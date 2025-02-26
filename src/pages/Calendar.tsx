@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
-import { DateTime } from 'luxon';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -12,30 +11,40 @@ import {
   CheckIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { EVENT_TYPES, EVENT_STATUS } from '../constants/calendar';
+import { EVENT_TYPES, EVENT_STATUS, MaintenanceEvent } from '../types';
 import EventModal from '../components/calendar/EventModal';
-import ListView from '../components/calendar/ListView';
-import type { MaintenanceEvent, Car } from '../types/calendar';
-import { Switch } from '@headlessui/react';
+
+interface CalendarEvent {
+  id: string;
+  car_id: string;
+  title: string;
+  description: string;
+  event_type: "maintenance" | "service" | "inspection" | "other";
+  start_date: string;
+  status: "scheduled" | "completed" | "cancelled" | "in_progress";
+  user_id: string;
+}
 
 export default function Calendar() {
-  const supabase = useSupabase();
-  const [currentDate, setCurrentDate] = useState(DateTime.now());
-  const [selectedDate, setSelectedDate] = useState<DateTime | null>(null);
-  const [events, setEvents] = useState<MaintenanceEvent[]>([]);
-  const [cars, setCars] = useState<Car[]>([]);
+  const { supabase } = useSupabase();
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [showAddEvent, setShowAddEvent] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [filterStatus, setFilterStatus] = useState<string[]>([]);
+  const [filterTypes, setFilterTypes] = useState<string[]>([]);
+  const [cars, setCars] = useState<MaintenanceEvent[]>([]);
   const [isAddingEvent, setIsAddingEvent] = useState(false);
   const [isEditingEvent, setIsEditingEvent] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<Partial<MaintenanceEvent> | null>(null);
-  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
-  const [showFilters, setShowFilters] = useState(false);
   const [selectedCarFilter, setSelectedCarFilter] = useState<number | undefined>();
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchData();
-  }, [currentDate]);
+  }, [selectedDate]);
 
   async function fetchData() {
     setLoading(true);
@@ -51,14 +60,14 @@ export default function Calendar() {
       }
 
       // Fetch events for the current month
-      const startOfMonth = currentDate.startOf('month').toISODate();
-      const endOfMonth = currentDate.endOf('month').toISODate();
+      const startOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+      const endOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0);
 
       const { data: eventsData } = await supabase
         .from('maintenance_events')
         .select('*')
-        .gte('start_date', startOfMonth)
-        .lte('start_date', endOfMonth)
+        .gte('start_date', startOfMonth.toISOString())
+        .lte('start_date', endOfMonth.toISOString())
         .order('start_date', { ascending: true });
 
       if (eventsData) {
@@ -71,7 +80,7 @@ export default function Calendar() {
     }
   }
 
-  async function handleAddEvent(eventData: Partial<MaintenanceEvent>) {
+  async function handleAddEvent(eventData: Partial<CalendarEvent>) {
     try {
       const { data, error } = await supabase
         .from('maintenance_events')
@@ -82,14 +91,14 @@ export default function Calendar() {
       if (error) throw error;
 
       setEvents([...events, data]);
-      setIsAddingEvent(false);
+      setShowAddEvent(false);
       setSelectedEvent(null);
     } catch (error) {
       console.error('Error adding event:', error);
     }
   }
 
-  async function handleUpdateEvent(eventData: Partial<MaintenanceEvent>) {
+  async function handleUpdateEvent(eventData: Partial<CalendarEvent>) {
     if (!selectedEvent?.id) return;
 
     try {
@@ -144,10 +153,10 @@ export default function Calendar() {
   }
 
   function generateCalendarDays() {
-    const firstDay = currentDate.startOf('month');
-    const lastDay = currentDate.endOf('month');
-    const startPadding = firstDay.weekday % 7;
-    const totalDays = lastDay.day;
+    const firstDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+    const lastDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0);
+    const startPadding = firstDay.getDay();
+    const totalDays = lastDay.getDate();
 
     // Generate padding cells
     const paddingCells = Array.from({ length: startPadding }, (_, i) => (
@@ -157,15 +166,15 @@ export default function Calendar() {
     // Generate day cells
     const dayCells = Array.from({ length: totalDays }, (_, i) => {
       const day = i + 1;
-      const date = firstDay.set({ day });
-      const isToday = date.hasSame(DateTime.now(), 'day');
-      const isSelected = selectedDate?.hasSame(date, 'day');
+      const date = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), day);
+      const isToday = date.toDateString() === new Date().toDateString();
+      const isSelected = date.toDateString() === selectedDate.toDateString();
       
       const dayEvents = events
         .filter(event => {
           if (selectedCarFilter && event.car_id !== selectedCarFilter) return false;
           if (selectedTypeFilter && event.event_type !== selectedTypeFilter) return false;
-          return DateTime.fromISO(event.start_date).hasSame(date, 'day');
+          return new Date(event.start_date).toDateString() === date.toDateString();
         });
 
       return (
@@ -241,7 +250,7 @@ export default function Calendar() {
             type="button"
             onClick={() => {
               setSelectedEvent(null);
-              setIsAddingEvent(true);
+              setShowAddEvent(true);
             }}
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
           >
@@ -300,25 +309,25 @@ export default function Calendar() {
           <div>
             <button
               type="button"
-              onClick={() => setCurrentDate(currentDate.minus({ months: 1 }))}
+              onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1))}
               className="p-2 rounded hover:bg-gray-100"
             >
               <ChevronLeftIcon className="h-5 w-5" />
             </button>
             <button
               type="button"
-              onClick={() => setCurrentDate(currentDate.plus({ months: 1 }))}
+              onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1))}
               className="p-2 rounded hover:bg-gray-100"
             >
               <ChevronRightIcon className="h-5 w-5" />
             </button>
           </div>
           <h2 className="text-lg font-semibold text-gray-900">
-            {currentDate.toFormat('LLLL yyyy')}
+            {selectedDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
           </h2>
           <button
             type="button"
-            onClick={() => setCurrentDate(DateTime.now())}
+            onClick={() => setSelectedDate(new Date())}
             className="px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50"
           >
             Today
@@ -353,26 +362,26 @@ export default function Calendar() {
       </div>
 
       {/* Event Modal */}
-      {(isAddingEvent || isEditingEvent) && (
+      {(showAddEvent || isEditingEvent) && (
         <EventModal
           isOpen={true}
           onClose={() => {
-            setIsAddingEvent(false);
+            setShowAddEvent(false);
             setIsEditingEvent(false);
             setSelectedEvent(null);
           }}
-          onSubmit={isAddingEvent ? handleAddEvent : handleUpdateEvent}
+          onSubmit={showAddEvent ? handleAddEvent : handleUpdateEvent}
           event={selectedEvent || {
             car_id: '',
             title: '',
             description: '',
             event_type: 'maintenance',
-            start_date: selectedDate?.toISODate() || DateTime.now().toISODate(),
+            start_date: selectedDate.toISOString(),
             status: 'scheduled',
           }}
           setEvent={setSelectedEvent}
           cars={cars}
-          mode={isAddingEvent ? 'add' : 'edit'}
+          mode={showAddEvent ? 'add' : 'edit'}
         />
       )}
 
@@ -392,9 +401,9 @@ export default function Calendar() {
               </div>
               
               <div className="text-sm text-gray-500">
-                <p>Start Date: {DateTime.fromISO(selectedEvent.start_date).toFormat('DDD')}</p>
+                <p>Start Date: {new Date(selectedEvent.start_date).toLocaleString('default', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
                 {selectedEvent.end_date && (
-                  <p>End Date: {DateTime.fromISO(selectedEvent.end_date).toFormat('DDD')}</p>
+                  <p>End Date: {new Date(selectedEvent.end_date).toLocaleString('default', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
                 )}
                 {selectedEvent.description && (
                   <p className="mt-2">{selectedEvent.description}</p>
