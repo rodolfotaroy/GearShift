@@ -9,6 +9,9 @@ interface Car {
   model: string;
   year: number;
   plate_number: string;
+  vin: string;
+  mileage: number;
+  user_id: string;
   image_url: string | null;
   created_at: string;
 }
@@ -36,6 +39,9 @@ export default function CarProfiles() {
     model: '',
     year: CURRENT_YEAR,
     plate_number: '',
+    vin: '',
+    mileage: 0,
+    user_id: '',
     image_url: null as string | null,
   });
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -89,61 +95,30 @@ export default function CarProfiles() {
     return errors;
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) return;
 
-    const errors = validateImageFile(file);
-    if (errors.length > 0) {
-      setValidationErrors(errors);
-      e.target.value = ''; // Reset file input
-      return;
-    }
-
-    setSelectedImage(file);
-    setValidationErrors([]);
-  };
-
-  async function handleImageUpload(file: File, carId: number) {
-    console.log('Starting image upload for car:', carId);
-    
-    const errors = validateImageFile(file);
-    if (errors.length > 0) {
-      setValidationErrors(errors);
-      return null;
-    }
-
-    const fileExt = file.name.split('.').pop()?.toLowerCase();
-    const sanitizedExt = ALLOWED_FILE_TYPES.find(type => type.endsWith(fileExt || ''))
-      ? fileExt
-      : 'jpg';
-    const fileName = `${carId}-${Date.now()}.${sanitizedExt}`;
-    const filePath = `${fileName}`;
-
     try {
-      // Upload the file to Supabase storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('car-images')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
+      const { data: uploadResult, error: uploadError } = await supabase.storage
+        .from('car-documents')
+        .upload(`${file.name}`, file);
 
-      if (uploadError) {
-        setValidationErrors([{ field: 'image', message: 'Failed to upload image' }]);
-        return null;
+      if (uploadError) throw uploadError;
+      
+      if (uploadResult) {
+        const { data: publicUrl } = await supabase.storage
+          .from('car-documents')
+          .getPublicUrl(uploadResult.path);
+          
+        if (publicUrl) {
+          setNewCar(prev => ({ ...prev, image_url: publicUrl.publicUrl }));
+        }
       }
-
-      const { data: urlData } = await supabase.storage
-        .from('car-images')
-        .getPublicUrl(filePath);
-
-      return urlData.publicUrl;
     } catch (error) {
-      setValidationErrors([{ field: 'image', message: 'Error during image upload' }]);
-      return null;
+      console.error('Error uploading file:', error);
     }
-  }
+  };
 
   async function handleAddCar(e: React.FormEvent) {
     e.preventDefault();
@@ -166,6 +141,9 @@ export default function CarProfiles() {
           model: newCar.model.trim(),
           year: newCar.year,
           plate_number: newCar.plate_number.toUpperCase(),
+          vin: newCar.vin,
+          mileage: newCar.mileage,
+          user_id: newCar.user_id,
         }])
         .select()
         .single();
@@ -180,19 +158,7 @@ export default function CarProfiles() {
       // If there's an image, upload it and update the car record
       if (selectedImage && newCarData) {
         console.log('Uploading image for car:', newCarData.id);
-        const imageUrl = await handleImageUpload(selectedImage, newCarData.id);
-        
-        if (imageUrl) {
-          console.log('Updating car with image URL:', imageUrl);
-          const { error: updateError } = await supabase
-            .from('cars')
-            .update({ image_url: imageUrl })
-            .eq('id', newCarData.id);
-
-          if (updateError) {
-            console.error('Error updating car with image:', updateError);
-          }
-        }
+        await handleFileUpload({ target: { files: [selectedImage] } } as React.ChangeEvent<HTMLInputElement>);
       }
 
       setIsAddingCar(false);
@@ -201,6 +167,9 @@ export default function CarProfiles() {
         model: '',
         year: CURRENT_YEAR,
         plate_number: '',
+        vin: '',
+        mileage: 0,
+        user_id: '',
         image_url: null,
       });
       setSelectedImage(null);
@@ -230,7 +199,7 @@ export default function CarProfiles() {
       // If there's a new image, upload it
       if (selectedImage) {
         console.log('Uploading new image for car:', selectedCar.id);
-        imageUrl = await handleImageUpload(selectedImage, selectedCar.id);
+        await handleFileUpload({ target: { files: [selectedImage] } } as React.ChangeEvent<HTMLInputElement>);
       }
 
       // Update the car with all fields including the new image URL if present
@@ -241,7 +210,10 @@ export default function CarProfiles() {
           model: newCar.model.trim(),
           year: newCar.year,
           plate_number: newCar.plate_number.toUpperCase(),
-          ...(imageUrl && { image_url: imageUrl }),
+          vin: newCar.vin,
+          mileage: newCar.mileage,
+          user_id: newCar.user_id,
+          ...(newCar.image_url && { image_url: newCar.image_url }),
         })
         .eq('id', selectedCar.id);
 
@@ -257,6 +229,9 @@ export default function CarProfiles() {
         model: '',
         year: CURRENT_YEAR,
         plate_number: '',
+        vin: '',
+        mileage: 0,
+        user_id: '',
         image_url: null,
       });
       setSelectedImage(null);
@@ -300,6 +275,9 @@ export default function CarProfiles() {
       model: car.model,
       year: car.year,
       plate_number: car.plate_number,
+      vin: car.vin,
+      mileage: car.mileage,
+      user_id: car.user_id,
       image_url: car.image_url,
     });
     setIsEditingCar(true);
@@ -438,12 +416,39 @@ export default function CarProfiles() {
                 />
               </div>
               <div>
+                <label className="block text-sm font-medium text-gray-700">VIN</label>
+                <input
+                  type="text"
+                  value={newCar.vin}
+                  onChange={(e) => setNewCar({ ...newCar, vin: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Mileage</label>
+                <input
+                  type="number"
+                  value={newCar.mileage}
+                  onChange={(e) => setNewCar({ ...newCar, mileage: parseInt(e.target.value) })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">User ID</label>
+                <input
+                  type="text"
+                  value={newCar.user_id}
+                  onChange={(e) => setNewCar({ ...newCar, user_id: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700">Car Image</label>
                 <div className="mt-1 flex items-center">
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={handleImageSelect}
+                    onChange={handleFileUpload}
                     className="mt-1 block w-full text-sm text-gray-500
                       file:mr-4 file:py-2 file:px-4
                       file:rounded-md file:border-0
@@ -472,6 +477,9 @@ export default function CarProfiles() {
                       model: '',
                       year: CURRENT_YEAR,
                       plate_number: '',
+                      vin: '',
+                      mileage: 0,
+                      user_id: '',
                       image_url: null,
                     });
                     setSelectedImage(null);

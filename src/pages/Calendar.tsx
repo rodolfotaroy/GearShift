@@ -13,18 +13,19 @@ import { EVENT_TYPES } from '../types';
 import EventModal from '../components/calendar/EventModal';
 
 interface Car {
-  id: string;
+  id: number;
   make: string;
   model: string;
   year: number;
   vin: string;
   mileage: number;
   user_id: string;
+  plate_number: string;
 }
 
 interface CalendarEvent {
-  id: string;
-  car_id: string;
+  id: number;
+  car_id: number;
   title: string;
   description: string;
   event_type: string;
@@ -44,7 +45,7 @@ export default function Calendar() {
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [cars, setCars] = useState<Car[]>([]);
-  const [selectedCarFilter, setSelectedCarFilter] = useState<string>();
+  const [selectedCarFilter, setSelectedCarFilter] = useState<number>();
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>();
 
   useEffect(() => {
@@ -96,7 +97,7 @@ export default function Calendar() {
     }
   }
 
-  async function handleDeleteEvent(eventId: string) {
+  async function handleDeleteEvent(eventId: number) {
     try {
       const { error } = await supabase
         .from('maintenance_events')
@@ -235,7 +236,7 @@ export default function Calendar() {
                 id="car-filter"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 value={selectedCarFilter}
-                onChange={e => setSelectedCarFilter(e.target.value)}
+                onChange={e => setSelectedCarFilter(Number(e.target.value))}
               >
                 <option value="">All Cars</option>
                 {cars.map(car => (

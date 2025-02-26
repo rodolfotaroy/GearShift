@@ -8,6 +8,9 @@ interface Car {
   make: string;
   model: string;
   plate_number: string;
+  vin: string;
+  mileage: number;
+  user_id: string;
 }
 
 interface Expense {
@@ -60,7 +63,7 @@ export default function ExpenseTracker() {
 
   const fetchExpenses = async () => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('expenses')
         .select(`
           *,
@@ -74,24 +77,14 @@ export default function ExpenseTracker() {
 
       if (error) throw error;
 
-      const { data } = await supabase
-        .from('expenses')
-        .select(`
-          *,
-          cars (
-            make,
-            model,
-            plate_number
-          )
-        `)
-        .order('date', { ascending: false });
-
-      if (selectedCarId !== 'all') {
-        setExpenses(data.filter((expense) => expense.car_id === selectedCarId));
-      } else if (selectedCategory !== 'all') {
-        setExpenses(data.filter((expense) => expense.category === selectedCategory));
-      } else {
-        setExpenses(data);
+      if (data) {
+        if (selectedCarId !== 'all') {
+          setExpenses(data.filter((expense) => expense.car_id === selectedCarId));
+        } else if (selectedCategory !== 'all') {
+          setExpenses(data.filter((expense) => expense.category === selectedCategory));
+        } else {
+          setExpenses(data);
+        }
       }
     } catch (error) {
       console.error('Error fetching expenses:', error);
