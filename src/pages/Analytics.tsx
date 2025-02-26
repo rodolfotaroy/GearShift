@@ -5,14 +5,14 @@ import {
   CategoryScale,
   LinearScale,
   BarElement,
-  Title,
-  Tooltip,
-  Legend,
   ArcElement,
   PointElement,
   LineElement,
+  Title,
+  Tooltip,
+  Legend,
 } from 'chart.js';
-import { Bar, Pie, Line } from 'react-chartjs-2';
+import { Line, Pie } from 'react-chartjs-2';
 import { DateTime } from 'luxon';
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import { ResponsiveCalendar } from '@nivo/calendar';

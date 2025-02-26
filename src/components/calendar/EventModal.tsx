@@ -1,15 +1,27 @@
-import { Fragment } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { DateTime } from 'luxon';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 import { EVENT_TYPES, RECURRENCE_TYPES } from '../../constants/calendar';
 import type { Car, MaintenanceEvent } from '../../types/calendar';
 
 interface EventModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (event: Partial<MaintenanceEvent>) => Promise<void>;
-  event: Partial<MaintenanceEvent>;
-  setEvent: (event: Partial<MaintenanceEvent>) => void;
+  onSubmit: (eventData: any) => void;
+  event: {
+    id?: string;
+    car_id: string;
+    title: string;
+    description: string;
+    event_type: string;
+    start_date: string;
+    end_date?: string;
+    recurrence_type?: string;
+    recurrence_interval?: number;
+    recurrence_end_date?: string;
+    notification_days_before?: number[];
+  };
+  setEvent: (event: any) => void;
   cars: Car[];
   mode: 'add' | 'edit';
 }
@@ -26,6 +38,14 @@ export default function EventModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await onSubmit(event);
+  };
+
+  const handleRecurrenceChange = (value: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | null) => {
+    setEvent({ ...event, recurrence_type: value });
+  };
+
+  const handleReminderDaysChange = (days: string[]) => {
+    setEvent({ ...event, notification_days_before: days.map(Number) });
   };
 
   return (
@@ -144,7 +164,7 @@ export default function EventModal({
                     id="recurrence"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     value={event.recurrence_type || 'none'}
-                    onChange={e => setEvent({ ...event, recurrence_type: e.target.value })}
+                    onChange={e => handleRecurrenceChange(e.target.value)}
                   >
                     {Object.entries(RECURRENCE_TYPES).map(([value, label]) => (
                       <option key={value} value={value}>
@@ -195,10 +215,7 @@ export default function EventModal({
                     multiple
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     value={event.notification_days_before || [1, 7]}
-                    onChange={e => {
-                      const values = Array.from(e.target.selectedOptions, option => Number(option.value));
-                      setEvent({ ...event, notification_days_before: values });
-                    }}
+                    onChange={e => handleReminderDaysChange(Array.from(e.target.selectedOptions, option => option.value))}
                   >
                     <option value="1">1 day</option>
                     <option value="3">3 days</option>

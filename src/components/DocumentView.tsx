@@ -28,14 +28,14 @@ export default function DocumentView({ car }: DocumentViewProps) {
     async function fetchDocuments() {
         setLoading(true);
         try {
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .from('documents')
                 .select('*')
                 .eq('car_id', car.id)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            setDocuments(data || []);
+            setDocuments(error ? [] : []);
         } catch (error) {
             console.error('Error fetching documents:', error);
         } finally {
@@ -53,7 +53,7 @@ export default function DocumentView({ car }: DocumentViewProps) {
             // Upload file to storage
             const fileExt = selectedFile.name.split('.').pop();
             const fileName = `${car.id}-${Date.now()}.${fileExt}`;
-            const { error: uploadError, data } = await supabase.storage
+            const { error: uploadError } = await supabase.storage
                 .from('car-documents')
                 .upload(fileName, selectedFile);
 

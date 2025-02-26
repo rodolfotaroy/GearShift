@@ -33,7 +33,6 @@ export default function Calendar() {
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [filterTypes, setFilterTypes] = useState<string[]>([]);
   const [cars, setCars] = useState<MaintenanceEvent[]>([]);
   const [isAddingEvent, setIsAddingEvent] = useState(false);
