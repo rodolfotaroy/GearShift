@@ -1,8 +1,7 @@
-import { Fragment, ReactNode } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { Disclosure, Menu, Transition } from '@headlessui/react'
-import { Bars3Icon, XMarkIcon, UserCircleIcon } from '@heroicons/react/24/outline'
-import { useAuth } from '../contexts/AuthContext'
+import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Bars3Icon } from '@heroicons/react/24/outline';
+import { useAuth } from '../contexts/AuthContext';
 
 const navigation = [
   { name: 'Dashboard', href: '/' },

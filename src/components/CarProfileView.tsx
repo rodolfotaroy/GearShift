@@ -4,8 +4,9 @@ import { XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline';
 import { DateTime } from 'luxon';
 import MaintenanceView from './MaintenanceView';
 import DocumentView from './DocumentView';
+import { Car as CarType } from '../types';
 
-interface Car {
+interface Car extends CarType {
   id: number;
   make: string;
   model: string;
@@ -15,6 +16,7 @@ interface Car {
   created_at: string;
   vin: string | null;
   mileage: number | null;
+  user_id: string;
 }
 
 interface Expense {

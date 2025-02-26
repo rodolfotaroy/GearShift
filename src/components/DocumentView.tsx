@@ -190,8 +190,9 @@ export default function DocumentView({ car }: DocumentViewProps) {
                                 <select
                                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                     value={newDocument.document_type}
-                                    onChange={(e) => setNewDocument({ ...newDocument, document_type: e.target.value })}
+                                    onChange={(e) => setNewDocument({ ...newDocument, document_type: e.target.value as typeof DOCUMENT_TYPES[number] })}
                                 >
+                                    <option value="">Select a type</option>
                                     {DOCUMENT_TYPES.map((type) => (
                                         <option key={type} value={type}>{type}</option>
                                     ))}

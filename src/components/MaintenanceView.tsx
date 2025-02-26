@@ -263,8 +263,9 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                                 <select
                                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                     value={newSchedule.service_type}
-                                    onChange={(e) => setNewSchedule({ ...newSchedule, service_type: e.target.value })}
+                                    onChange={(e) => setNewSchedule({ ...newSchedule, service_type: e.target.value as typeof SERVICE_TYPES[number] })}
                                 >
+                                    <option value="">Select a service type</option>
                                     {SERVICE_TYPES.map((type) => (
                                         <option key={type} value={type}>{type}</option>
                                     ))}
@@ -332,8 +333,9 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                                 <select
                                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                     value={newService.service_type}
-                                    onChange={(e) => setNewService({ ...newService, service_type: e.target.value })}
+                                    onChange={(e) => setNewService({ ...newService, service_type: e.target.value as typeof SERVICE_TYPES[number] })}
                                 >
+                                    <option value="">Select a service type</option>
                                     {SERVICE_TYPES.map((type) => (
                                         <option key={type} value={type}>{type}</option>
                                     ))}
