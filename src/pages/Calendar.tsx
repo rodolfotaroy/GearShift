@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useSupabase } from '../contexts/SupabaseContext';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -28,17 +28,15 @@ interface CalendarEvent {
 }
 
 export default function Calendar() {
-  const supabase = useSupabaseClient();
+  const { supabase } = useSupabase();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [filterTypes, setFilterTypes] = useState<string[]>([]);
   const [cars, setCars] = useState<MaintenanceEvent[]>([]);
-  const [isAddingEvent, setIsAddingEvent] = useState(false);
-  const [isEditingEvent, setIsEditingEvent] = useState(false);
+  const [filterTypes, setFilterTypes] = useState<string[]>([]);
   const [selectedCarFilter, setSelectedCarFilter] = useState<number | undefined>();
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
@@ -113,7 +111,6 @@ export default function Calendar() {
       if (error) throw error;
 
       setEvents(events.map(event => event.id === selectedEvent.id ? data : event));
-      setIsEditingEvent(false);
       setSelectedEvent(null);
     } catch (error) {
       console.error('Error updating event:', error);
@@ -199,7 +196,6 @@ export default function Calendar() {
                 onClick={(e) => {
                   e.stopPropagation();
                   setSelectedEvent(event);
-                  setIsEditingEvent(true);
                 }}
               >
                 {event.title}
@@ -354,7 +350,6 @@ export default function Calendar() {
             cars={cars}
             onEventClick={(event) => {
               setSelectedEvent(event);
-              setIsEditingEvent(true);
             }}
             selectedCarId={selectedCarFilter}
             selectedEventType={selectedTypeFilter}
@@ -363,16 +358,15 @@ export default function Calendar() {
       </div>
 
       {/* Event Modal */}
-      {(showAddEvent || isEditingEvent) && (
+      {(showAddEvent) && (
         <EventModal
           isOpen={true}
           onClose={() => {
             setShowAddEvent(false);
-            setIsEditingEvent(false);
             setSelectedEvent(null);
           }}
-          onSubmit={showAddEvent ? handleAddEvent : handleUpdateEvent}
-          event={selectedEvent || {
+          onSubmit={handleAddEvent}
+          event={{
             car_id: '',
             title: '',
             description: '',
@@ -382,12 +376,12 @@ export default function Calendar() {
           }}
           setEvent={setSelectedEvent}
           cars={cars}
-          mode={showAddEvent ? 'add' : 'edit'}
+          mode={'add'}
         />
       )}
 
       {/* Event Actions Modal */}
-      {selectedEvent && !isEditingEvent && (
+      {selectedEvent && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">{selectedEvent.title}</h3>
@@ -434,10 +428,12 @@ export default function Calendar() {
                 )}
                 <button
                   type="button"
-                  onClick={() => setIsEditingEvent(true)}
+                  onClick={() => {
+                    setSelectedEvent(null);
+                  }}
                   className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                 >
-                  Edit
+                  Close
                 </button>
                 <button
                   type="button"
