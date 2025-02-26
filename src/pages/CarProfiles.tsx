@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
-import { PlusIcon, PencilIcon, TrashIcon, PhotoIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, TrashIcon, PhotoIcon } from '@heroicons/react/24/outline';
 import CarProfileView from '../components/CarProfileView';
 
 interface Car {

@@ -8,16 +8,18 @@ import {
   CalendarIcon,
   FunnelIcon,
   TrashIcon,
-  CheckIcon,
-  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { EVENT_TYPES } from '../types';
+import EventModal from '../components/calendar/EventModal';
 
 interface Car {
   id: string;
   make: string;
   model: string;
   year: number;
+  vin: string;
+  mileage: number;
+  user_id: string;
 }
 
 interface CalendarEvent {

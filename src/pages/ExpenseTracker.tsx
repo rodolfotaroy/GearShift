@@ -58,35 +58,45 @@ export default function ExpenseTracker() {
     fetchCars();
   }, [selectedCarId, selectedCategory]);
 
-  async function fetchExpenses() {
-    let query = supabase
-      .from('expenses')
-      .select(`
-        *,
-        cars (
-          make,
-          model,
-          plate_number
-        )
-      `)
-      .order('date', { ascending: false });
+  const fetchExpenses = async () => {
+    try {
+      const { error } = await supabase
+        .from('expenses')
+        .select(`
+          *,
+          cars (
+            make,
+            model,
+            plate_number
+          )
+        `)
+        .order('date', { ascending: false });
 
-    if (selectedCarId !== 'all') {
-      query = query.eq('car_id', selectedCarId);
-    }
+      if (error) throw error;
 
-    if (selectedCategory !== 'all') {
-      query = query.eq('category', selectedCategory);
-    }
+      const { data } = await supabase
+        .from('expenses')
+        .select(`
+          *,
+          cars (
+            make,
+            model,
+            plate_number
+          )
+        `)
+        .order('date', { ascending: false });
 
-    const { data, error } = await query;
-
-    if (error) {
+      if (selectedCarId !== 'all') {
+        setExpenses(data.filter((expense) => expense.car_id === selectedCarId));
+      } else if (selectedCategory !== 'all') {
+        setExpenses(data.filter((expense) => expense.category === selectedCategory));
+      } else {
+        setExpenses(data);
+      }
+    } catch (error) {
       console.error('Error fetching expenses:', error);
-    } else {
-      setExpenses(data || []);
     }
-  }
+  };
 
   async function fetchCars() {
     const { data, error } = await supabase
