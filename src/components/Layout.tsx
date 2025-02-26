@@ -1,8 +1,13 @@
-import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import { Disclosure } from '@headlessui/react';
 import { useAuth } from '../contexts/AuthContext';
+import {
+  HomeIcon,
+  CalendarIcon,
+  ChartBarIcon,
+  CogIcon,
+  DocumentIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 
 const navigation = [
   { name: 'Dashboard', href: '/' },
@@ -13,12 +18,12 @@ const navigation = [
 ];
 
 interface LayoutProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
 
   return (
     <div className="min-h-screen bg-gray-100">
