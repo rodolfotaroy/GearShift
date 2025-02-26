@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSupabase } from '../contexts/SupabaseContext';
+import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -19,14 +19,16 @@ interface CalendarEvent {
   car_id: string;
   title: string;
   description: string;
-  event_type: "maintenance" | "service" | "inspection" | "other";
+  event_type: string;
   start_date: string;
-  status: "scheduled" | "completed" | "cancelled" | "in_progress";
-  user_id: string;
+  end_date?: string;
+  status: string;
+  recurrence?: string;
+  reminder_days?: string[];
 }
 
 export default function Calendar() {
-  const { supabase } = useSupabase();
+  const supabase = useSupabaseClient();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [showAddEvent, setShowAddEvent] = useState(false);

@@ -11,6 +11,7 @@ import {
   XMarkIcon,
   Bars3Icon
 } from '@heroicons/react/24/outline';
+import type { SVGProps } from 'react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -19,7 +20,7 @@ interface LayoutProps {
 interface NavigationItem {
   name: string;
   href: string;
-  icon: React.ComponentType<{ className: string }>;
+  icon: (props: SVGProps<SVGSVGElement>) => JSX.Element;
 }
 
 const navigation: NavigationItem[] = [
