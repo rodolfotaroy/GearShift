@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { Disclosure } from '@headlessui/react';
 import {
   HomeIcon,
   CalendarIcon,
@@ -7,36 +8,49 @@ import {
   CogIcon,
   DocumentIcon,
   UserIcon,
+  XMarkIcon,
+  Bars3Icon
 } from '@heroicons/react/24/outline';
-
-const navigation = [
-  { name: 'Dashboard', href: '/' },
-  { name: 'Calendar', href: '/calendar' },
-  { name: 'Car Profiles', href: '/car-profiles' },
-  { name: 'Analytics', href: '/analytics' },
-  { name: 'Expense Tracker', href: '/expense-tracker' },
-];
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
+interface NavigationItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className: string }>;
+}
+
+const navigation: NavigationItem[] = [
+  { name: 'Dashboard', href: '/', icon: HomeIcon },
+  { name: 'Calendar', href: '/calendar', icon: CalendarIcon },
+  { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
+  { name: 'Documents', href: '/documents', icon: DocumentIcon },
+  { name: 'Settings', href: '/settings', icon: CogIcon },
+];
+
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
 
   return (
     <div className="min-h-screen bg-gray-100">
       <Disclosure as="nav" className="bg-white shadow-sm">
-        {({ open }) => (
+        {({ open }: { open: boolean }) => (
           <>
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-              <div className="flex h-16 justify-between">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between h-16">
                 <div className="flex">
-                  <div className="flex flex-shrink-0 items-center">
+                  <div className="flex-shrink-0 flex items-center">
                     <img
-                      className="h-8 w-auto"
-                      src="/logo.png"
+                      className="block lg:hidden h-8 w-auto"
+                      src="/logo.svg"
+                      alt="GearShift"
+                    />
+                    <img
+                      className="hidden lg:block h-8 w-auto"
+                      src="/logo.svg"
                       alt="GearShift"
                     />
                   </div>
@@ -45,12 +59,13 @@ export default function Layout({ children }: LayoutProps) {
                       <Link
                         key={item.name}
                         to={item.href}
-                        className={`inline-flex items-center px-1 pt-1 text-sm font-medium ${
+                        className={`${
                           location.pathname === item.href
-                            ? 'border-b-2 border-indigo-500 text-gray-900'
-                            : 'border-b-2 border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                        }`}
+                            ? 'border-blue-500 text-gray-900'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
                       >
+                        <item.icon className="h-5 w-5 mr-2" />
                         {item.name}
                       </Link>
                     ))}
@@ -59,18 +74,18 @@ export default function Layout({ children }: LayoutProps) {
                 <div className="hidden sm:ml-6 sm:flex sm:items-center">
                   <button
                     onClick={() => signOut()}
-                    className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                    className="bg-white p-1 rounded-full text-gray-400 hover:text-gray-500"
                   >
-                    Sign out
+                    <UserIcon className="h-6 w-6" />
                   </button>
                 </div>
                 <div className="-mr-2 flex items-center sm:hidden">
-                  <Disclosure.Button className="inline-flex items-center justify-center rounded-md bg-white p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                  <Disclosure.Button className="bg-white inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
                     <span className="sr-only">Open main menu</span>
                     {open ? (
-                      <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
+                      <XMarkIcon className="block h-6 w-6" />
                     ) : (
-                      <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
+                      <Bars3Icon className="block h-6 w-6" />
                     )}
                   </Disclosure.Button>
                 </div>
@@ -78,44 +93,33 @@ export default function Layout({ children }: LayoutProps) {
             </div>
 
             <Disclosure.Panel className="sm:hidden">
-              <div className="space-y-1 pb-3 pt-2">
+              <div className="pt-2 pb-3 space-y-1">
                 {navigation.map((item) => (
                   <Disclosure.Button
                     key={item.name}
                     as={Link}
                     to={item.href}
-                    className={`block py-2 pl-3 pr-4 text-base font-medium ${
+                    className={`${
                       location.pathname === item.href
-                        ? 'border-l-4 border-indigo-500 bg-indigo-50 text-indigo-700'
-                        : 'border-l-4 border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800'
-                    }`}
+                        ? 'bg-blue-50 border-blue-500 text-blue-700'
+                        : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'
+                    } block pl-3 pr-4 py-2 border-l-4 text-base font-medium`}
                   >
-                    {item.name}
+                    <div className="flex items-center">
+                      <item.icon className="h-5 w-5 mr-2" />
+                      {item.name}
+                    </div>
                   </Disclosure.Button>
                 ))}
-              </div>
-              <div className="border-t border-gray-200 pb-3 pt-4">
-                <div className="mt-3 space-y-1">
-                  <Disclosure.Button
-                    onClick={() => signOut()}
-                    className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"
-                  >
-                    Sign out
-                  </Disclosure.Button>
-                </div>
               </div>
             </Disclosure.Panel>
           </>
         )}
       </Disclosure>
 
-      <div className="py-10">
-        <main>
-          <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-            {children}
-          </div>
-        </main>
-      </div>
+      <main className="py-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">{children}</div>
+      </main>
     </div>
   );
 }
