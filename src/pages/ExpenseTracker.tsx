@@ -109,10 +109,9 @@ export default function ExpenseTracker() {
 
   async function handleAddExpense(e: React.FormEvent) {
     e.preventDefault();
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('expenses')
-      .insert([newExpense])
-      .select();
+      .insert([newExpense]);
 
     if (error) {
       console.error('Error adding expense:', error);

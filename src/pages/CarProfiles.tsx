@@ -158,7 +158,7 @@ export default function CarProfiles() {
       // If there's an image, upload it and update the car record
       if (selectedImage && newCarData) {
         console.log('Uploading image for car:', newCarData.id);
-        await handleFileUpload({ target: { files: [selectedImage] } } as React.ChangeEvent<HTMLInputElement>);
+        await handleFileUpload({ target: { files: [selectedImage] } } as unknown as React.ChangeEvent<HTMLInputElement>);
       }
 
       setIsAddingCar(false);
@@ -194,12 +194,10 @@ export default function CarProfiles() {
     }
 
     try {
-      let imageUrl = newCar.image_url;
-
       // If there's a new image, upload it
       if (selectedImage) {
         console.log('Uploading new image for car:', selectedCar.id);
-        await handleFileUpload({ target: { files: [selectedImage] } } as React.ChangeEvent<HTMLInputElement>);
+        await handleFileUpload({ target: { files: [selectedImage] } } as unknown as React.ChangeEvent<HTMLInputElement>);
       }
 
       // Update the car with all fields including the new image URL if present

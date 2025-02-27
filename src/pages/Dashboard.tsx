@@ -40,11 +40,6 @@ type CarExpense = {
   total: number;
 };
 
-type CarStats = {
-  make: string;
-  model: string;
-};
-
 export default function Dashboard() {
   const supabase = useSupabase();
   const [totalExpenses, setTotalExpenses] = useState(0);
@@ -52,12 +47,10 @@ export default function Dashboard() {
   const [monthlyExpenses, setMonthlyExpenses] = useState<MonthlyExpense[]>([]);
   const [carExpenses, setCarExpenses] = useState<CarExpense[]>([]);
   const [carCount, setCarCount] = useState(0);
-  const [carStats, setCarStats] = useState<CarStats[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchDashboardData();
-    fetchCarData();
   }, []);
 
   async function fetchDashboardData() {
@@ -115,7 +108,10 @@ export default function Dashboard() {
 
         // Expenses by car
         const carTotals = expenses.reduce((acc: { [key: string]: number }, expense) => {
-          const carName = expense.cars ? `${expense.cars.make} ${expense.cars.model}` : 'Unknown';
+          // Safely access make and model
+          const carName = expense.cars && expense.cars.make && expense.cars.model 
+            ? `${expense.cars.make} ${expense.cars.model}` 
+            : 'Unknown';
           acc[carName] = (acc[carName] || 0) + expense.amount;
           return acc;
         }, {});
@@ -140,27 +136,6 @@ export default function Dashboard() {
       setLoading(false);
     }
   }
-
-  const fetchCarData = async () => {
-    try {
-      const { data: carData, error: carError } = await supabase
-        .from('cars')
-        .select('make, model')
-        .order('created_at', { ascending: false });
-
-      if (carError) throw carError;
-
-      if (carData) {
-        const formattedData = carData.map(car => ({
-          make: car.make,
-          model: car.model
-        }));
-        setCarStats(formattedData);
-      }
-    } catch (error) {
-      console.error('Error fetching car data:', error);
-    }
-  };
 
   const doughnutData = {
     labels: expensesByCategory.map(item => item.category),
