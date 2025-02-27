@@ -363,6 +363,11 @@ export default function CarProfiles() {
             setIsViewingProfile(false);
             setSelectedCar(null);
           }}
+          onCarUpdated={() => {
+            fetchCars(); // Refresh the car list after update
+            setIsViewingProfile(false);
+            setSelectedCar(null);
+          }}
         />
       )}
 

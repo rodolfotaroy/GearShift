@@ -108,9 +108,11 @@ export default function Dashboard() {
 
         // Expenses by car
         const carTotals = expenses.reduce((acc: { [key: string]: number }, expense) => {
-          // Safely access make and model
-          const carName = expense.cars && expense.cars.make && expense.cars.model 
-            ? `${expense.cars.make} ${expense.cars.model}` 
+          // Safely access make and model with type assertion
+          const carName = expense.cars && 
+            (expense.cars as { make: string; model: string }).make && 
+            (expense.cars as { make: string; model: string }).model
+            ? `${(expense.cars as { make: string; model: string }).make} ${(expense.cars as { make: string; model: string }).model}` 
             : 'Unknown';
           acc[carName] = (acc[carName] || 0) + expense.amount;
           return acc;

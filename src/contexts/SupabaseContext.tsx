@@ -10,7 +10,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 const SupabaseContext = createContext(supabase);
 
 export const useSupabase = () => {
-  return useContext(SupabaseContext);
+  const context = useContext(SupabaseContext);
+  return { supabase: context };
 };
 
 export const SupabaseProvider = ({ children }: { children: React.ReactNode }) => {
