@@ -9,7 +9,8 @@ import {
   DocumentIcon,
   UserIcon,
   XMarkIcon,
-  Bars3Icon
+  Bars3Icon,
+  CreditCardIcon
 } from '@heroicons/react/24/outline';
 import type { ComponentType } from 'react';
 
@@ -26,6 +27,7 @@ interface NavigationItem {
 const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/', icon: HomeIcon },
   { name: 'Calendar', href: '/calendar', icon: CalendarIcon },
+  { name: 'Expenses', href: '/expenses', icon: CreditCardIcon },
   { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
   { name: 'Documents', href: '/documents', icon: DocumentIcon },
   { name: 'Settings', href: '/settings', icon: CogIcon },
