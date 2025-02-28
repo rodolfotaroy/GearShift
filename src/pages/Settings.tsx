@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { 
@@ -12,18 +12,18 @@ import {
 export default function Settings() {
   const { user, signOut } = useAuth();
   const { supabaseClient } = useSupabase();
-  const [profile, setProfile] = useState({
+  const [profile, setProfile] = React.useState({
     full_name: '',
     email: '',
     avatar_url: ''
   });
-  const [notifications, setNotifications] = useState({
+  const [notifications, setNotifications] = React.useState({
     email_updates: false,
     push_notifications: false
   });
-  const [theme, setTheme] = useState('light');
+  const [theme, setTheme] = React.useState('light');
 
-  useEffect(() => {
+  React.useEffect(() => {
     fetchUserProfile();
   }, [user]);
 
