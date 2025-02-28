@@ -28,12 +28,11 @@ export interface Expense {
 export interface MaintenanceSchedule {
     id?: number;
     car_id: number;
-    service_type: typeof SERVICE_TYPES[number];
+    service_type: string;
     due_date: string;
     mileage_due: number;
     description: string;
-    status?: 'Pending' | 'Completed' | 'Overdue';
-    created_at?: string;
+    status: 'Pending' | 'Completed' | 'Overdue';
 }
 
 export interface ServiceHistory {

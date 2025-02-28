@@ -96,7 +96,7 @@ export default function Maintenance() {
       car_id: selectedCar.id
     };
 
-    const { data, error } = await supabaseClient
+    const { data } = await supabaseClient
       .from('maintenance_schedule')
       .insert(scheduleToAdd)
       .select();
@@ -121,7 +121,7 @@ export default function Maintenance() {
       car_id: selectedCar.id
     };
 
-    const { data, error } = await supabaseClient
+    const { data } = await supabaseClient
       .from('service_history')
       .insert(serviceToAdd)
       .select();

@@ -16,7 +16,6 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
     const [showAddSchedule, setShowAddSchedule] = useState(false);
     const [showAddService, setShowAddService] = useState(false);
     const [newSchedule, setNewSchedule] = useState<MaintenanceSchedule>({
-        car_id: car.id,
         service_type: SERVICE_TYPES[0],
         due_date: DateTime.now().plus({ months: 1 }).toISODate() || '',
         mileage_due: car.mileage ? car.mileage + 5000 : 0,
@@ -24,7 +23,6 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
         status: 'Pending'
     });
     const [newService, setNewService] = useState<ServiceHistory>({
-        car_id: car.id,
         service_type: SERVICE_TYPES[0],
         service_date: DateTime.now().toISODate() || '',
         mileage: car.mileage || 0,
@@ -69,72 +67,64 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
     }
 
     async function addMaintenanceSchedule() {
-        try {
-            if (!user) throw new Error('User not authenticated');
+        const scheduleToAdd = {
+            ...newSchedule,
+            car_id: car.id
+        };
 
-            const { error } = await supabaseClient
-                .from('maintenance_schedule')
-                .insert([{
-                    car_id: car.id,
-                    user_id: user.id,
-                    ...newSchedule
-                }]);
+        const { data, error } = await supabaseClient
+            .from('maintenance_schedule')
+            .insert(scheduleToAdd)
+            .select();
 
-            if (error) throw error;
+        if (data) {
+            setSchedules([...schedules, data[0]]);
             setShowAddSchedule(false);
-            fetchMaintenanceData();
-        } catch (error) {
-            console.error('Error adding maintenance schedule:', error);
+            setNewSchedule({
+                service_type: SERVICE_TYPES[0],
+                due_date: DateTime.now().plus({ months: 1 }).toISODate() || '',
+                mileage_due: car.mileage ? car.mileage + 5000 : 0,
+                description: '',
+                status: 'Pending'
+            });
         }
     }
 
     async function addServiceHistory() {
-        try {
-            if (!user) throw new Error('User not authenticated');
+        const serviceToAdd = {
+            ...newService,
+            car_id: car.id
+        };
 
-            const { error } = await supabaseClient
-                .from('service_history')
-                .insert([{
-                    car_id: car.id,
-                    user_id: user.id,
-                    ...newService
-                }]);
+        const { data, error } = await supabaseClient
+            .from('service_history')
+            .insert(serviceToAdd)
+            .select();
 
-            if (error) throw error;
+        if (data) {
+            setHistory([...history, data[0]]);
             setShowAddService(false);
-            fetchMaintenanceData();
-        } catch (error) {
-            console.error('Error adding service history:', error);
-        }
-    }
+            setNewService({
+                service_type: SERVICE_TYPES[0],
+                service_date: DateTime.now().toISODate() || '',
+                mileage: car.mileage || 0,
+                cost: 0,
+                description: ''
+            });
 
-    async function completeMaintenanceItem(schedule: MaintenanceSchedule) {
-        try {
-            if (!user) throw new Error('User not authenticated');
+            // Update related maintenance schedule if exists
+            const relatedSchedule = schedules.find(
+                schedule => 
+                    schedule.service_type === serviceToAdd.service_type && 
+                    schedule.status !== 'Completed'
+            );
 
-            await Promise.all([
-                // Mark the schedule as completed
-                supabaseClient
+            if (relatedSchedule) {
+                await supabaseClient
                     .from('maintenance_schedule')
-                    .update({ is_completed: true })
-                    .eq('id', schedule.id),
-                
-                // Add to service history
-                supabaseClient
-                    .from('service_history')
-                    .insert([{
-                        car_id: car.id,
-                        user_id: user.id,
-                        service_type: schedule.service_type,
-                        service_date: DateTime.now().toISODate(),
-                        mileage: car.mileage,
-                        description: schedule.description
-                    }])
-            ]);
-
-            fetchMaintenanceData();
-        } catch (error) {
-            console.error('Error completing maintenance item:', error);
+                    .update({ status: 'Completed' })
+                    .eq('id', relatedSchedule.id);
+            }
         }
     }
 
@@ -172,7 +162,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
 
                 <div className="bg-white shadow overflow-hidden sm:rounded-md">
                     <ul className="divide-y divide-gray-200">
-                        {schedules.filter(s => !s.is_completed).map((schedule) => (
+                        {schedules.filter(s => s.status !== 'Completed').map((schedule) => (
                             <li key={schedule.id}>
                                 <div className="px-4 py-4 flex items-center justify-between sm:px-6">
                                     <div className="flex items-center">
@@ -193,13 +183,6 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                                             </div>
                                         </div>
                                     </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => completeMaintenanceItem(schedule)}
-                                        className="ml-4 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
-                                    >
-                                        Complete
-                                    </button>
                                 </div>
                             </li>
                         ))}
