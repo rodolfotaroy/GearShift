@@ -12,6 +12,7 @@ import Analytics from './pages/Analytics';
 import Calendar from './pages/Calendar';
 import Documents from './pages/Documents';
 import Settings from './pages/Settings';
+import Maintenance from './pages/Maintenance';
 
 const queryClient = new QueryClient();
 
@@ -69,6 +70,13 @@ function App() {
                 <PrivateRoute>
                   <Layout>
                     <Settings />
+                  </Layout>
+                </PrivateRoute>
+              } />
+              <Route path="/maintenance" element={
+                <PrivateRoute>
+                  <Layout>
+                    <Maintenance />
                   </Layout>
                 </PrivateRoute>
               } />

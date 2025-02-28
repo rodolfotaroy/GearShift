@@ -26,28 +26,25 @@ export interface Expense {
 }
 
 export interface MaintenanceSchedule {
-    id: number;
+    id?: number;
     car_id: number;
-    service_type: ServiceType;
+    service_type: typeof SERVICE_TYPES[number];
     due_date: string;
-    mileage_due?: number;
-    description?: string;
-    is_completed: boolean;
-    created_at: string;
-    user_id: string;
+    mileage_due: number;
+    description: string;
+    status?: 'Pending' | 'Completed' | 'Overdue';
+    created_at?: string;
 }
 
 export interface ServiceHistory {
-    id: number;
+    id?: number;
     car_id: number;
-    service_type: ServiceType;
+    service_type: typeof SERVICE_TYPES[number];
     service_date: string;
-    mileage?: number;
-    cost?: number;
-    description?: string;
-    document_urls?: string[];
-    created_at: string;
-    user_id: string;
+    mileage: number;
+    cost: number;
+    description: string;
+    created_at?: string;
 }
 
 export interface Document {
@@ -62,15 +59,20 @@ export interface Document {
     user_id: string;
 }
 
-export interface MaintenanceEvent {
-    id: number;
-    car_id: number;
+export interface CalendarEvent {
+    id?: string;
+    car_id: string;
     title: string;
     description: string;
-    event_type: EventType;
+    event_type: typeof EVENT_TYPES[number];
     start_date: string;
-    status: EventStatus;
-    user_id: string;
+    end_date?: string;
+    status: 'Scheduled' | 'Completed' | 'Cancelled';
+    recurrence?: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+    recurrence_interval?: number;
+    recurrence_end_date?: string;
+    reminder_days?: string[];
+    created_at?: string;
 }
 
 export type EventType = "maintenance" | "service" | "inspection" | "other";
@@ -79,8 +81,28 @@ export type EventStatus = "scheduled" | "completed" | "cancelled" | "in_progress
 export const EVENT_TYPES: EventType[] = ["maintenance", "service", "inspection", "other"];
 export const EVENT_STATUS: EventStatus[] = ["scheduled", "completed", "cancelled", "in_progress"];
 
-export type ServiceType = "Oil Change" | "Tire Rotation" | "Brake Service" | "Air Filter" | "Battery" | "Inspection" | "Other";
-export const SERVICE_TYPES: ServiceType[] = ["Oil Change", "Tire Rotation", "Brake Service", "Air Filter", "Battery", "Inspection", "Other"];
+export const SERVICE_TYPES = [
+  'Oil Change', 
+  'Tire Rotation', 
+  'Brake Inspection', 
+  'Battery Check', 
+  'Air Filter Replacement', 
+  'Transmission Service', 
+  'Coolant Flush', 
+  'Other'
+] as const;
+
+export const EVENT_TYPES_NEW = [
+  'Maintenance', 
+  'Fuel', 
+  'Insurance', 
+  'Registration', 
+  'Inspection', 
+  'Other'
+] as const;
+
+export type ServiceType = typeof SERVICE_TYPES[number];
+export type EventTypeNew = typeof EVENT_TYPES_NEW[number];
 
 export type DocumentType = "Receipt" | "Warranty" | "Insurance" | "Registration" | "Inspection" | "Service Record" | "Other";
 export const DOCUMENT_TYPES: DocumentType[] = ["Receipt", "Warranty", "Insurance", "Registration", "Inspection", "Service Record", "Other"];

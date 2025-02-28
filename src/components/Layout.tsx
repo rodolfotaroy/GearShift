@@ -10,7 +10,8 @@ import {
   UserIcon,
   XMarkIcon,
   Bars3Icon,
-  CreditCardIcon
+  CreditCardIcon,
+  WrenchScrewdriverIcon
 } from '@heroicons/react/24/outline';
 import type { ComponentType } from 'react';
 
@@ -27,6 +28,7 @@ interface NavigationItem {
 const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/', icon: HomeIcon },
   { name: 'Cars', href: '/cars', icon: UserIcon },
+  { name: 'Maintenance', href: '/maintenance', icon: WrenchScrewdriverIcon },
   { name: 'Calendar', href: '/calendar', icon: CalendarIcon },
   { name: 'Expenses', href: '/expenses', icon: CreditCardIcon },
   { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
