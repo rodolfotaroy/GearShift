@@ -1,6 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { MaintenanceCost } from '../types';
 import { formatCurrency } from '../utils/formatting';
+import { useSupabase } from '../contexts/SupabaseContext';
+
+interface Car {
+  id: string;
+  make: string;
+  model: string;
+}
 
 interface MaintenanceCostTrackerProps {
   costs: MaintenanceCost[];
@@ -8,10 +15,29 @@ interface MaintenanceCostTrackerProps {
 }
 
 const MaintenanceCostTracker: React.FC<MaintenanceCostTrackerProps> = ({ costs, onAddCost }) => {
+  const { supabaseClient } = useSupabase();
+  const [cars, setCars] = useState<Car[]>([]);
   const [newCost, setNewCost] = useState<Partial<MaintenanceCost>>({
     date: new Date(),
     category: 'Routine'
   });
+
+  useEffect(() => {
+    fetchCars();
+  }, []);
+
+  const fetchCars = async () => {
+    try {
+      const { data, error } = await supabaseClient
+        .from('cars')
+        .select('id, make, model');
+
+      if (error) throw error;
+      if (data) setCars(data);
+    } catch (error) {
+      console.error('Error fetching cars:', error);
+    }
+  };
 
   const costSummary = useMemo(() => {
     return {
@@ -58,6 +84,26 @@ const MaintenanceCostTracker: React.FC<MaintenanceCostTrackerProps> = ({ costs, 
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">
+              Vehicle
+            </label>
+            <select
+              value={newCost.vehicleId || ''}
+              onChange={(e) => setNewCost({...newCost, vehicleId: e.target.value})}
+              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 
+                         shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 
+                         dark:bg-dark-background-tertiary dark:text-dark-text-primary"
+              required
+            >
+              <option value="">Select Vehicle</option>
+              {cars.map(car => (
+                <option key={car.id} value={car.id}>
+                  {car.make} {car.model}
+                </option>
+              ))}
+            </select>
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">
               Amount

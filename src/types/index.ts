@@ -76,9 +76,9 @@ export interface CalendarEvent {
 export interface MaintenanceCost {
   id?: string;
   vehicleId: string;
+  amount: number;
   date: Date;
   category: 'Repair' | 'Routine' | 'Parts' | 'Labor' | 'Other';
-  amount: number;
   description?: string;
   serviceProvider?: string;
   receiptUrl?: string;
