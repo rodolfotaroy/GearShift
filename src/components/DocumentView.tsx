@@ -9,7 +9,7 @@ interface DocumentViewProps {
 }
 
 export default function DocumentView({ car }: DocumentViewProps) {
-    const { supabaseClient, session } = useSupabase();
+    const { supabaseClient, supabaseAuth } = useSupabase();
     const [documents, setDocuments] = useState<Document[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAddDocument, setShowAddDocument] = useState(false);
@@ -47,7 +47,8 @@ export default function DocumentView({ car }: DocumentViewProps) {
         if (!selectedFile) return;
 
         try {
-            if (!session) throw new Error('User not authenticated');
+            const { data: { user } } = await supabaseAuth.getUser();
+            if (!user) throw new Error('User not authenticated');
 
             // Upload file to storage
             const fileExt = selectedFile.name.split('.').pop();
@@ -68,7 +69,7 @@ export default function DocumentView({ car }: DocumentViewProps) {
                 .from('documents')
                 .insert([{
                     car_id: car.id,
-                    user_id: session.user.id,
+                    user_id: user.id,
                     file_url: publicUrl,
                     ...newDocument
                 }]);

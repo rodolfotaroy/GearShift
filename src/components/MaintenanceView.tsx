@@ -9,7 +9,7 @@ interface MaintenanceViewProps {
 }
 
 export default function MaintenanceView({ car }: MaintenanceViewProps) {
-    const supabase = useSupabase();
+    const { supabaseClient, supabaseAuth, supabaseStorage } = useSupabase();
     const [schedules, setSchedules] = useState<MaintenanceSchedule[]>([]);
     const [history, setHistory] = useState<ServiceHistory[]>([]);
     const [loading, setLoading] = useState(true);
@@ -32,7 +32,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
 
     useEffect(() => {
         // Check authentication status
-        supabase.auth.getUser().then(({ data: { user } }) => {
+        supabaseAuth.getUser().then(({ data: { user } }) => {
             setUser(user);
             if (user) {
                 fetchMaintenanceData();
@@ -44,12 +44,12 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
         setLoading(true);
         try {
             const [scheduleData, historyData] = await Promise.all([
-                supabase
+                supabaseClient
                     .from('maintenance_schedule')
                     .select('*')
                     .eq('car_id', car.id)
                     .order('due_date', { ascending: true }),
-                supabase
+                supabaseClient
                     .from('service_history')
                     .select('*')
                     .eq('car_id', car.id)
@@ -72,7 +72,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
         try {
             if (!user) throw new Error('User not authenticated');
 
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('maintenance_schedule')
                 .insert([{
                     car_id: car.id,
@@ -92,7 +92,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
         try {
             if (!user) throw new Error('User not authenticated');
 
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('service_history')
                 .insert([{
                     car_id: car.id,
@@ -114,13 +114,13 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
 
             await Promise.all([
                 // Mark the schedule as completed
-                supabase
+                supabaseClient
                     .from('maintenance_schedule')
                     .update({ is_completed: true })
                     .eq('id', schedule.id),
                 
                 // Add to service history
-                supabase
+                supabaseClient
                     .from('service_history')
                     .insert([{
                         car_id: car.id,
