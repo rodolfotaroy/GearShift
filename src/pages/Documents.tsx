@@ -142,7 +142,7 @@ export default function Documents() {
 
           <label 
             htmlFor="file-upload" 
-            className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 cursor-pointer"
+            className="inline-block"
           >
             <Button
               onClick={() => {
@@ -151,7 +151,7 @@ export default function Documents() {
                 }
               }}
               variant="primary"
-              className="w-full"
+              className="w-auto"
               disabled={!selectedFile}
             >
               Upload
