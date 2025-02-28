@@ -12,7 +12,6 @@ import {
   Title
 } from 'chart.js';
 import { Doughnut, Line } from 'react-chartjs-2';
-import { DateTime } from 'luxon';
 import MaintenanceCostTracker from '../components/MaintenanceCostTracker';
 import { MaintenanceCost } from '../types';
 
