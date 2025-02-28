@@ -230,28 +230,54 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Expenses by Category Chart */}
         <div className="bg-white dark:bg-dark-background-secondary rounded-xl shadow-md dark:shadow-dark-md p-6 
-                        md:col-span-1 lg:col-span-2 min-h-[400px]">
+                        md:col-span-1 lg:col-span-2 h-[400px] flex flex-col">
           <h3 className="text-lg font-semibold text-neutral-800 dark:text-dark-text-primary mb-4">
             Expenses by Category
           </h3>
-          <div className="h-full">
+          <div className="flex-grow overflow-hidden">
             <Doughnut 
               data={doughnutData} 
-              options={chartOptions}
+              options={{
+                ...chartOptions,
+                responsive: true,
+                maintainAspectRatio: false,
+              }}
             />
           </div>
         </div>
 
         {/* Maintenance History Chart */}
         <div className="bg-white dark:bg-dark-background-secondary rounded-xl shadow-md dark:shadow-dark-md p-6 
-                        md:col-span-1 lg:col-span-1 min-h-[400px]">
+                        md:col-span-1 lg:col-span-1 h-[400px] flex flex-col">
           <h3 className="text-lg font-semibold text-neutral-800 dark:text-dark-text-primary mb-4">
             Maintenance History
           </h3>
-          <div className="h-full">
+          <div className="flex-grow overflow-hidden">
             <Line 
               data={lineData} 
-              options={chartOptions}
+              options={{
+                ...chartOptions,
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  x: {
+                    ticks: {
+                      color: '#94a3b8' // slate-500 for dark mode
+                    },
+                    grid: {
+                      color: '#334155' // slate-700 for dark mode
+                    }
+                  },
+                  y: {
+                    ticks: {
+                      color: '#94a3b8' // slate-500 for dark mode
+                    },
+                    grid: {
+                      color: '#334155' // slate-700 for dark mode
+                    }
+                  }
+                }
+              }}
             />
           </div>
         </div>
