@@ -36,7 +36,7 @@ interface CarProfileViewProps {
 }
 
 export default function CarProfileView({ car, onClose, onCarUpdated }: CarProfileViewProps) {
-  const supabase = useSupabase();
+  const { supabaseClient, supabaseStorage } = useSupabase();
   const [activeTab, setActiveTab] = useState<'details' | 'maintenance' | 'documents'>('details');
   const [editMode, setEditMode] = useState(false);
   const [editedCar, setEditedCar] = useState(car);
@@ -50,7 +50,7 @@ export default function CarProfileView({ car, onClose, onCarUpdated }: CarProfil
   }, [car.id]);
 
   async function fetchCarExpenses() {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('expenses')
       .select('*')
       .eq('car_id', car.id)
@@ -84,20 +84,20 @@ export default function CarProfileView({ car, onClose, onCarUpdated }: CarProfil
         const fileExt = selectedImage.name.split('.').pop();
         const fileName = `${car.id}-${Date.now()}.${fileExt}`;
         
-        const { error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabaseStorage
           .from('car-images')
           .upload(fileName, selectedImage);
 
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
+        const { data: { publicUrl } } = supabaseStorage
           .from('car-images')
           .getPublicUrl(fileName);
 
         imageUrl = publicUrl;
       }
 
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from('cars')
         .update({
           ...editedCar,

@@ -9,7 +9,7 @@ interface DocumentViewProps {
 }
 
 export default function DocumentView({ car }: DocumentViewProps) {
-    const supabase = useSupabase();
+    const { supabaseClient, session } = useSupabase();
     const [documents, setDocuments] = useState<Document[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAddDocument, setShowAddDocument] = useState(false);
@@ -28,7 +28,7 @@ export default function DocumentView({ car }: DocumentViewProps) {
     async function fetchDocuments() {
         setLoading(true);
         try {
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('documents')
                 .select('*')
                 .eq('car_id', car.id)
@@ -47,29 +47,28 @@ export default function DocumentView({ car }: DocumentViewProps) {
         if (!selectedFile) return;
 
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error('User not authenticated');
+            if (!session) throw new Error('User not authenticated');
 
             // Upload file to storage
             const fileExt = selectedFile.name.split('.').pop();
             const fileName = `${car.id}-${Date.now()}.${fileExt}`;
-            const { error: uploadError } = await supabase.storage
+            const { error: uploadError } = await supabaseClient.storage
                 .from('car-documents')
                 .upload(fileName, selectedFile);
 
             if (uploadError) throw uploadError;
 
             // Get public URL
-            const { data: { publicUrl } } = supabase.storage
+            const { data: { publicUrl } } = supabaseClient.storage
                 .from('car-documents')
                 .getPublicUrl(fileName);
 
             // Save document record
-            const { error: dbError } = await supabase
+            const { error: dbError } = await supabaseClient
                 .from('documents')
                 .insert([{
                     car_id: car.id,
-                    user_id: user.id,
+                    user_id: session.user.id,
                     file_url: publicUrl,
                     ...newDocument
                 }]);
@@ -95,13 +94,13 @@ export default function DocumentView({ car }: DocumentViewProps) {
             // Delete from storage
             const fileName = document.file_url.split('/').pop();
             if (fileName) {
-                await supabase.storage
+                await supabaseClient.storage
                     .from('car-documents')
                     .remove([fileName]);
             }
 
             // Delete from database
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('documents')
                 .delete()
                 .eq('id', document.id);
