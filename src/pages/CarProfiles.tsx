@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { PencilIcon, TrashIcon, PhotoIcon } from '@heroicons/react/24/outline';
 import CarProfileView from '../components/CarProfileView';
-import Button from '../components/Button';
+import { Button } from '../components/Button';
 
 interface Car {
   id: number;
@@ -286,12 +286,12 @@ export default function CarProfiles() {
     <div className="w-full max-w-[98%] sm:max-w-[95%] mx-auto px-2 sm:px-4">
       <div className="flex justify-between items-center mb-4 sm:mb-8">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Car Profiles</h1>
-        <Button
+        <Button.Button
           onClick={() => setIsAddingCar(true)}
           className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-full hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg text-sm sm:text-base whitespace-nowrap"
         >
           Add Car
-        </Button>
+        </Button.Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
@@ -338,18 +338,18 @@ export default function CarProfiles() {
                 </div>
                 
                 <div className="flex space-x-1 sm:space-x-2 ml-2" onClick={(e) => e.stopPropagation()}>
-                  <Button
+                  <Button.Button
                     onClick={() => startEditCar(car)}
                     className="p-1 sm:p-1.5 rounded-full hover:bg-gray-100 transition-colors duration-200"
                   >
                     <PencilIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-600 hover:text-indigo-600" />
-                  </Button>
-                  <Button
+                  </Button.Button>
+                  <Button.Button
                     onClick={() => handleDeleteCar(car.id)}
                     className="p-1 sm:p-1.5 rounded-full hover:bg-gray-100 transition-colors duration-200"
                   >
                     <TrashIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-600 hover:text-red-600" />
-                  </Button>
+                  </Button.Button>
                 </div>
               </div>
             </div>
@@ -470,7 +470,7 @@ export default function CarProfiles() {
                 </div>
               )}
               <div className="flex justify-end space-x-3">
-                <Button
+                <Button.Button
                   type="button"
                   onClick={() => {
                     setIsAddingCar(false);
@@ -491,13 +491,13 @@ export default function CarProfiles() {
                   className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
                   Cancel
-                </Button>
-                <Button
+                </Button.Button>
+                <Button.Button
                   type="submit"
                   className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
                 >
                   {isAddingCar ? 'Add Car' : 'Save Changes'}
-                </Button>
+                </Button.Button>
               </div>
             </form>
           </div>
