@@ -23,21 +23,62 @@ const MaintenanceCostTracker: React.FC<MaintenanceCostTrackerProps> = ({ costs, 
   });
 
   useEffect(() => {
+    const checkSupabaseConnection = async () => {
+      try {
+        console.log('Supabase URL:', supabaseClient.supabaseUrl);
+        console.log('Supabase Client:', supabaseClient);
+        
+        // Test connection with a simple query
+        const { data, error } = await supabaseClient
+          .from('cars')
+          .select('id', { count: 'exact' });
+
+        console.log('Connection Test Results:', {
+          data,
+          error,
+          supabaseUrl: supabaseClient.supabaseUrl
+        });
+      } catch (err) {
+        console.error('Supabase Connection Check Failed:', err);
+      }
+    };
+
+    const fetchCars = async () => {
+      try {
+        console.log('Attempting to fetch cars from Supabase');
+        const { data, error, status } = await supabaseClient
+          .from('cars')
+          .select('id, make, model');
+
+        console.log('Supabase fetch response:', {
+          data, 
+          error, 
+          status
+        });
+
+        if (error) {
+          console.error('Detailed Supabase Error:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          });
+          throw error;
+        }
+        
+        if (data) {
+          console.log('Cars fetched:', data);
+          setCars(data);
+        } else {
+          console.warn('No cars data returned');
+        }
+      } catch (error) {
+        console.error('Comprehensive Error fetching cars:', error);
+      }
+    };
+
+    checkSupabaseConnection();
     fetchCars();
-  }, []);
-
-  const fetchCars = async () => {
-    try {
-      const { data, error } = await supabaseClient
-        .from('cars')
-        .select('id, make, model');
-
-      if (error) throw error;
-      if (data) setCars(data);
-    } catch (error) {
-      console.error('Error fetching cars:', error);
-    }
-  };
+  }, [supabaseClient]);
 
   const costSummary = useMemo(() => {
     return {
