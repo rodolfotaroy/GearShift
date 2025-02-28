@@ -37,7 +37,7 @@ interface CalendarEvent {
 }
 
 export default function Calendar() {
-  const { supabase } = useSupabase();
+  const { supabaseClient } = useSupabase();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [showAddEvent, setShowAddEvent] = useState(false);
@@ -55,7 +55,7 @@ export default function Calendar() {
   async function fetchData() {
     try {
       // Fetch cars
-      const { data: carsData, error: carsError } = await supabase
+      const { data: carsData, error: carsError } = await supabaseClient
         .from('cars')
         .select('*');
 
@@ -66,7 +66,7 @@ export default function Calendar() {
       const startOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
       const endOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0);
 
-      const { data: eventsData, error: eventsError } = await supabase
+      const { data: eventsData, error: eventsError } = await supabaseClient
         .from('maintenance_events')
         .select('*')
         .gte('start_date', startOfMonth.toISOString())
@@ -81,7 +81,7 @@ export default function Calendar() {
 
   async function handleAddEvent(eventData: Partial<CalendarEvent>) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('maintenance_events')
         .insert([eventData])
         .select()
@@ -99,7 +99,7 @@ export default function Calendar() {
 
   async function handleDeleteEvent(eventId: number) {
     try {
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from('maintenance_events')
         .delete()
         .eq('id', eventId);

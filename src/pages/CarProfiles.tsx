@@ -27,7 +27,7 @@ const CURRENT_YEAR = new Date().getFullYear();
 const PLATE_NUMBER_REGEX = /^[A-Z0-9]{1,8}$/;
 
 export default function CarProfiles() {
-  const supabase = useSupabase();
+  const { supabaseClient, supabaseStorage } = useSupabase();
   const [cars, setCars] = useState<Car[]>([]);
   const [isAddingCar, setIsAddingCar] = useState(false);
   const [isEditingCar, setIsEditingCar] = useState(false);
@@ -51,7 +51,7 @@ export default function CarProfiles() {
   }, []);
 
   async function fetchCars() {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('cars')
       .select('*')
       .order('created_at', { ascending: false });
@@ -100,14 +100,14 @@ export default function CarProfiles() {
     if (!file) return;
 
     try {
-      const { data: uploadResult, error: uploadError } = await supabase.storage
+      const { data: uploadResult, error: uploadError } = await supabaseStorage
         .from('car-documents')
         .upload(`${file.name}`, file);
 
       if (uploadError) throw uploadError;
       
       if (uploadResult) {
-        const { data: publicUrl } = await supabase.storage
+        const { data: publicUrl } = await supabaseStorage
           .from('car-documents')
           .getPublicUrl(uploadResult.path);
           
@@ -134,7 +134,7 @@ export default function CarProfiles() {
     }
 
     try {
-      const { data: newCarData, error: carError } = await supabase
+      const { data: newCarData, error: carError } = await supabaseClient
         .from('cars')
         .insert([{
           make: newCar.make.trim(),
@@ -201,7 +201,7 @@ export default function CarProfiles() {
       }
 
       // Update the car with all fields including the new image URL if present
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from('cars')
         .update({
           make: newCar.make.trim(),
@@ -244,7 +244,7 @@ export default function CarProfiles() {
       return;
     }
 
-    const { error: expensesError } = await supabase
+    const { error: expensesError } = await supabaseClient
       .from('expenses')
       .delete()
       .eq('car_id', carId);
@@ -254,7 +254,7 @@ export default function CarProfiles() {
       return;
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseClient
       .from('cars')
       .delete()
       .eq('id', carId);

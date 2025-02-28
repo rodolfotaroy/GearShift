@@ -126,8 +126,8 @@ export default function Analytics() {
     setDailyExpenses(
       Object.entries(dailyData).map(([day, value]) => ({
         day,
-        value,
-      }))
+        value: value as number,
+      } as DailyExpense))
     );
 
     // Process category trends
