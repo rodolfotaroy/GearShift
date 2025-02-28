@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { MaintenanceCost } from '../types';
 import { formatCurrency } from '../utils/formatting';
-import { supabase } from '../contexts/SupabaseContext';
+import { createClient } from '@supabase/supabase-js';
 
 interface Car {
   id: string;
@@ -20,24 +20,51 @@ const MaintenanceCostTracker: React.FC<MaintenanceCostTrackerProps> = ({ costs, 
     date: new Date(),
     category: 'Routine'
   });
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCars = async () => {
       try {
+        // Explicitly create Supabase client with environment variables
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+        if (!supabaseUrl || !supabaseAnonKey) {
+          throw new Error('Supabase URL or Anon Key is missing');
+        }
+
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+        console.log('Supabase Client Created:', {
+          url: supabaseUrl,
+          anonKeyPresent: !!supabaseAnonKey
+        });
+
         const { data, error } = await supabase
           .from('cars')
           .select('id, make, model');
 
+        console.log('Supabase Query Result:', {
+          data,
+          error
+        });
+
         if (error) {
-          console.error('Error fetching cars:', error);
+          setError(`Failed to fetch cars: ${error.message}`);
+          console.error('Supabase Error:', error);
           return;
         }
 
         if (data) {
           setCars(data);
+          console.log('Cars fetched successfully:', data);
+        } else {
+          setError('No cars data returned');
         }
-      } catch (error) {
-        console.error('Unexpected error fetching cars:', error);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        setError(`Unexpected error: ${errorMessage}`);
+        console.error('Comprehensive Fetch Error:', err);
       }
     };
 
@@ -72,6 +99,13 @@ const MaintenanceCostTracker: React.FC<MaintenanceCostTrackerProps> = ({ costs, 
           Total: {formatCurrency(costSummary.total)}
         </div>
       </div>
+
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{error}</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-gray-50 dark:bg-dark-background-tertiary rounded-lg p-4">
