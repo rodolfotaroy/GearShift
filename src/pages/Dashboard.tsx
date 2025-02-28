@@ -13,8 +13,6 @@ import {
 } from 'chart.js';
 import { Doughnut, Line, Bar } from 'react-chartjs-2';
 import { DateTime } from 'luxon';
-import MaintenanceCostTracker from '../components/MaintenanceCostTracker';
-import { MaintenanceCost } from '../types';
 import { formatCurrency } from '../utils/formatting';
 
 ChartJS.register(
@@ -51,9 +49,9 @@ export default function Dashboard() {
   const [carExpenses, setCarExpenses] = useState<CarExpense[]>([]);
   const [carCount, setCarCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
-  const [maintenanceCosts, setMaintenanceCosts] = useState<MaintenanceCost[]>([]);
+  const [maintenanceCosts, setMaintenanceCosts] = useState<any[]>([]);
 
-  const handleAddMaintenanceCost = (cost: MaintenanceCost) => {
+  const handleAddMaintenanceCost = (cost: any) => {
     setMaintenanceCosts([...maintenanceCosts, { ...cost, id: Date.now().toString() }]);
   };
 
