@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { MaintenanceCost } from '../types';
 import { formatCurrency } from '../utils/formatting';
 import { createClient } from '@supabase/supabase-js';
+import Button from './Button';
 
 interface Car {
   id: string;
@@ -173,15 +174,9 @@ const MaintenanceCostTracker: React.FC<MaintenanceCostTrackerProps> = ({ costs, 
               ))}
             </select>
           </div>
-          <button 
-            type="submit" 
-            className="w-full bg-blue-500 dark:bg-blue-600 text-white 
-                       py-2 rounded-md hover:bg-blue-600 dark:hover:bg-blue-700 
-                       transition-colors duration-300 
-                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-          >
+          <Button type="submit">
             Add Maintenance Cost
-          </button>
+          </Button>
         </form>
       </div>
     </div>
