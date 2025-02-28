@@ -30,7 +30,7 @@ export const Button: React.FC<ButtonProps> = ({
         ${variantStyles[variant]}
         py-2 
         px-4 
-        rounded-md 
+        rounded-full 
         transition-colors 
         duration-300 
         focus:outline-none 
