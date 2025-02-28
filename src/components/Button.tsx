@@ -1,4 +1,3 @@
-import Button from '../components/Button';
 import React from 'react';
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'success' | 'default' | 'gradient';
@@ -48,5 +47,3 @@ export const Button: React.FC<ButtonProps> = ({
     </button>
   );
 };
-
-export default Button;
