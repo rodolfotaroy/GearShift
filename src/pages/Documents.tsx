@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
-import { DocumentPlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { TrashIcon } from '@heroicons/react/24/outline';
 
 interface Document {
   id: number;
@@ -140,8 +140,14 @@ export default function Documents() {
               htmlFor="file-upload" 
               className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 cursor-pointer"
             >
-              <DocumentPlusIcon className="h-5 w-5 mr-2" />
-              Upload Document
+              <Button
+                onClick={handleFileUpload}
+                variant="primary"
+                className="w-full"
+                disabled={!false}
+              >
+                Upload
+              </Button>
               <input 
                 type="file" 
                 id="file-upload" 
