@@ -21,6 +21,7 @@ export default function Documents() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [selectedCarId, setSelectedCarId] = useState<number | 'all'>('all');
   const [cars, setCars] = useState<{ id: number; name: string }[]>([]);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
     fetchCars();
@@ -66,7 +67,10 @@ export default function Documents() {
   async function handleFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
+    setSelectedFile(file);
+  }
 
+  async function handleUpload(file: File) {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
@@ -142,10 +146,14 @@ export default function Documents() {
               className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 cursor-pointer"
             >
               <Button
-                onClick={handleFileUpload}
+                onClick={() => {
+                  if (selectedFile) {
+                    handleUpload(selectedFile);
+                  }
+                }}
                 variant="primary"
                 className="w-full"
-                disabled={!false}
+                disabled={!selectedFile}
               >
                 Upload
               </Button>
