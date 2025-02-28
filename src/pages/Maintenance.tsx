@@ -5,8 +5,31 @@ import {
   ClipboardDocumentListIcon,
   PlusIcon 
 } from '@heroicons/react/24/outline';
+import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
 import { DateTime } from 'luxon';
 import Button from '../components/Button';
+
+const SERVICE_TYPES = ['Oil Change', 'Tire Rotation', 'Brake Service', 'Engine Tune-up', 'Other'] as const;
+
+interface MaintenanceSchedule {
+  id?: number;
+  car_id: number;
+  service_type: typeof SERVICE_TYPES[number];
+  due_date: string;
+  mileage_due: number;
+  description?: string;
+  status: string;
+}
+
+interface ServiceHistory {
+  id?: number;
+  car_id: number;
+  service_type: typeof SERVICE_TYPES[number];
+  service_date: string;
+  mileage: number;
+  cost: number;
+  description?: string;
+}
 
 export default function Maintenance() {
   const { supabaseClient, supabaseAuth } = useSupabase();
@@ -190,6 +213,8 @@ export default function Maintenance() {
               </h2>
               <Button 
                 onClick={() => setShowAddScheduleModal(true)}
+                variant="primary"
+                className="p-2 rounded-full"
               >
                 <PlusIcon className="h-5 w-5" />
               </Button>
@@ -355,11 +380,13 @@ export default function Maintenance() {
                   <Button 
                     type="button"
                     onClick={() => setShowAddScheduleModal(false)}
+                    variant="default"
                   >
                     Cancel
                   </Button>
                   <Button 
                     type="submit"
+                    variant="primary"
                   >
                     Add Schedule
                   </Button>
@@ -460,11 +487,13 @@ export default function Maintenance() {
                   <Button 
                     type="button"
                     onClick={() => setShowAddServiceModal(false)}
+                    variant="default"
                   >
                     Cancel
                   </Button>
                   <Button 
                     type="submit"
+                    variant="primary"
                   >
                     Add Service
                   </Button>
