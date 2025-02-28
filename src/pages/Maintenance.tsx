@@ -20,7 +20,6 @@ export default function Maintenance() {
   const [selectedCar, setSelectedCar] = useState<any>(null);
   const [schedules, setSchedules] = useState<MaintenanceSchedule[]>([]);
   const [history, setHistory] = useState<ServiceHistory[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showAddScheduleModal, setShowAddScheduleModal] = useState(false);
   const [showAddServiceModal, setShowAddServiceModal] = useState(false);
   const [newSchedule, setNewSchedule] = useState<MaintenanceSchedule>({
@@ -56,7 +55,7 @@ export default function Maintenance() {
   }, [selectedCar]);
 
   async function fetchUserCars() {
-    const { data, error } = await supabaseClient
+    const { data } = await supabaseClient
       .from('cars')
       .select('*')
       .eq('user_id', user.id);
@@ -70,7 +69,6 @@ export default function Maintenance() {
   }
 
   async function fetchMaintenanceData() {
-    setLoading(true);
     try {
       const [scheduleData, historyData] = await Promise.all([
         supabaseClient
@@ -89,8 +87,6 @@ export default function Maintenance() {
       if (historyData.data) setHistory(historyData.data);
     } catch (error) {
       console.error('Error fetching maintenance data:', error);
-    } finally {
-      setLoading(false);
     }
   }
 

@@ -15,15 +15,18 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
     const [loading, setLoading] = useState(true);
     const [showAddSchedule, setShowAddSchedule] = useState(false);
     const [showAddService, setShowAddService] = useState(false);
-    const [newSchedule, setNewSchedule] = useState({
+    const [newSchedule, setNewSchedule] = useState<MaintenanceSchedule>({
+        car_id: car.id,
         service_type: SERVICE_TYPES[0],
-        due_date: DateTime.now().plus({ months: 1 }).toISODate(),
+        due_date: DateTime.now().plus({ months: 1 }).toISODate() || '',
         mileage_due: car.mileage ? car.mileage + 5000 : 0,
-        description: ''
+        description: '',
+        status: 'Pending'
     });
-    const [newService, setNewService] = useState({
+    const [newService, setNewService] = useState<ServiceHistory>({
+        car_id: car.id,
         service_type: SERVICE_TYPES[0],
-        service_date: DateTime.now().toISODate(),
+        service_date: DateTime.now().toISODate() || '',
         mileage: car.mileage || 0,
         cost: 0,
         description: ''
@@ -56,11 +59,8 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                     .order('service_date', { ascending: false })
             ]);
 
-            if (scheduleData.error) throw scheduleData.error;
-            if (historyData.error) throw historyData.error;
-
-            setSchedules(scheduleData.data || []);
-            setHistory(historyData.data || []);
+            if (scheduleData.data) setSchedules(scheduleData.data);
+            if (historyData.data) setHistory(historyData.data);
         } catch (error) {
             console.error('Error fetching maintenance data:', error);
         } finally {
