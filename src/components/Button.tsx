@@ -17,7 +17,7 @@ const variantStyles: Record<ButtonVariant, string> = {
   gradient: 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 shadow-lg'
 };
 
-export const Button: React.FC<ButtonProps> = ({
+const Button: React.FC<ButtonProps> = ({
   children,
   variant = 'primary',
   fullWidth = false,
@@ -47,3 +47,5 @@ export const Button: React.FC<ButtonProps> = ({
     </button>
   );
 };
+
+export { Button };
