@@ -4,6 +4,7 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class', // Enable class-based dark mode
   theme: {
     extend: {
       colors: {
@@ -55,6 +56,17 @@ export default {
           700: '#b91c1c',
           800: '#991b1b',
           900: '#7f1d1d'
+        },
+        // Dark mode specific colors
+        dark: {
+          background: '#0f172a', // Slate-900
+          surface: '#1e293b', // Slate-800
+          text: {
+            primary: '#f8fafc', // Slate-50
+            secondary: '#e2e8f0', // Slate-200
+            muted: '#94a3b8' // Slate-500
+          },
+          border: '#334155' // Slate-700
         }
       },
       boxShadow: {
@@ -62,7 +74,9 @@ export default {
         DEFAULT: '0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px 0 rgba(0, 0, 0, 0.04)',
         md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
         lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-        xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+        xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+        // Dark mode shadow
+        'dark-lg': '0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2)'
       },
       borderRadius: {
         // More refined corner radiuses
