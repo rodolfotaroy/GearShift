@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { TrashIcon } from '@heroicons/react/24/outline';
-import Button from '../components/Button';
+import { Button } from '../components/Button';
 
 interface Document {
   id: number;

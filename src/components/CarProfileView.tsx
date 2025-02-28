@@ -1,4 +1,4 @@
-import Button from '../components/Button';
+import { Button } from '../components/Button';
 import { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline';

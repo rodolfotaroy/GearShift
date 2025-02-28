@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
 import { useSupabase } from '../contexts/SupabaseContext';
-import Button from '../components/Button';
+import { Button } from '../components/Button';
 import {
   CalendarIcon,
   ClipboardDocumentListIcon,

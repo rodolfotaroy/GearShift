@@ -1,4 +1,4 @@
-import Button from '../components/Button';
+import { Button } from '../components/Button';
 import { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { EVENT_TYPES } from '../../types';
