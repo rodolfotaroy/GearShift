@@ -140,31 +140,30 @@ export default function Documents() {
             ))}
           </select>
 
-          <div className="ml-auto">
-            <label 
-              htmlFor="file-upload" 
-              className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 cursor-pointer"
+          <label 
+            htmlFor="file-upload" 
+            className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 cursor-pointer"
+          >
+            <Button
+              onClick={() => {
+                if (selectedFile) {
+                  handleUpload(selectedFile);
+                }
+              }}
+              variant="primary"
+              className="w-full"
+              disabled={!selectedFile}
             >
-              <Button
-                onClick={() => {
-                  if (selectedFile) {
-                    handleUpload(selectedFile);
-                  }
-                }}
-                variant="primary"
-                className="w-full"
-                disabled={!selectedFile}
-              >
-                Upload
-              </Button>
-              <input 
-                type="file" 
-                id="file-upload" 
-                className="hidden" 
-                onChange={handleFileUpload}
-              />
-            </label>
-          </div>
+              Upload
+            </Button>
+            <input 
+              type="file" 
+              id="file-upload" 
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" 
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+          </label>
         </div>
 
         <div className="bg-white shadow overflow-hidden sm:rounded-lg">
