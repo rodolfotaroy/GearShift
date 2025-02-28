@@ -6,7 +6,7 @@ import {
   CogIcon, 
   LockClosedIcon, 
   BellIcon, 
-  ColorSwatchIcon 
+  SwatchIcon 
 } from '@heroicons/react/24/outline';
 
 export default function Settings() {
@@ -158,7 +158,6 @@ export default function Settings() {
           {/* Theme Section */}
           <div className="bg-white shadow rounded-lg p-6">
             <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <ColorSwatchIcon className="h-6 w-6 mr-2 text-gray-600" />
               Theme
             </h2>
             <div className="flex space-x-4">
