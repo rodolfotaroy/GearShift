@@ -1,18 +1,21 @@
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
-import {
-  Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend,
+import { 
+  Chart as ChartJS, 
+  ArcElement, 
+  Tooltip, 
+  Legend, 
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
+  Title,
   BarElement,
 } from 'chart.js';
 import { Doughnut, Line, Bar } from 'react-chartjs-2';
 import { DateTime } from 'luxon';
+import MaintenanceCostTracker from '../components/MaintenanceCostTracker';
+import { MaintenanceCost } from '../types';
 import { formatCurrency } from '../utils/formatting';
 
 ChartJS.register(
@@ -23,6 +26,7 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
+  Title,
   BarElement
 );
 
@@ -41,7 +45,7 @@ type CarExpense = {
   total: number;
 };
 
-export default function Dashboard() {
+const Dashboard: React.FC = () => {
   const { supabaseClient } = useSupabase();
   const [totalExpenses, setTotalExpenses] = useState<number>(0);
   const [expensesByCategory, setExpensesByCategory] = useState<ExpenseSummary[]>([]);
@@ -49,9 +53,9 @@ export default function Dashboard() {
   const [carExpenses, setCarExpenses] = useState<CarExpense[]>([]);
   const [carCount, setCarCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
-  const [maintenanceCosts, setMaintenanceCosts] = useState<any[]>([]);
+  const [maintenanceCosts, setMaintenanceCosts] = useState<MaintenanceCost[]>([]);
 
-  const handleAddMaintenanceCost = (cost: any) => {
+  const handleAddMaintenanceCost = (cost: MaintenanceCost) => {
     setMaintenanceCosts([...maintenanceCosts, { ...cost, id: Date.now().toString() }]);
   };
 
@@ -203,7 +207,7 @@ export default function Dashboard() {
               Total Expenses (6 Months)
             </dt>
             <dd className="mt-1 text-3xl font-semibold text-neutral-900 dark:text-dark-text-primary">
-              ¥{totalExpenses.toLocaleString()}
+              ¥{formatCurrency(totalExpenses)}
             </dd>
           </div>
         </div>
@@ -345,3 +349,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
+export default Dashboard;
