@@ -1,3 +1,4 @@
+import Button from '../components/Button';
 import { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { MaintenanceSchedule, ServiceHistory, Car, SERVICE_TYPES } from '../types';
@@ -293,14 +294,14 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                             <button
                                 type="button"
                                 onClick={() => setShowAddSchedule(false)}
-                                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                variant="default"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="button"
                                 onClick={addMaintenanceSchedule}
-                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                                variant="primary"
                             >
                                 Add Schedule
                             </button>
@@ -376,14 +377,14 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                             <button
                                 type="button"
                                 onClick={() => setShowAddService(false)}
-                                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                variant="default"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="button"
                                 onClick={addServiceHistory}
-                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                                variant="primary"
                             >
                                 Add Service
                             </button>

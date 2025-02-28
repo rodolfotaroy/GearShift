@@ -1,3 +1,4 @@
+import Button from '../components/Button';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 

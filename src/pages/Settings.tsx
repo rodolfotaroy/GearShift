@@ -1,3 +1,4 @@
+import Button from '../components/Button';
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSupabase } from '../contexts/SupabaseContext';

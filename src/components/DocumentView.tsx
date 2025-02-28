@@ -1,3 +1,4 @@
+import Button from '../components/Button';
 import { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { Document, Car, DOCUMENT_TYPES } from '../types';
@@ -242,7 +243,7 @@ export default function DocumentView({ car }: DocumentViewProps) {
                             <button
                                 type="button"
                                 onClick={() => setShowAddDocument(false)}
-                                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                variant="default"
                             >
                                 Cancel
                             </button>
@@ -250,7 +251,7 @@ export default function DocumentView({ car }: DocumentViewProps) {
                                 type="button"
                                 onClick={uploadDocument}
                                 disabled={!selectedFile || !newDocument.title}
-                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                                variant="primary"
                             >
                                 Upload
                             </button>
