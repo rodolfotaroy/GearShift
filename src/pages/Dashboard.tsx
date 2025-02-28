@@ -219,7 +219,7 @@ export default function Dashboard() {
               Average Monthly Expense
             </dt>
             <dd className="mt-1 text-3xl font-semibold text-gray-900">
-              ¥{(totalExpenses / 6).toLocaleString()}
+              ¥{(totalExpenses / 6).toFixed(2)}
             </dd>
           </div>
         </div>
