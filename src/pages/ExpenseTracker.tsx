@@ -40,7 +40,7 @@ const EXPENSE_CATEGORIES = [
 ];
 
 export default function ExpenseTracker() {
-  const supabase = useSupabase();
+  const { supabaseClient } = useSupabase();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [cars, setCars] = useState<Car[]>([]);
   const [isAddingExpense, setIsAddingExpense] = useState(false);
@@ -63,7 +63,7 @@ export default function ExpenseTracker() {
 
   const fetchExpenses = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('expenses')
         .select(`
           *,
@@ -92,7 +92,7 @@ export default function ExpenseTracker() {
   };
 
   async function fetchCars() {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('cars')
       .select('*')
       .order('created_at', { ascending: false });
@@ -109,7 +109,7 @@ export default function ExpenseTracker() {
 
   async function handleAddExpense(e: React.FormEvent) {
     e.preventDefault();
-    const { error } = await supabase
+    const { error } = await supabaseClient
       .from('expenses')
       .insert([newExpense]);
 
@@ -126,7 +126,7 @@ export default function ExpenseTracker() {
     e.preventDefault();
     if (!selectedExpense) return;
 
-    const { error } = await supabase
+    const { error } = await supabaseClient
       .from('expenses')
       .update({
         car_id: newExpense.car_id,
@@ -152,7 +152,7 @@ export default function ExpenseTracker() {
       return;
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseClient
       .from('expenses')
       .delete()
       .eq('id', expenseId);

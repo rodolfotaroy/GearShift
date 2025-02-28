@@ -41,12 +41,12 @@ type CarExpense = {
 };
 
 export default function Dashboard() {
-  const supabase = useSupabase();
-  const [totalExpenses, setTotalExpenses] = useState(0);
+  const { supabaseClient } = useSupabase();
+  const [totalExpenses, setTotalExpenses] = useState<number>(0);
   const [expensesByCategory, setExpensesByCategory] = useState<ExpenseSummary[]>([]);
   const [monthlyExpenses, setMonthlyExpenses] = useState<MonthlyExpense[]>([]);
   const [carExpenses, setCarExpenses] = useState<CarExpense[]>([]);
-  const [carCount, setCarCount] = useState(0);
+  const [carCount, setCarCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -57,7 +57,7 @@ export default function Dashboard() {
     setLoading(true);
     try {
       // Fetch expenses with car details
-      const { data: expenses } = await supabase
+      const { data: expenses } = await supabaseClient
         .from('expenses')
         .select(`
           amount,
@@ -71,11 +71,11 @@ export default function Dashboard() {
 
       if (expenses) {
         // Total expenses
-        const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+        const total = expenses.reduce((sum: number, expense: any) => sum + expense.amount, 0);
         setTotalExpenses(total);
 
         // Expenses by category
-        const categoryTotals = expenses.reduce((acc: { [key: string]: number }, expense) => {
+        const categoryTotals = expenses.reduce((acc: { [key: string]: number }, expense: any) => {
           acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
           return acc;
         }, {});
@@ -83,12 +83,12 @@ export default function Dashboard() {
         setExpensesByCategory(
           Object.entries(categoryTotals).map(([category, total]) => ({
             category,
-            total,
+            total: total as number,
           }))
         );
 
         // Monthly expenses (last 6 months)
-        const monthlyData = expenses.reduce((acc: { [key: string]: number }, expense) => {
+        const monthlyData = expenses.reduce((acc: { [key: string]: number }, expense: any) => {
           const month = DateTime.fromISO(expense.date).toFormat('LLL yyyy');
           acc[month] = (acc[month] || 0) + expense.amount;
           return acc;
@@ -107,7 +107,7 @@ export default function Dashboard() {
         );
 
         // Expenses by car
-        const carTotals = expenses.reduce((acc: { [key: string]: number }, expense) => {
+        const carTotals = expenses.reduce((acc: { [key: string]: number }, expense: any) => {
           // Safely access make and model with type assertion
           const carName = expense.cars && 
             (expense.cars as { make: string; model: string }).make && 
@@ -121,13 +121,13 @@ export default function Dashboard() {
         setCarExpenses(
           Object.entries(carTotals).map(([carName, total]) => ({
             carName,
-            total,
+            total: total as number,
           }))
         );
       }
 
       // Fetch car count
-      const { count } = await supabase
+      const { count } = await supabaseClient
         .from('cars')
         .select('*', { count: 'exact' });
 
