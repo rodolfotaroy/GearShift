@@ -4,11 +4,10 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
-  darkMode: 'class', // Enable class-based dark mode
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        // Professional color palette
         primary: {
           50: '#f0f5ff',
           100: '#e6eeff',
@@ -57,18 +56,19 @@ export default {
           800: '#991b1b',
           900: '#7f1d1d'
         },
-        // Dark mode specific colors
         dark: {
-          background: '#0f172a', // Slate-900
-          surface: '#1e293b', // Slate-800
+          background: {
+            DEFAULT: '#0f172a', // Deeper dark background
+            secondary: '#1e293b', // Slightly lighter for cards
+            tertiary: '#334155' // Even lighter for subtle elements
+          },
           text: {
-            primary: '#f8fafc', // Slate-50
-            secondary: '#e2e8f0', // Slate-200
-            muted: '#94a3b8' // Slate-500
+            primary: '#e2e8f0', // Soft white for primary text
+            secondary: '#94a3b8', // Muted for secondary text
+            muted: '#64748b' // Very muted for least important text
           },
           border: '#334155' // Slate-700
         },
-        // Button color variants
         button: {
           primary: {
             DEFAULT: '#2460ff',
@@ -110,21 +110,47 @@ export default {
         }
       },
       boxShadow: {
-        // Refined, subtle shadows
         DEFAULT: '0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px 0 rgba(0, 0, 0, 0.04)',
         md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
         lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
         xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-        // Dark mode shadow
-        'dark-lg': '0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2)'
+        'dark-sm': '0 1px 2px 0 rgba(255, 255, 255, 0.05)',
+        'dark-md': '0 4px 6px -1px rgba(255, 255, 255, 0.1), 0 2px 4px -1px rgba(255, 255, 255, 0.06)',
+        'dark-lg': '0 10px 15px -3px rgba(255, 255, 255, 0.1), 0 4px 6px -2px rgba(255, 255, 255, 0.05)'
+      },
+      transitionProperty: {
+        'colors-all': 'color, background-color, border-color, text-decoration-color, fill, stroke, box-shadow',
+      },
+      keyframes: {
+        'subtle-pulse': {
+          '0%, 100%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.02)' }
+        },
+        'fade-in-down': {
+          '0%': { opacity: '0', transform: 'translateY(-10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' }
+        }
+      },
+      animation: {
+        'subtle-pulse': 'subtle-pulse 0.5s ease-in-out',
+        'fade-in-down': 'fade-in-down 0.3s ease-out'
       },
       borderRadius: {
-        // More refined corner radiuses
         DEFAULT: '0.375rem', // 6px
         lg: '0.5rem',        // 8px
-        xl: '0.75rem'        // 12px
+        xl: '0.75rem',        // 12px
+        '2xl': '1rem'
       }
     },
   },
-  plugins: [],
+  plugins: [
+    function({ addBase, theme }) {
+      addBase({
+        'html': { 
+          transition: 'background-color 0.3s ease, color 0.3s ease',
+          scrollBehavior: 'smooth'
+        }
+      })
+    }
+  ],
 }

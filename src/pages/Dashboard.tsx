@@ -13,6 +13,9 @@ import {
 } from 'chart.js';
 import { Doughnut, Line, Bar } from 'react-chartjs-2';
 import { DateTime } from 'luxon';
+import MaintenanceCostTracker from '../components/MaintenanceCostTracker';
+import { MaintenanceCost } from '../types';
+import { formatCurrency } from '../utils/formatting';
 
 ChartJS.register(
   ArcElement,
@@ -48,6 +51,11 @@ export default function Dashboard() {
   const [carExpenses, setCarExpenses] = useState<CarExpense[]>([]);
   const [carCount, setCarCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+  const [maintenanceCosts, setMaintenanceCosts] = useState<MaintenanceCost[]>([]);
+
+  const handleAddMaintenanceCost = (cost: MaintenanceCost) => {
+    setMaintenanceCosts([...maintenanceCosts, { ...cost, id: Date.now().toString() }]);
+  };
 
   useEffect(() => {
     fetchDashboardData();
@@ -188,7 +196,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6 dark:bg-dark-background dark:text-dark-text-primary transition-colors duration-300">
+    <div className="container mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <div className="bg-white dark:bg-dark-surface shadow-md dark:shadow-dark-lg rounded-lg">
@@ -308,6 +316,25 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      <div className="md:col-span-2 lg:col-span-3">
+        <MaintenanceCostTracker 
+          costs={maintenanceCosts} 
+          onAddCost={handleAddMaintenanceCost} 
+        />
+      </div>
+
+      {/* Responsive grid layout with micro-interactions */}
+      <div className="bg-white dark:bg-dark-background-secondary rounded-xl shadow-md dark:shadow-dark-md p-6 
+                      hover:shadow-lg dark:hover:shadow-dark-lg transition-all duration-300 
+                      transform hover:-translate-y-1 hover:scale-[1.02]">
+        {/* Quick stats or summary card */}
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-dark-text-primary mb-4">
+          Vehicle Overview
+        </h3>
+        {/* Add more responsive and interactive content */}
+      </div>
+
       <button 
         className="px-4 py-2 rounded-md 
           bg-button-primary dark:bg-button-primary-dark 

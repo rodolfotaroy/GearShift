@@ -73,6 +73,31 @@ export interface CalendarEvent {
     created_at?: string;
 }
 
+export interface MaintenanceCost {
+  id?: string;
+  vehicleId: string;
+  date: Date;
+  category: 'Repair' | 'Routine' | 'Parts' | 'Labor' | 'Other';
+  amount: number;
+  description?: string;
+  serviceProvider?: string;
+  receiptUrl?: string;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  displayName?: string;
+  avatarUrl?: string;
+  vehicles: string[]; // Array of vehicle IDs
+  preferences: {
+    theme: 'light' | 'dark' | 'system';
+    currency: string;
+    language: string;
+  };
+  role: 'owner' | 'admin' | 'viewer';
+}
+
 export type EventType = "maintenance" | "service" | "inspection" | "other";
 export type EventStatus = "scheduled" | "completed" | "cancelled" | "in_progress";
 
