@@ -10,6 +10,8 @@ import CarProfiles from './pages/CarProfiles';
 import ExpenseTracker from './pages/ExpenseTracker';
 import Analytics from './pages/Analytics';
 import Calendar from './pages/Calendar';
+import Documents from './pages/Documents';
+import Settings from './pages/Settings';
 
 const queryClient = new QueryClient();
 
@@ -53,6 +55,20 @@ function App() {
                 <PrivateRoute>
                   <Layout>
                     <Analytics />
+                  </Layout>
+                </PrivateRoute>
+              } />
+              <Route path="/documents" element={
+                <PrivateRoute>
+                  <Layout>
+                    <Documents />
+                  </Layout>
+                </PrivateRoute>
+              } />
+              <Route path="/settings" element={
+                <PrivateRoute>
+                  <Layout>
+                    <Settings />
                   </Layout>
                 </PrivateRoute>
               } />
