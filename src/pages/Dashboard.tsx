@@ -145,13 +145,13 @@ export default function Dashboard() {
       {
         data: expensesByCategory.map(item => item.total),
         backgroundColor: [
-          '#FF6384',
-          '#36A2EB',
-          '#FFCE56',
-          '#4BC0C0',
-          '#9966FF',
-          '#FF9F40',
-          '#FF6384',
+          '#8B9467',
+          '#F7DC6F',
+          '#F2C464',
+          '#E9D8A6',
+          '#C9E4CA',
+          '#8B9467',
+          '#F7DC6F',
           '#C9CBCF',
         ],
       },
@@ -164,8 +164,8 @@ export default function Dashboard() {
       {
         label: 'Monthly Expenses',
         data: monthlyExpenses.map(item => item.total),
-        borderColor: '#36A2EB',
-        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+        borderColor: '#4B5563',
+        backgroundColor: 'rgba(75, 85, 99, 0.1)',
         fill: true,
         tension: 0.4,
       },
@@ -178,7 +178,7 @@ export default function Dashboard() {
       {
         label: 'Expenses by Car',
         data: carExpenses.map(item => item.total),
-        backgroundColor: '#4BC0C0',
+        backgroundColor: '#4B5563',
       },
     ],
   };
@@ -190,35 +190,35 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="bg-white overflow-hidden shadow-md rounded-lg">
           <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-500 truncate">
-              Total Expenses
+            <dt className="text-sm font-medium text-neutral-500 truncate">
+              Total Expenses (6 Months)
             </dt>
-            <dd className="mt-1 text-3xl font-semibold text-gray-900">
+            <dd className="mt-1 text-3xl font-semibold text-neutral-900">
               ¥{totalExpenses.toLocaleString()}
             </dd>
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white overflow-hidden shadow-md rounded-lg">
           <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-500 truncate">
+            <dt className="text-sm font-medium text-neutral-500 truncate">
               Registered Cars
             </dt>
-            <dd className="mt-1 text-3xl font-semibold text-gray-900">
+            <dd className="mt-1 text-3xl font-semibold text-neutral-900">
               {carCount}
             </dd>
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white overflow-hidden shadow-md rounded-lg">
           <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-500 truncate">
+            <dt className="text-sm font-medium text-neutral-500 truncate">
               Average Monthly Expense
             </dt>
-            <dd className="mt-1 text-3xl font-semibold text-gray-900">
+            <dd className="mt-1 text-3xl font-semibold text-neutral-900">
               ¥{(totalExpenses / 6).toFixed(2)}
             </dd>
           </div>
@@ -228,29 +228,47 @@ export default function Dashboard() {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Expense Categories */}
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white overflow-hidden shadow-md rounded-lg">
           <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Expense Categories</h3>
+            <h3 className="text-lg font-medium text-neutral-900 mb-4">Expense Categories</h3>
             <div className="h-64">
-              <Doughnut data={doughnutData} options={{ maintainAspectRatio: false }} />
+              <Doughnut data={doughnutData} options={{ 
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    labels: {
+                      color: '#4b5563' // neutral-600
+                    }
+                  }
+                }
+              }} />
             </div>
           </div>
         </div>
 
         {/* Monthly Trend */}
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white overflow-hidden shadow-md rounded-lg">
           <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Monthly Trend</h3>
+            <h3 className="text-lg font-medium text-neutral-900 mb-4">Monthly Trend</h3>
             <div className="h-64">
-              <Line data={lineData} options={{ maintainAspectRatio: false }} />
+              <Line data={lineData} options={{ 
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    labels: {
+                      color: '#4b5563' // neutral-600
+                    }
+                  }
+                }
+              }} />
             </div>
           </div>
         </div>
 
         {/* Expenses by Car */}
-        <div className="bg-white overflow-hidden shadow rounded-lg lg:col-span-2">
+        <div className="bg-white overflow-hidden shadow-md rounded-lg lg:col-span-2">
           <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Expenses by Car</h3>
+            <h3 className="text-lg font-medium text-neutral-900 mb-4">Expenses by Car</h3>
             <div className="h-64">
               <Bar data={barData} options={{ maintainAspectRatio: false }} />
             </div>
