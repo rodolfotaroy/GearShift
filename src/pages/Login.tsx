@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useSupabase } from '../contexts/SupabaseContext';
 
 export default function Login() {
+    const { supabaseAuth } = useSupabase();
+    const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const navigate = useNavigate();
-    const supabase = useSupabase();
 
     async function handleLogin(e: React.FormEvent) {
         e.preventDefault();
@@ -16,7 +16,7 @@ export default function Login() {
         setError(null);
 
         try {
-            const { error } = await supabase.auth.signInWithPassword({
+            const { error } = await supabaseAuth.signInWithPassword({
                 email,
                 password,
             });
@@ -36,7 +36,7 @@ export default function Login() {
         setError(null);
 
         try {
-            const { error } = await supabase.auth.signUp({
+            const { error } = await supabaseAuth.signUp({
                 email,
                 password,
             });
