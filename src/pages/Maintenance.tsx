@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { 
   MaintenanceSchedule, 
@@ -24,7 +24,7 @@ export default function Maintenance() {
   const [showAddServiceModal, setShowAddServiceModal] = useState(false);
   const [newSchedule, setNewSchedule] = useState<MaintenanceSchedule>({
     car_id: 0,
-    service_type: 'Oil Change',
+    service_type: SERVICE_TYPES[0],
     due_date: DateTime.now().plus({ months: 1 }).toISODate() || '',
     mileage_due: 0,
     description: '',
@@ -32,7 +32,7 @@ export default function Maintenance() {
   });
   const [newService, setNewService] = useState<ServiceHistory>({
     car_id: 0,
-    service_type: 'Oil Change',
+    service_type: SERVICE_TYPES[0],
     service_date: DateTime.now().toISODate() || '',
     mileage: 0,
     cost: 0,
@@ -85,8 +85,8 @@ export default function Maintenance() {
 
       if (scheduleData.data) setSchedules(scheduleData.data);
       if (historyData.data) setHistory(historyData.data);
-    } catch (error) {
-      console.error('Error fetching maintenance data:', error);
+    } catch {
+      console.error('Error fetching maintenance data');
     }
   }
 
@@ -106,7 +106,7 @@ export default function Maintenance() {
       setShowAddScheduleModal(false);
       setNewSchedule({
         car_id: selectedCar.id,
-        service_type: 'Oil Change',
+        service_type: SERVICE_TYPES[0],
         due_date: DateTime.now().plus({ months: 1 }).toISODate() || '',
         mileage_due: 0,
         description: '',
@@ -131,7 +131,7 @@ export default function Maintenance() {
       setShowAddServiceModal(false);
       setNewService({
         car_id: selectedCar.id,
-        service_type: 'Oil Change',
+        service_type: SERVICE_TYPES[0],
         service_date: DateTime.now().toISODate() || '',
         mileage: 0,
         cost: 0,

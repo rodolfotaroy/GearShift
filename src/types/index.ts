@@ -38,12 +38,11 @@ export interface MaintenanceSchedule {
 export interface ServiceHistory {
     id?: number;
     car_id: number;
-    service_type: typeof SERVICE_TYPES[number];
+    service_type: string;
     service_date: string;
     mileage: number;
     cost: number;
     description: string;
-    created_at?: string;
 }
 
 export interface Document {

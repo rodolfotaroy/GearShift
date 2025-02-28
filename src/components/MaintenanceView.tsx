@@ -16,6 +16,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
     const [showAddSchedule, setShowAddSchedule] = useState(false);
     const [showAddService, setShowAddService] = useState(false);
     const [newSchedule, setNewSchedule] = useState<MaintenanceSchedule>({
+        car_id: car.id || 0,
         service_type: SERVICE_TYPES[0],
         due_date: DateTime.now().plus({ months: 1 }).toISODate() || '',
         mileage_due: car.mileage ? car.mileage + 5000 : 0,
@@ -23,6 +24,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
         status: 'Pending'
     });
     const [newService, setNewService] = useState<ServiceHistory>({
+        car_id: car.id || 0,
         service_type: SERVICE_TYPES[0],
         service_date: DateTime.now().toISODate() || '',
         mileage: car.mileage || 0,
@@ -59,8 +61,8 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
 
             if (scheduleData.data) setSchedules(scheduleData.data);
             if (historyData.data) setHistory(historyData.data);
-        } catch (error) {
-            console.error('Error fetching maintenance data:', error);
+        } catch {
+            console.error('Error fetching maintenance data');
         } finally {
             setLoading(false);
         }
@@ -69,10 +71,10 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
     async function addMaintenanceSchedule() {
         const scheduleToAdd = {
             ...newSchedule,
-            car_id: car.id
+            car_id: car.id || 0
         };
 
-        const { data, error } = await supabaseClient
+        const { data } = await supabaseClient
             .from('maintenance_schedule')
             .insert(scheduleToAdd)
             .select();
@@ -81,6 +83,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
             setSchedules([...schedules, data[0]]);
             setShowAddSchedule(false);
             setNewSchedule({
+                car_id: car.id || 0,
                 service_type: SERVICE_TYPES[0],
                 due_date: DateTime.now().plus({ months: 1 }).toISODate() || '',
                 mileage_due: car.mileage ? car.mileage + 5000 : 0,
@@ -93,10 +96,10 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
     async function addServiceHistory() {
         const serviceToAdd = {
             ...newService,
-            car_id: car.id
+            car_id: car.id || 0
         };
 
-        const { data, error } = await supabaseClient
+        const { data } = await supabaseClient
             .from('service_history')
             .insert(serviceToAdd)
             .select();
@@ -105,6 +108,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
             setHistory([...history, data[0]]);
             setShowAddService(false);
             setNewService({
+                car_id: car.id || 0,
                 service_type: SERVICE_TYPES[0],
                 service_date: DateTime.now().toISODate() || '',
                 mileage: car.mileage || 0,
