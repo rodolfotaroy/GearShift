@@ -51,12 +51,12 @@ export default function Layout({ children }: LayoutProps) {
                   <div className="flex-shrink-0 flex items-center">
                     <img
                       className="block lg:hidden h-8 w-auto"
-                      src="/logo.svg"
+                      src="/logo.png"
                       alt="GearShift"
                     />
                     <img
                       className="hidden lg:block h-8 w-auto"
-                      src="/logo.svg"
+                      src="/logo.png"
                       alt="GearShift"
                     />
                   </div>
