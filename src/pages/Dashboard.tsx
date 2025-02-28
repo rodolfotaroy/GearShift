@@ -308,6 +308,15 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      <button 
+        className="px-4 py-2 rounded-md 
+          bg-button-primary dark:bg-button-primary-dark 
+          text-button-primary-text dark:text-button-primary-dark-text
+          hover:bg-button-primary-hover dark:hover:bg-button-primary-dark-hover
+          transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+      >
+        Add Maintenance
+      </button>
     </div>
   );
 }

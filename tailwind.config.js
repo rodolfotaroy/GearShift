@@ -67,6 +67,46 @@ export default {
             muted: '#94a3b8' // Slate-500
           },
           border: '#334155' // Slate-700
+        },
+        // Button color variants
+        button: {
+          primary: {
+            DEFAULT: '#2460ff',
+            hover: '#1c4cd6',
+            text: '#ffffff',
+            dark: {
+              DEFAULT: '#3b82f6', // A slightly lighter blue for dark mode
+              hover: '#60a5fa',
+              text: '#ffffff'
+            }
+          },
+          secondary: {
+            DEFAULT: '#6b7280', // neutral-500
+            hover: '#4b5563',
+            text: '#ffffff',
+            dark: {
+              DEFAULT: '#475569', // slate-600
+              hover: '#64748b', // slate-500
+              text: '#ffffff'
+            }
+          },
+          outline: {
+            DEFAULT: 'transparent',
+            border: '#6b7280',
+            text: '#6b7280',
+            hover: {
+              background: '#f3f4f6',
+              text: '#374151'
+            },
+            dark: {
+              border: '#94a3b8', // slate-500
+              text: '#94a3b8',
+              hover: {
+                background: '#1e293b', // slate-800
+                text: '#e2e8f0' // slate-200
+              }
+            }
+          }
         }
       },
       boxShadow: {
