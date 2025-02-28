@@ -1,4 +1,4 @@
-import { Button } from '../components/Button';
+import { Button } from './Button';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Disclosure } from '@headlessui/react';

@@ -1,9 +1,9 @@
-import { Button } from '../components/Button';
+import { Button } from './Button';
 import React, { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { PencilIcon, TrashIcon, PhotoIcon } from '@heroicons/react/24/outline';
 import CarProfileView from '../components/CarProfileView';
-import { Button } from '../components/Button';
+import { Button } from './Button';
 
 interface Car {
   id: number;

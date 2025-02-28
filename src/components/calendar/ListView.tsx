@@ -1,4 +1,4 @@
-import { Button } from '../components/Button';
+import { Button } from './Button';
 import { DateTime } from 'luxon';
 import { EVENT_TYPES } from '../../constants/calendar';
 import type { MaintenanceEvent, Car } from '../../types/calendar';

@@ -1,4 +1,4 @@
-import { Button } from '../components/Button';
+import { Button } from './Button';
 import { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { MaintenanceSchedule, ServiceHistory, Car, SERVICE_TYPES } from '../types';
