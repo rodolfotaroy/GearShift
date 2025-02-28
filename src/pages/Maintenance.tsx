@@ -1,17 +1,12 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
-import { 
-  MaintenanceSchedule, 
-  ServiceHistory, 
-  SERVICE_TYPES 
-} from '../types';
-import { 
-  ClipboardDocumentListIcon, 
-  WrenchScrewdriverIcon, 
-  CalendarIcon, 
+import {
+  CalendarIcon,
+  ClipboardDocumentListIcon,
   PlusIcon 
 } from '@heroicons/react/24/outline';
 import { DateTime } from 'luxon';
+import Button from '../components/Button';
 
 export default function Maintenance() {
   const { supabaseClient, supabaseAuth } = useSupabase();
@@ -193,12 +188,11 @@ export default function Maintenance() {
                 <CalendarIcon className="h-6 w-6 mr-2 text-gray-600" />
                 Upcoming Maintenance
               </h2>
-              <button 
+              <Button 
                 onClick={() => setShowAddScheduleModal(true)}
-                className="bg-indigo-600 text-white p-2 rounded-full hover:bg-indigo-700 transition"
               >
                 <PlusIcon className="h-5 w-5" />
-              </button>
+              </Button>
             </div>
 
             {schedules.length === 0 ? (
@@ -249,12 +243,11 @@ export default function Maintenance() {
                 <ClipboardDocumentListIcon className="h-6 w-6 mr-2 text-gray-600" />
                 Service History
               </h2>
-              <button 
+              <Button 
                 onClick={() => setShowAddServiceModal(true)}
-                className="bg-indigo-600 text-white p-2 rounded-full hover:bg-indigo-700 transition"
               >
                 <PlusIcon className="h-5 w-5" />
-              </button>
+              </Button>
             </div>
 
             {history.length === 0 ? (
@@ -359,19 +352,17 @@ export default function Maintenance() {
                   />
                 </div>
                 <div className="flex justify-end space-x-2">
-                  <button
+                  <Button 
                     type="button"
                     onClick={() => setShowAddScheduleModal(false)}
-                    className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </Button>
+                  <Button 
                     type="submit"
-                    className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
                   >
                     Add Schedule
-                  </button>
+                  </Button>
                 </div>
               </form>
             </div>
@@ -466,19 +457,17 @@ export default function Maintenance() {
                   />
                 </div>
                 <div className="flex justify-end space-x-2">
-                  <button
+                  <Button 
                     type="button"
                     onClick={() => setShowAddServiceModal(false)}
-                    className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </Button>
+                  <Button 
                     type="submit"
-                    className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
                   >
                     Add Service
-                  </button>
+                  </Button>
                 </div>
               </form>
             </div>
