@@ -14,8 +14,7 @@ export const useSupabase = () => {
   return {
     supabaseClient: supabase,
     supabaseAuth: supabase.auth,
-    supabaseStorage: supabase.storage,
-    session: supabase.auth.session()
+    supabaseStorage: supabase.storage
   };
 };
 

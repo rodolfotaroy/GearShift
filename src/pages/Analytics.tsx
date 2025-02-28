@@ -60,9 +60,9 @@ const CATEGORY_COLORS = {
 };
 
 export default function Analytics() {
-  const supabase = useSupabase();
+  const { supabaseClient } = useSupabase();
   const [cars, setCars] = useState<Car[]>([]);
-  const [selectedCar, setSelectedCar] = useState<number | 'all'>('all');
+  const [selectedCar, setSelectedCar] = useState<string>('all');
   const [timeRange, setTimeRange] = useState<'month' | 'year'>('month');
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [dailyExpenses, setDailyExpenses] = useState<DailyExpense[]>([]);
@@ -71,10 +71,10 @@ export default function Analytics() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchData();
+    loadData();
   }, [selectedCar, timeRange]);
 
-  async function fetchData() {
+  async function loadData() {
     setLoading(true);
     setError(null);
     try {
@@ -87,7 +87,7 @@ export default function Analytics() {
   }
 
   async function fetchCars() {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('cars')
       .select('id, make, model')
       .order('created_at', { ascending: false });
@@ -101,7 +101,7 @@ export default function Analytics() {
       ? DateTime.now().minus({ months: 1 }).toISODate()
       : DateTime.now().minus({ years: 1 }).toISODate();
 
-    let query = supabase
+    let query = supabaseClient
       .from('expenses')
       .select('*')
       .gte('date', startDate)
@@ -118,7 +118,7 @@ export default function Analytics() {
     setExpenses(data || []);
 
     // Process daily expenses for calendar chart
-    const dailyData = (data || []).reduce((acc: { [key: string]: number }, expense) => {
+    const dailyData = (data || []).reduce((acc: { [key: string]: number }, expense: Expense) => {
       acc[expense.date] = (acc[expense.date] || 0) + expense.amount;
       return acc;
     }, {});
@@ -131,7 +131,7 @@ export default function Analytics() {
     );
 
     // Process category trends
-    const categories = [...new Set(data?.map(e => e.category))];
+    const categories = [...new Set(data?.map((e: Expense) => e.category))];
     const months = Array.from({ length: timeRange === 'month' ? 4 : 12 }, (_, i) => {
       return DateTime.now().minus({ months: i }).toFormat('LLL yyyy');
     }).reverse();
@@ -140,11 +140,11 @@ export default function Analytics() {
     categories.forEach(category => {
       trends[category] = months.map(month => {
         return (data || [])
-          .filter(e => 
+          .filter((e: Expense) => 
             e.category === category && 
             DateTime.fromISO(e.date).toFormat('LLL yyyy') === month
           )
-          .reduce((sum, e) => sum + e.amount, 0);
+          .reduce((sum: number, e: Expense) => sum + e.amount, 0);
       });
     });
 
@@ -210,7 +210,7 @@ export default function Analytics() {
               id="car-select"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               value={selectedCar}
-              onChange={(e) => setSelectedCar(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+              onChange={(e) => setSelectedCar(e.target.value === 'all' ? 'all' : e.target.value)}
             >
               <option value="all">All Cars</option>
               {cars.map((car) => (

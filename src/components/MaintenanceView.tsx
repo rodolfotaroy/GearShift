@@ -9,7 +9,7 @@ interface MaintenanceViewProps {
 }
 
 export default function MaintenanceView({ car }: MaintenanceViewProps) {
-    const { supabaseClient, supabaseAuth, supabaseStorage } = useSupabase();
+    const { supabaseClient, supabaseAuth } = useSupabase();
     const [schedules, setSchedules] = useState<MaintenanceSchedule[]>([]);
     const [history, setHistory] = useState<ServiceHistory[]>([]);
     const [loading, setLoading] = useState(true);
