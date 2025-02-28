@@ -54,6 +54,8 @@ const Dashboard: React.FC = () => {
   const [carCount, setCarCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [maintenanceCosts, setMaintenanceCosts] = useState<MaintenanceCost[]>([]);
+  const [upcomingMaintenanceCount, setUpcomingMaintenanceCount] = useState<number>(0);
+  const [averageMaintenanceCost, setAverageMaintenanceCost] = useState<number>(0);
 
   const handleAddMaintenanceCost = (cost: MaintenanceCost) => {
     setMaintenanceCosts([...maintenanceCosts, { ...cost, id: Date.now().toString() }]);
@@ -198,51 +200,83 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white dark:bg-dark-surface shadow-md dark:shadow-dark-lg rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-neutral-500 dark:text-dark-text-muted truncate">
+    <div className="container mx-auto px-4 py-8">
+      {/* Summary Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Total Expenses Card */}
+        <div className="bg-white dark:bg-dark-background-secondary rounded-xl shadow-md dark:shadow-dark-md p-6 
+                        flex flex-col justify-between hover:shadow-lg dark:hover:shadow-dark-lg 
+                        transition-all duration-300 transform hover:-translate-y-1 min-h-[150px]">
+          <div>
+            <dt className="text-sm font-medium text-neutral-500 dark:text-dark-text-secondary truncate mb-2">
               Total Expenses (6 Months)
             </dt>
-            <dd className="mt-1 text-3xl font-semibold text-neutral-900 dark:text-dark-text-primary">
+            <dd className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-dark-text-primary 
+                           break-words overflow-hidden text-ellipsis">
               ¥{formatCurrency(totalExpenses)}
             </dd>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-dark-surface shadow-md dark:shadow-dark-lg rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-neutral-500 dark:text-dark-text-muted truncate">
-              Registered Cars
+        {/* Car Count Card */}
+        <div className="bg-white dark:bg-dark-background-secondary rounded-xl shadow-md dark:shadow-dark-md p-6 
+                        flex flex-col justify-between hover:shadow-lg dark:hover:shadow-dark-lg 
+                        transition-all duration-300 transform hover:-translate-y-1 min-h-[150px]">
+          <div>
+            <dt className="text-sm font-medium text-neutral-500 dark:text-dark-text-secondary truncate mb-2">
+              Total Vehicles
             </dt>
-            <dd className="mt-1 text-3xl font-semibold text-neutral-900 dark:text-dark-text-primary">
+            <dd className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-dark-text-primary 
+                           break-words overflow-hidden text-ellipsis">
               {carCount}
             </dd>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-dark-surface shadow-md dark:shadow-dark-lg rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-neutral-500 dark:text-dark-text-muted truncate">
-              Average Monthly Expense
+        {/* Upcoming Maintenance Card */}
+        <div className="bg-white dark:bg-dark-background-secondary rounded-xl shadow-md dark:shadow-dark-md p-6 
+                        flex flex-col justify-between hover:shadow-lg dark:hover:shadow-dark-lg 
+                        transition-all duration-300 transform hover:-translate-y-1 min-h-[150px]">
+          <div>
+            <dt className="text-sm font-medium text-neutral-500 dark:text-dark-text-secondary truncate mb-2">
+              Upcoming Maintenance
             </dt>
-            <dd className="mt-1 text-3xl font-semibold text-neutral-900 dark:text-dark-text-primary">
-              ¥{(totalExpenses / 6).toFixed(2)}
+            <dd className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-dark-text-primary 
+                           break-words overflow-hidden text-ellipsis">
+              {upcomingMaintenanceCount}
+            </dd>
+          </div>
+        </div>
+
+        {/* Average Maintenance Cost Card */}
+        <div className="bg-white dark:bg-dark-background-secondary rounded-xl shadow-md dark:shadow-dark-md p-6 
+                        flex flex-col justify-between hover:shadow-lg dark:hover:shadow-dark-lg 
+                        transition-all duration-300 transform hover:-translate-y-1 min-h-[150px]">
+          <div>
+            <dt className="text-sm font-medium text-neutral-500 dark:text-dark-text-secondary truncate mb-2">
+              Avg. Maintenance Cost
+            </dt>
+            <dd className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-dark-text-primary 
+                           break-words overflow-hidden text-ellipsis">
+              ¥{formatCurrency(averageMaintenanceCost)}
             </dd>
           </div>
         </div>
       </div>
 
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Expense Categories */}
-        <div className="bg-white dark:bg-dark-surface shadow-md dark:shadow-dark-lg rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg font-medium text-neutral-900 dark:text-dark-text-primary mb-4">Expense Categories</h3>
-            <div className="h-64">
-              <Doughnut data={doughnutData} options={{ 
+      {/* Charts and Detailed Sections */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Expenses by Category Chart */}
+        <div className="bg-white dark:bg-dark-background-secondary rounded-xl shadow-md dark:shadow-dark-md p-6 
+                        md:col-span-1 lg:col-span-2 min-h-[400px]">
+          <h3 className="text-lg font-semibold text-neutral-800 dark:text-dark-text-primary mb-4">
+            Expenses by Category
+          </h3>
+          <div className="h-full">
+            <Doughnut 
+              data={doughnutData} 
+              options={{ 
+                responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
                   legend: {
@@ -261,17 +295,22 @@ const Dashboard: React.FC = () => {
                   '#E9D8A6', '#C9E4CA', '#8B9467', 
                   '#F7DC6F', '#C9CBCF'
                 ]
-              }} />
-            </div>
+              }} 
+            />
           </div>
         </div>
 
-        {/* Monthly Trend */}
-        <div className="bg-white dark:bg-dark-surface shadow-md dark:shadow-dark-lg rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg font-medium text-neutral-900 dark:text-dark-text-primary mb-4">Monthly Trend</h3>
-            <div className="h-64">
-              <Line data={lineData} options={{ 
+        {/* Maintenance History Chart */}
+        <div className="bg-white dark:bg-dark-background-secondary rounded-xl shadow-md dark:shadow-dark-md p-6 
+                        md:col-span-1 lg:col-span-1 min-h-[400px]">
+          <h3 className="text-lg font-semibold text-neutral-800 dark:text-dark-text-primary mb-4">
+            Maintenance History
+          </h3>
+          <div className="h-full">
+            <Line 
+              data={lineData} 
+              options={{ 
+                responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
                   legend: {
@@ -303,49 +342,19 @@ const Dashboard: React.FC = () => {
                     }
                   }
                 }
-              }} />
-            </div>
+              }} 
+            />
           </div>
         </div>
 
-        {/* Expenses by Car */}
-        <div className="bg-white dark:bg-dark-surface shadow-md dark:shadow-dark-lg rounded-lg lg:col-span-2">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg font-medium text-neutral-900 dark:text-dark-text-primary mb-4">Expenses by Car</h3>
-            <div className="h-64">
-              <Bar data={barData} options={{ maintainAspectRatio: false }} />
-            </div>
-          </div>
+        {/* Maintenance Cost Tracker */}
+        <div className="md:col-span-2 lg:col-span-3">
+          <MaintenanceCostTracker 
+            costs={maintenanceCosts} 
+            onAddCost={handleAddMaintenanceCost} 
+          />
         </div>
       </div>
-
-      <div className="md:col-span-2 lg:col-span-3">
-        <MaintenanceCostTracker 
-          costs={maintenanceCosts} 
-          onAddCost={handleAddMaintenanceCost} 
-        />
-      </div>
-
-      {/* Responsive grid layout with micro-interactions */}
-      <div className="bg-white dark:bg-dark-background-secondary rounded-xl shadow-md dark:shadow-dark-md p-6 
-                      hover:shadow-lg dark:hover:shadow-dark-lg transition-all duration-300 
-                      transform hover:-translate-y-1 hover:scale-[1.02]">
-        {/* Quick stats or summary card */}
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-dark-text-primary mb-4">
-          Vehicle Overview
-        </h3>
-        {/* Add more responsive and interactive content */}
-      </div>
-
-      <button 
-        className="px-4 py-2 rounded-md 
-          bg-button-primary dark:bg-button-primary-dark 
-          text-button-primary-text dark:text-button-primary-dark-text
-          hover:bg-button-primary-hover dark:hover:bg-button-primary-dark-hover
-          transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-      >
-        Add Maintenance
-      </button>
     </div>
   );
 }
