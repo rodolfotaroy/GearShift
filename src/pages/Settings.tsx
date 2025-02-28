@@ -5,8 +5,7 @@ import {
   UserIcon, 
   CogIcon, 
   LockClosedIcon, 
-  BellIcon, 
-  SwatchIcon 
+  BellIcon 
 } from '@heroicons/react/24/outline';
 
 export default function Settings() {
@@ -157,7 +156,7 @@ export default function Settings() {
 
           {/* Theme Section */}
           <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
+            <h2 className="text-xl font-semibold mb-4">
               Theme
             </h2>
             <div className="flex space-x-4">
