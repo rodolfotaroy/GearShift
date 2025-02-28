@@ -20,11 +20,27 @@ export default function Settings() {
     email_updates: false,
     push_notifications: false
   });
-  const [theme, setTheme] = React.useState('light');
+  const [theme, setTheme] = React.useState(() => {
+    // Initialize theme from local storage or default to 'light'
+    return localStorage.getItem('app-theme') || 'light';
+  });
 
   React.useEffect(() => {
     fetchUserProfile();
+    
+    // Apply theme on component mount
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(theme);
   }, [user]);
+
+  React.useEffect(() => {
+    // Persist theme to local storage whenever it changes
+    localStorage.setItem('app-theme', theme);
+    
+    // Apply theme
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(theme);
+  }, [theme]);
 
   async function fetchUserProfile() {
     if (!user) return;
@@ -67,8 +83,6 @@ export default function Settings() {
 
   function handleThemeChange(selectedTheme: string) {
     setTheme(selectedTheme);
-    document.documentElement.classList.remove('light', 'dark');
-    document.documentElement.classList.add(selectedTheme);
   }
 
   return (
