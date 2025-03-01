@@ -48,7 +48,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
         description: '',
         user_id: car?.user_id || ''
     });
-    const [selectedStatus, setSelectedStatus] = useState('');
+    const [selectedStatus, setSelectedStatus] = useState<string>('');
 
     useEffect(() => {
         if (!car) {
@@ -146,41 +146,44 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
         if (!car) return;
 
         const serviceToAdd = {
-            ...newService,
-            car_id: car.id ? String(car.id) : '',
-            user_id: car.user_id || ''
+          ...newService,
+          car_id: car.id ? String(car.id) : '',
+          // Fallback to 'maintenance' if event_type is not set
+          event_type: newService.service_type || 'maintenance',
+          user_id: car.user_id || ''
         };
 
         const { data } = await supabaseClient
-            .from('service_history')
-            .insert(serviceToAdd)
-            .select();
+          .from('service_history')
+          .insert(serviceToAdd)
+          .select();
 
         if (data) {
-            setHistory([...history, data[0]]);
-            setShowAddService(false);
-            setNewService({
-                car_id: car.id ? String(car.id) : '',
-                service_type: SERVICE_TYPES[0],
-                service_date: DateTime.now().toISODate() || '',
-                mileage: 0,
-                cost: 0,
-                description: '',
-                user_id: car.user_id || ''
-            });
+          setHistory([...history, data[0]]);
+          setShowAddService(false);
+          setNewService({
+            car_id: car.id ? String(car.id) : '',
+            service_type: SERVICE_TYPES[0],
+            service_date: DateTime.now().toISODate() || '',
+            mileage: 0,
+            cost: 0,
+            description: '',
+            user_id: car.user_id || ''
+          });
 
-            // Update related maintenance schedule if exists
-            const relatedSchedule = schedules.find(
-                schedule => 
-                    schedule.event_type === serviceToAdd.service_type 
-            );
+          // Update related maintenance schedule if exists
+          const relatedSchedule = schedules.find(
+            schedule => 
+              // Use optional chaining and provide fallback
+              (schedule.event_type || 'maintenance') === serviceToAdd.service_type
+          );
 
-            if (relatedSchedule) {
-                await supabaseClient
-                    .from('maintenance_events')
-                    .update({ completed: true })
-                    .eq('id', relatedSchedule.id);
-            }
+          if (relatedSchedule) {
+            await supabaseClient
+              .from('maintenance_events')
+              .update({ completed: true })
+              .eq('id', relatedSchedule.id);
+          }
         }
     }
 

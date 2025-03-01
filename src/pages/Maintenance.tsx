@@ -13,12 +13,14 @@ import { DateTime } from 'luxon';
 const SERVICE_TYPES = ['Oil Change', 'Tire Rotation', 'Brake Service', 'Engine Tune-up', 'Other'] as const;
 
 interface MaintenanceSchedule {
+  id?: number;
   car_id: string;
   title: string;
   description: string;
   date: string;
   completed: boolean;
   notes: string;
+  event_type: string;
 }
 
 interface ServiceHistory {
@@ -50,12 +52,14 @@ export default function Maintenance() {
   const [showAddServiceModal, setShowAddServiceModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [newSchedule, setNewSchedule] = useState<MaintenanceSchedule>({
+    id: 0,
     car_id: selectedCar?.id || 0,
     title: '',
     description: '',
     date: DateTime.now().plus({ months: 1 }).toISODate() || '',
     completed: false,
-    notes: ''
+    notes: '',
+    event_type: 'maintenance'
   });
   const [newService, setNewService] = useState<ServiceHistory>({
     car_id: '',
@@ -240,7 +244,8 @@ export default function Maintenance() {
       description: newSchedule.description || '',
       date: newSchedule.date || DateTime.now().plus({ months: 1 }).toISODate(),
       completed: false,
-      notes: newSchedule.notes
+      notes: newSchedule.notes,
+      event_type: newSchedule.event_type || 'maintenance'
     };
 
     console.log('Formatted Schedule to add:', scheduleToAdd);
@@ -272,12 +277,14 @@ export default function Maintenance() {
         
         // Reset to default state
         setNewSchedule({
+          id: 0,
           car_id: selectedCar.id,
           title: '',
           description: '',
           date: DateTime.now().plus({ months: 1 }).toISODate() || '',
           completed: false,
-          notes: ''
+          notes: '',
+          event_type: 'maintenance'
         });
       }
     } catch (catchError) {

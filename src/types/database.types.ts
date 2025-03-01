@@ -85,3 +85,16 @@ export interface Database {
     }
   }
 }
+
+export interface MaintenanceSchedule {
+  id: number;
+  car_id: number;
+  title: string;
+  description?: string;
+  date: string;
+  completed: boolean;
+  created_at?: string;
+  updated_at?: string;
+  notes?: string;
+  event_type?: 'maintenance' | 'inspection' | 'insurance' | 'tax' | 'other';
+}
