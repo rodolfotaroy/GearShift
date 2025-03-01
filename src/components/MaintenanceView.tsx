@@ -80,12 +80,22 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
     async function fetchSchedules() {
         if (!car) return;
 
-        const { data } = await supabaseClient
-            .from('maintenance_events')
-            .select('*')
-            .eq('car_id', car.id);
+        try {
+            const { data, error } = await supabaseClient
+                .from('maintenance_events')
+                .select('*')
+                .eq('car_id', car.id)
+                .order('date', { ascending: true });
 
-        if (data) setSchedules(data);
+            if (error) {
+                console.error('Error fetching maintenance events:', error);
+                return;
+            }
+
+            if (data) setSchedules(data);
+        } catch (error) {
+            console.error('Error in fetchSchedules:', error);
+        }
     }
 
     async function fetchServiceHistory() {
@@ -105,21 +115,36 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
             car_id: newSchedule.car_id || 0
         };
 
-        const { data } = await supabaseClient
-            .from('maintenance_events')
-            .insert(scheduleToAdd)
-            .select();
+        try {
+            const { data, error } = await supabaseClient
+                .from('maintenance_events')
+                .insert({
+                    car_id: scheduleToAdd.car_id,
+                    title: scheduleToAdd.service_type,
+                    description: scheduleToAdd.description || '',
+                    date: DateTime.fromISO(scheduleToAdd.due_date).toISO(),
+                    completed: false
+                })
+                .select();
 
-        if (data) {
-            setSchedules([...schedules, data[0]]);
-            setShowAddSchedule(false);
-            setNewSchedule({
-                car_id: 0,
-                service_type: '',
-                due_date: '',
-                mileage_due: null,
-                description: ''
-            });
+            if (error) {
+                console.error('Error adding maintenance schedule:', error);
+                return;
+            }
+
+            if (data) {
+                setSchedules([...schedules, ...data]);
+                setShowAddSchedule(false);
+                setNewSchedule({
+                    car_id: 0,
+                    service_type: '',
+                    due_date: '',
+                    mileage_due: null,
+                    description: ''
+                });
+            }
+        } catch (error) {
+            console.error('Error in addMaintenanceSchedule:', error);
         }
     }
 
@@ -196,7 +221,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                                 <div className="px-4 py-4 flex items-center justify-between sm:px-6">
                                     <div className="flex items-center">
                                         <div className="flex-shrink-0">
-                                            {DateTime.fromISO(schedule.due_date) < DateTime.now() ? (
+                                            {DateTime.fromISO(schedule.date) < DateTime.now() ? (
                                                 <XCircleIcon className="h-6 w-6 text-red-500" />
                                             ) : (
                                                 <CheckCircleIcon className="h-6 w-6 text-green-500" />
@@ -204,10 +229,10 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                                         </div>
                                         <div className="ml-4">
                                             <div className="text-sm font-medium text-gray-900">
-                                                {schedule.service_type}
+                                                {schedule.title}
                                             </div>
                                             <div className="text-sm text-gray-500">
-                                                Due: {DateTime.fromISO(schedule.due_date).toFormat('yyyy/MM/dd')}
+                                                Due: {DateTime.fromISO(schedule.date).toFormat('yyyy/MM/dd')}
                                                 {schedule.mileage_due && ` or at ${schedule.mileage_due.toLocaleString()} km`}
                                             </div>
                                         </div>
