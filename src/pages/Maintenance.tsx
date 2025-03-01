@@ -97,8 +97,8 @@ export default function Maintenance() {
         // Process successful query
         if (data && data.length > 0) {
           setCars(data);
-          // Only set selected car if not already set
-          if (!selectedCar) {
+          // Always set the first car if no car is selected or the current selected car is not in the list
+          if (!selectedCar || !data.some(car => car.id === selectedCar.id)) {
             setSelectedCar(data[0]);
           }
         } else {
@@ -137,7 +137,7 @@ export default function Maintenance() {
     if (!authLoading) {
       fetchUserAndCars();
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, supabaseClient]);
 
   useEffect(() => {
     async function fetchMaintenanceData() {
@@ -355,10 +355,12 @@ export default function Maintenance() {
           </label>
           <select
             id="car-select"
-            value={selectedCar.id}
+            value={selectedCar?.id || ''}
             onChange={(e) => {
               const car = cars.find(c => c.id === e.target.value);
-              setSelectedCar(car || null);
+              if (car) {
+                setSelectedCar(car);
+              }
             }}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           >
