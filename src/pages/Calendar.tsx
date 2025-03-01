@@ -1,16 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Button } from '../components';
+import { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { useAuth } from '../contexts/AuthContext';
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  PlusIcon,
-  Bars4Icon,
-  CalendarIcon,
-  FunnelIcon,
-  TrashIcon,
-} from '@heroicons/react/24/outline';
 import { DateTime } from 'luxon';
 import { Database } from '../types/database.types';
 
@@ -45,7 +35,7 @@ export default function Calendar() {
   });
 
   // Centralized data fetching with improved error handling
-  const fetchData = useCallback(async () => {
+  const fetchData = useEffect(() => {
     if (!user) {
       setState(prev => ({ ...prev, loading: false, error: 'No authenticated user' }));
       return;
@@ -53,7 +43,7 @@ export default function Calendar() {
 
     try {
       // Fetch cars
-      const { data: carsData, error: carsError } = await supabaseClient
+      const { data: carsData, error: carsError } = supabaseClient
         .from('cars')
         .select('*')
         .eq('user_id', user.id);
@@ -76,7 +66,7 @@ export default function Calendar() {
         query.eq('car_id', state.filters.car);
       }
 
-      const { data: eventsData, error: eventsError } = await query;
+      const { data: eventsData, error: eventsError } = query;
 
       if (eventsError) throw eventsError;
 
@@ -101,34 +91,6 @@ export default function Calendar() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-
-  // Add event with robust error handling
-  const addEvent = async (eventData: Partial<CalendarEvent>) => {
-    try {
-      const { data, error } = await supabaseClient
-        .from('maintenance_events')
-        .insert({
-          ...eventData,
-          user_id: user?.id
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setState(prev => ({
-        ...prev,
-        events: [data, ...prev.events],
-        selectedEvent: null
-      }));
-    } catch (error) {
-      console.error('Error adding event:', error);
-      setState(prev => ({
-        ...prev,
-        error: error instanceof Error ? error.message : 'Failed to add event'
-      }));
-    }
-  };
 
   // Delete event with robust error handling
   const deleteEvent = async (eventId: number) => {
@@ -166,7 +128,7 @@ export default function Calendar() {
     return (
       <div className="bg-red-100 p-4 rounded-lg">
         <p className="text-red-600">Error: {state.error}</p>
-        <Button onClick={fetchData}>Retry</Button>
+        <div onClick={() => fetchData()}>Retry</div>
       </div>
     );
   }
@@ -176,25 +138,23 @@ export default function Calendar() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Calendar Navigation */}
         <div className="flex items-center space-x-4">
-          <button 
+          <div 
             onClick={() => setState(prev => ({ 
               ...prev, 
               selectedDate: DateTime.fromJSDate(prev.selectedDate).minus({ months: 1 }).toJSDate() 
             }))}
           >
-            <ChevronLeftIcon className="h-6 w-6" />
-          </button>
+          </div>
           <h2 className="text-xl font-semibold">
             {DateTime.fromJSDate(state.selectedDate).toFormat('MMMM yyyy')}
           </h2>
-          <button 
+          <div 
             onClick={() => setState(prev => ({ 
               ...prev, 
               selectedDate: DateTime.fromJSDate(prev.selectedDate).plus({ months: 1 }).toJSDate() 
             }))}
           >
-            <ChevronRightIcon className="h-6 w-6" />
-          </button>
+          </div>
         </div>
 
         {/* Event List */}
@@ -211,12 +171,11 @@ export default function Calendar() {
                 Date: {DateTime.fromISO(event.date).toLocaleString(DateTime.DATE_FULL)}
               </p>
               <div className="flex justify-end space-x-2 mt-2">
-                <Button 
-                  variant="danger" 
+                <div 
                   onClick={() => deleteEvent(event.id)}
                 >
                   Delete
-                </Button>
+                </div>
               </div>
             </div>
           ))}

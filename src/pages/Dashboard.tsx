@@ -12,8 +12,7 @@ import {
   Title
 } from 'chart.js';
 import { Doughnut, Line } from 'react-chartjs-2';
-import MaintenanceCostTracker from '../components/MaintenanceCostTracker';
-import { MaintenanceCost } from '../types';
+import { MaintenanceCostTracker } from '../components/MaintenanceCostTracker';
 
 ChartJS.register(
   ArcElement,
@@ -43,11 +42,6 @@ const Dashboard: React.FC = () => {
   const [carExpenses, setCarExpenses] = useState<CarExpense[]>([]);
   const [carCount, setCarCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
-  const [maintenanceCosts, setMaintenanceCosts] = useState<MaintenanceCost[]>([]);
-
-  const handleAddMaintenanceCost = (cost: MaintenanceCost) => {
-    setMaintenanceCosts([...maintenanceCosts, { ...cost, id: Date.now().toString() }]);
-  };
 
   useEffect(() => {
     fetchDashboardData();
@@ -157,6 +151,23 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  interface MaintenanceCostTrackerProps {
+    costs: MaintenanceCost[];
+    onAddCost: (cost: MaintenanceCost) => void;
+  }
+
+  const MaintenanceCostTrackerWrapper: React.FC<MaintenanceCostTrackerProps> = ({ 
+    costs, 
+    onAddCost 
+  }) => {
+    return (
+      <MaintenanceCostTracker 
+        costs={costs}
+        onAddCost={onAddCost}
+      />
+    );
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -199,99 +210,43 @@ const Dashboard: React.FC = () => {
         <div className="bg-white dark:bg-dark-background-secondary rounded-xl shadow-md dark:shadow-dark-md p-6 
                         flex flex-col justify-between hover:shadow-lg dark:hover:shadow-dark-lg 
                         transition-all duration-300 transform hover:-translate-y-1 min-h-[150px]">
-          <div>
-            <dt className="text-sm font-medium text-neutral-500 dark:text-dark-text-secondary truncate mb-2">
-              Average Monthly Expense
-            </dt>
-            <dd className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-dark-text-primary 
-                           break-words overflow-hidden text-ellipsis">
-              ¥{(totalExpenses / 6).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </dd>
-          </div>
-        </div>
-
-        {/* Maintenance Cost Card */}
-        <div className="bg-white dark:bg-dark-background-secondary rounded-xl shadow-md dark:shadow-dark-md p-6 
-                        flex flex-col justify-between hover:shadow-lg dark:hover:shadow-dark-lg 
-                        transition-all duration-300 transform hover:-translate-y-1 min-h-[150px]">
-          <div>
-            <dt className="text-sm font-medium text-neutral-500 dark:text-dark-text-secondary truncate mb-2">
-              Total Maintenance Costs
-            </dt>
-            <dd className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-dark-text-primary 
-                           break-words overflow-hidden text-ellipsis">
-              ¥{maintenanceCosts.reduce((sum, cost) => sum + cost.amount, 0).toLocaleString()}
-            </dd>
-          </div>
+          <MaintenanceCostTrackerWrapper 
+            costs={[]} 
+            onAddCost={() => console.log('Add cost')} 
+          />
         </div>
       </div>
 
-      {/* Charts and Detailed Sections */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Expenses by Category Chart */}
-        <div className="bg-white dark:bg-dark-background-secondary rounded-xl shadow-md dark:shadow-dark-md p-6 
-                        md:col-span-1 lg:col-span-2 h-[400px] flex flex-col">
-          <h3 className="text-lg font-semibold text-neutral-800 dark:text-dark-text-primary mb-4">
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Expenses by Category */}
+        <div className="bg-white dark:bg-dark-background-secondary rounded-xl shadow-md dark:shadow-dark-md p-6">
+          <h2 className="text-xl font-semibold mb-4 text-neutral-900 dark:text-dark-text-primary">
             Expenses by Category
-          </h3>
-          <div className="flex-grow overflow-hidden">
+          </h2>
+          <div className="h-64">
             <Doughnut 
               data={doughnutData} 
-              options={{
-                ...chartOptions,
-                responsive: true,
-                maintainAspectRatio: false,
-              }}
+              options={chartOptions} 
             />
           </div>
         </div>
 
-        {/* Maintenance History Chart */}
-        <div className="bg-white dark:bg-dark-background-secondary rounded-xl shadow-md dark:shadow-dark-md p-6 
-                        md:col-span-1 lg:col-span-1 h-[400px] flex flex-col">
-          <h3 className="text-lg font-semibold text-neutral-800 dark:text-dark-text-primary mb-4">
-            Maintenance History
-          </h3>
-          <div className="flex-grow overflow-hidden">
+        {/* Expenses by Car */}
+        <div className="bg-white dark:bg-dark-background-secondary rounded-xl shadow-md dark:shadow-dark-md p-6">
+          <h2 className="text-xl font-semibold mb-4 text-neutral-900 dark:text-dark-text-primary">
+            Expenses by Vehicle
+          </h2>
+          <div className="h-64">
             <Line 
               data={lineData} 
-              options={{
-                ...chartOptions,
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                  x: {
-                    ticks: {
-                      color: '#94a3b8' // slate-500 for dark mode
-                    },
-                    grid: {
-                      color: '#334155' // slate-700 for dark mode
-                    }
-                  },
-                  y: {
-                    ticks: {
-                      color: '#94a3b8' // slate-500 for dark mode
-                    },
-                    grid: {
-                      color: '#334155' // slate-700 for dark mode
-                    }
-                  }
-                }
-              }}
+              options={chartOptions} 
             />
           </div>
-        </div>
-
-        {/* Maintenance Cost Tracker */}
-        <div className="md:col-span-2 lg:col-span-3">
-          <MaintenanceCostTracker 
-            costs={maintenanceCosts} 
-            onAddCost={handleAddMaintenanceCost} 
-          />
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default Dashboard;

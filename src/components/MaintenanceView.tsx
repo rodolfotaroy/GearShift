@@ -11,7 +11,7 @@ import { Database } from '../types/database.types';
 type MaintenanceEvent = Database['public']['Tables']['maintenance_events']['Row'];
 type Car = Database['public']['Tables']['cars']['Row'];
 
-export default function MaintenanceView({ 
+export const MaintenanceView = ({ 
   car, 
   schedules, 
   loading,
@@ -23,22 +23,52 @@ export default function MaintenanceView({
   loading: boolean;
   onAddSchedule: (schedule: Partial<MaintenanceEvent>) => void;
   onUpdateSchedule: (id: number, updates: Partial<MaintenanceEvent>) => void;
-}) {
-  const [state, setState] = useState<{
+}) => {
+  // Ensure type safety for state and props
+  const [scheduleState, setScheduleState] = useState<{
     showAddSchedule: boolean;
     selectedStatus: string;
-    newSchedule: Partial<MaintenanceEvent>;
+    newSchedule: Partial<{
+      id?: number;
+      car_id: number;
+      title: string;
+      description?: string;
+      date: string;
+      completed: boolean;
+      created_at?: string;
+      updated_at?: string;
+      notes?: string;
+    }>;
   }>({
     showAddSchedule: false,
     selectedStatus: '',
     newSchedule: {
-      car_id: car.id,
+      car_id: 0,
       title: '',
       description: '',
-      date: DateTime.now().plus({ months: 1 }).toISODate() || '',
+      date: '',
       completed: false
     }
   });
+
+  // Update state setter to ensure type compatibility
+  const updateScheduleState = (
+    update: (prev: typeof scheduleState) => Partial<typeof scheduleState>
+  ) => {
+    setScheduleState(prev => ({
+      ...prev,
+      ...update(prev)
+    }));
+  };
+
+  const updateNewSchedule = (updates: Partial<typeof scheduleState.newSchedule>) => {
+    updateScheduleState(prev => ({
+      newSchedule: {
+        ...prev.newSchedule,
+        ...updates
+      }
+    }));
+  };
 
   // Memoized filtered schedules with improved type safety
   const filteredSchedules = useMemo(() => {
@@ -50,7 +80,7 @@ export default function MaintenanceView({
       const isCompleted = schedule.completed;
       const isUpcoming = scheduleDate >= today && !schedule.completed;
 
-      switch (state.selectedStatus) {
+      switch (scheduleState.selectedStatus) {
         case 'Overdue':
           return isOverdue;
         case 'Completed':
@@ -61,34 +91,27 @@ export default function MaintenanceView({
           return true;
       }
     });
-  }, [schedules, state.selectedStatus]);
+  }, [schedules, scheduleState.selectedStatus]);
 
   // Handle new schedule input changes
   const handleNewScheduleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setState(prev => ({
-      ...prev,
-      newSchedule: {
-        ...prev.newSchedule,
-        [name]: value
-      }
-    }));
+    updateNewSchedule({ [name]: value });
   };
 
   // Submit new maintenance schedule
   const handleAddSchedule = () => {
-    if (state.newSchedule.title && state.newSchedule.date) {
-      onAddSchedule(state.newSchedule);
-      setState(prev => ({
-        ...prev,
+    if (scheduleState.newSchedule.title && scheduleState.newSchedule.date) {
+      onAddSchedule(scheduleState.newSchedule);
+      updateScheduleState(prev => ({
         showAddSchedule: false,
         newSchedule: {
-          car_id: car.id,
+          car_id: 0,
           title: '',
           description: '',
-          date: DateTime.now().plus({ months: 1 }).toISODate() || '',
+          date: '',
           completed: false
         }
       }));
@@ -101,12 +124,11 @@ export default function MaintenanceView({
       {['Overdue', 'Upcoming', 'Completed'].map(status => (
         <button
           key={status}
-          onClick={() => setState(prev => ({
-            ...prev,
+          onClick={() => updateScheduleState(prev => ({
             selectedStatus: status === prev.selectedStatus ? '' : status
           }))}
           className={`px-3 py-1 rounded ${
-            state.selectedStatus === status 
+            scheduleState.selectedStatus === status 
               ? 'bg-indigo-600 text-white' 
               : 'bg-gray-200 text-gray-800'
           }`}
@@ -133,7 +155,7 @@ export default function MaintenanceView({
       {/* Maintenance Schedule Section */}
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Maintenance Schedule</h2>
-        <Button onClick={() => setState(prev => ({ ...prev, showAddSchedule: true }))}>
+        <Button onClick={() => updateScheduleState(prev => ({ showAddSchedule: true }))}>
           Add Schedule
         </Button>
       </div>
@@ -170,7 +192,7 @@ export default function MaintenanceView({
       </div>
 
       {/* Add Maintenance Schedule Modal */}
-      {state.showAddSchedule && (
+      {scheduleState.showAddSchedule && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-96">
             <h2 className="text-2xl font-bold mb-4 dark:text-white">Add Maintenance Schedule</h2>
@@ -184,7 +206,7 @@ export default function MaintenanceView({
                 type="text"
                 id="title"
                 name="title"
-                value={state.newSchedule.title}
+                value={scheduleState.newSchedule.title}
                 onChange={handleNewScheduleChange}
                 className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:text-white"
                 placeholder="Enter maintenance event title"
@@ -199,7 +221,7 @@ export default function MaintenanceView({
               <textarea
                 id="description"
                 name="description"
-                value={state.newSchedule.description}
+                value={scheduleState.newSchedule.description}
                 onChange={handleNewScheduleChange}
                 className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:text-white"
                 placeholder="Enter maintenance event description"
@@ -215,7 +237,7 @@ export default function MaintenanceView({
                 type="date"
                 id="date"
                 name="date"
-                value={state.newSchedule.date}
+                value={scheduleState.newSchedule.date}
                 onChange={handleNewScheduleChange}
                 className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:text-white"
               />
@@ -225,7 +247,7 @@ export default function MaintenanceView({
             <div className="flex justify-end space-x-3 mt-6">
               <Button 
                 variant="secondary" 
-                onClick={() => setState(prev => ({ ...prev, showAddSchedule: false }))}
+                onClick={() => updateScheduleState(prev => ({ showAddSchedule: false }))}
               >
                 Cancel
               </Button>

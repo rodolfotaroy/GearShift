@@ -1,51 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { PencilIcon, TrashIcon, PhotoIcon } from '@heroicons/react/24/outline';
-import CarProfileView from '../components/CarProfileView';
-import { Button } from '../components';
-
-interface Car {
-  id: number;
-  make: string;
-  model: string;
-  year: number;
-  plate_number: string;
-  vin: string;
-  mileage: number;
-  user_id: string;
-  image_url: string | null;
-  created_at: string;
-}
-
-interface ValidationError {
-  field: string;
-  message: string;
-}
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const CURRENT_YEAR = new Date().getFullYear();
-const PLATE_NUMBER_REGEX = /^[A-Z0-9]{1,8}$/;
+import { CarProfileView } from '../components/CarProfileView';
+import { Tables } from '../types/supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function CarProfiles() {
   const { supabaseClient, supabaseStorage } = useSupabase();
-  const [cars, setCars] = useState<Car[]>([]);
+  const { user } = useAuth();
+  const [cars, setCars] = useState<Tables['cars'][]>([]);
   const [isAddingCar, setIsAddingCar] = useState(false);
   const [isEditingCar, setIsEditingCar] = useState(false);
-  const [selectedCar, setSelectedCar] = useState<Car | null>(null);
+  const [selectedCar, setSelectedCar] = useState<Tables['cars'] | null>(null);
   const [isViewingProfile, setIsViewingProfile] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
-  const [newCar, setNewCar] = useState({
+  const [validationErrors, setValidationErrors] = useState<{ field: string; message: string }[]>([]);
+  const [newCar, setNewCar] = useState<Partial<Tables['cars']>>({
     make: '',
     model: '',
-    year: CURRENT_YEAR,
+    year: new Date().getFullYear(),
     plate_number: '',
     vin: '',
     mileage: 0,
-    user_id: '',
-    image_url: null as string | null,
+    user_id: user?.id || '',
+    image_url: null,
   });
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+  const CURRENT_YEAR = new Date().getFullYear();
+  const PLATE_NUMBER_REGEX = /^[A-Z0-9]{1,8}$/;
 
   useEffect(() => {
     fetchCars();
@@ -64,27 +48,27 @@ export default function CarProfiles() {
     }
   }
 
-  const validateCarData = (): ValidationError[] => {
-    const errors: ValidationError[] = [];
+  const validateCarData = (): { field: string; message: string }[] => {
+    const errors: { field: string; message: string }[] = [];
 
-    if (!newCar.make.trim()) {
+    if (!newCar.make?.trim()) {
       errors.push({ field: 'make', message: 'Make is required' });
     }
-    if (!newCar.model.trim()) {
+    if (!newCar.model?.trim()) {
       errors.push({ field: 'model', message: 'Model is required' });
     }
-    if (newCar.year < 1900 || newCar.year > CURRENT_YEAR + 1) {
+    if ((newCar.year || 0) < 1900 || (newCar.year || 0) > CURRENT_YEAR + 1) {
       errors.push({ field: 'year', message: `Year must be between 1900 and ${CURRENT_YEAR + 1}` });
     }
-    if (!PLATE_NUMBER_REGEX.test(newCar.plate_number)) {
+    if (!PLATE_NUMBER_REGEX.test(newCar.plate_number || '')) {
       errors.push({ field: 'plate_number', message: 'Invalid plate number format. Use capital letters and numbers only (max 8 characters)' });
     }
 
     return errors;
   };
 
-  const validateImageFile = (file: File): ValidationError[] => {
-    const errors: ValidationError[] = [];
+  const validateImageFile = (file: File): { field: string; message: string }[] => {
+    const errors: { field: string; message: string }[] = [];
 
     if (file.size > MAX_FILE_SIZE) {
       errors.push({ field: 'image', message: 'File size must be less than 5MB' });
@@ -113,7 +97,7 @@ export default function CarProfiles() {
           .getPublicUrl(uploadResult.path);
           
         if (publicUrl) {
-          setNewCar(prev => ({ ...prev, image_url: publicUrl.publicUrl }));
+          setNewCar((prev: Partial<Tables['cars']>) => ({ ...prev, image_url: publicUrl.publicUrl }));
         }
       }
     } catch (error) {
@@ -138,13 +122,13 @@ export default function CarProfiles() {
       const { data: newCarData, error: carError } = await supabaseClient
         .from('cars')
         .insert([{
-          make: newCar.make.trim(),
-          model: newCar.model.trim(),
-          year: newCar.year,
-          plate_number: newCar.plate_number.toUpperCase(),
-          vin: newCar.vin,
-          mileage: newCar.mileage,
-          user_id: newCar.user_id,
+          make: newCar.make?.trim() || '',
+          model: newCar.model?.trim() || '',
+          year: newCar.year || new Date().getFullYear(),
+          plate_number: newCar.plate_number?.toUpperCase() || '',
+          vin: newCar.vin || '',
+          mileage: newCar.mileage || 0,
+          user_id: user?.id || '',
         }])
         .select()
         .single();
@@ -166,11 +150,11 @@ export default function CarProfiles() {
       setNewCar({
         make: '',
         model: '',
-        year: CURRENT_YEAR,
+        year: new Date().getFullYear(),
         plate_number: '',
         vin: '',
         mileage: 0,
-        user_id: '',
+        user_id: user?.id || '',
         image_url: null,
       });
       setSelectedImage(null);
@@ -201,23 +185,22 @@ export default function CarProfiles() {
         await handleFileUpload({ target: { files: [selectedImage] } } as unknown as React.ChangeEvent<HTMLInputElement>);
       }
 
-      // Update the car with all fields including the new image URL if present
-      const { error } = await supabaseClient
+      // Update car details
+      const { error: updateError } = await supabaseClient
         .from('cars')
         .update({
-          make: newCar.make.trim(),
-          model: newCar.model.trim(),
-          year: newCar.year,
-          plate_number: newCar.plate_number.toUpperCase(),
-          vin: newCar.vin,
-          mileage: newCar.mileage,
-          user_id: newCar.user_id,
-          ...(newCar.image_url && { image_url: newCar.image_url }),
+          make: newCar.make?.trim() || '',
+          model: newCar.model?.trim() || '',
+          year: newCar.year || new Date().getFullYear(),
+          plate_number: newCar.plate_number?.toUpperCase() || '',
+          vin: newCar.vin || '',
+          mileage: newCar.mileage || 0,
+          image_url: newCar.image_url || selectedCar.image_url
         })
         .eq('id', selectedCar.id);
 
-      if (error) {
-        console.error('Error updating car:', error);
+      if (updateError) {
+        console.error('Error updating car:', updateError);
         return;
       }
 
@@ -226,11 +209,11 @@ export default function CarProfiles() {
       setNewCar({
         make: '',
         model: '',
-        year: CURRENT_YEAR,
+        year: new Date().getFullYear(),
         plate_number: '',
         vin: '',
         mileage: 0,
-        user_id: '',
+        user_id: user?.id || '',
         image_url: null,
       });
       setSelectedImage(null);
@@ -240,240 +223,170 @@ export default function CarProfiles() {
     }
   }
 
-  async function handleDeleteCar(carId: number) {
-    if (!window.confirm('Are you sure you want to delete this car? This will also delete all associated expenses.')) {
-      return;
-    }
+  const handleDeleteCar = async (carId: number) => {
+    try {
+      const { error } = await supabaseClient
+        .from('cars')
+        .delete()
+        .eq('id', carId);
 
-    const { error: expensesError } = await supabaseClient
-      .from('expenses')
-      .delete()
-      .eq('car_id', carId);
+      if (error) {
+        console.error('Error deleting car:', error);
+        return;
+      }
 
-    if (expensesError) {
-      console.error('Error deleting car expenses:', expensesError);
-      return;
-    }
-
-    const { error } = await supabaseClient
-      .from('cars')
-      .delete()
-      .eq('id', carId);
-
-    if (error) {
-      console.error('Error deleting car:', error);
-    } else {
       fetchCars();
+    } catch (error) {
+      console.error('Error in delete car process:', error);
     }
-  }
-
-  function startEditCar(car: Car) {
-    setSelectedCar(car);
-    setNewCar({
-      make: car.make,
-      model: car.model,
-      year: car.year,
-      plate_number: car.plate_number,
-      vin: car.vin,
-      mileage: car.mileage,
-      user_id: car.user_id,
-      image_url: car.image_url,
-    });
-    setIsEditingCar(true);
-  }
+  };
 
   return (
-    <div className="w-full max-w-[98%] sm:max-w-[95%] mx-auto px-2 sm:px-4">
-      <div className="flex justify-between items-center mb-4 sm:mb-8">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Car Profiles</h1>
-        <Button
-          onClick={() => setIsAddingCar(true)}
-          variant="primary"
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">My Cars</h1>
+        <button 
+          onClick={() => setIsAddingCar(true)} 
+          className="bg-primary-500 text-white px-4 py-2 rounded hover:bg-primary-600 transition-colors"
         >
-          Add Car
-        </Button>
+          Add New Car
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-        {cars.map((car) => (
-          <div
-            key={car.id}
-            className="bg-white rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden transform hover:-translate-y-1"
-            onClick={() => {
-              setSelectedCar(car);
-              setIsViewingProfile(true);
-            }}
-          >
-            <div className="relative aspect-[16/9] bg-gray-100">
-              {car.image_url ? (
-                <div className="absolute inset-0 overflow-hidden">
-                  <img
-                    src={car.image_url}
-                    alt={`${car.make} ${car.model}`}
-                    className="w-full h-full object-cover object-center transform hover:scale-110 transition-transform duration-500"
-                  />
-                </div>
-              ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                  <PhotoIcon className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400" />
-                </div>
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
-            </div>
-            
-            <div className="p-3 sm:p-4">
-              <div className="flex justify-between items-start">
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-1 truncate">{car.make} {car.model}</h2>
-                  <div className="space-y-1">
-                    <p className="text-xs sm:text-sm text-gray-600 flex items-center">
-                      <span className="inline-block w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-gradient-to-r from-indigo-400 to-purple-400 mr-2 flex-shrink-0" />
-                      <span className="truncate">{car.year}</span>
-                    </p>
-                    <p className="text-xs sm:text-sm text-gray-600 flex items-center">
-                      <span className="inline-block w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 mr-2 flex-shrink-0" />
-                      <span className="truncate">{car.plate_number}</span>
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex space-x-1 sm:space-x-2 ml-2" onClick={(e) => e.stopPropagation()}>
-                  <Button
-                    onClick={() => startEditCar(car)}
-                    variant="primary"
-                    className="p-1 sm:p-1.5 rounded-full hover:bg-gray-100 transition-colors duration-200"
-                  >
-                    <PencilIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-600 hover:text-indigo-600" />
-                  </Button>
-                  <Button
-                    onClick={() => handleDeleteCar(car.id)}
-                    variant="primary"
-                    className="p-1 sm:p-1.5 rounded-full hover:bg-gray-100 transition-colors duration-200"
-                  >
-                    <TrashIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-600 hover:text-red-600" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {isViewingProfile && selectedCar && (
-        <CarProfileView
-          car={selectedCar}
-          onClose={() => {
-            setIsViewingProfile(false);
-            setSelectedCar(null);
-          }}
-          onCarUpdated={() => {
-            fetchCars(); // Refresh the car list after update
-            setIsViewingProfile(false);
-            setSelectedCar(null);
-          }}
-        />
-      )}
-
+      {/* Add/Edit Car Modal */}
       {(isAddingCar || isEditingCar) && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h2 className="text-xl font-bold mb-4">
+          <div className="bg-white dark:bg-dark-surface p-6 rounded-lg w-full max-w-md">
+            <h2 className="text-xl font-semibold mb-4">
               {isAddingCar ? 'Add New Car' : 'Edit Car'}
             </h2>
             <form onSubmit={isAddingCar ? handleAddCar : handleEditCar} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Make</label>
+                <label htmlFor="make" className="block text-sm font-medium mb-1">Make</label>
                 <input
                   type="text"
+                  id="make"
                   value={newCar.make}
-                  onChange={(e) => setNewCar({ ...newCar, make: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  onChange={(e) => setNewCar((prev: Partial<Tables['cars']>) => ({ ...prev, make: e.target.value }))}
+                  className="w-full p-2 border rounded"
                   required
                 />
+                {validationErrors.find(err => err.field === 'make') && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {validationErrors.find(err => err.field === 'make')?.message}
+                  </p>
+                )}
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700">Model</label>
+                <label htmlFor="model" className="block text-sm font-medium mb-1">Model</label>
                 <input
                   type="text"
+                  id="model"
                   value={newCar.model}
-                  onChange={(e) => setNewCar({ ...newCar, model: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  onChange={(e) => setNewCar((prev: Partial<Tables['cars']>) => ({ ...prev, model: e.target.value }))}
+                  className="w-full p-2 border rounded"
                   required
                 />
+                {validationErrors.find(err => err.field === 'model') && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {validationErrors.find(err => err.field === 'model')?.message}
+                  </p>
+                )}
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700">Year</label>
+                <label htmlFor="year" className="block text-sm font-medium mb-1">Year</label>
                 <input
                   type="number"
+                  id="year"
                   value={newCar.year}
-                  onChange={(e) => setNewCar({ ...newCar, year: parseInt(e.target.value) })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  onChange={(e) => setNewCar((prev: Partial<Tables['cars']>) => ({ ...prev, year: Number(e.target.value) }))}
+                  className="w-full p-2 border rounded"
+                  min={1900}
+                  max={CURRENT_YEAR + 1}
                   required
                 />
+                {validationErrors.find(err => err.field === 'year') && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {validationErrors.find(err => err.field === 'year')?.message}
+                  </p>
+                )}
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700">Plate Number</label>
+                <label htmlFor="plate_number" className="block text-sm font-medium mb-1">Plate Number</label>
                 <input
                   type="text"
+                  id="plate_number"
                   value={newCar.plate_number}
-                  onChange={(e) => setNewCar({ ...newCar, plate_number: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  onChange={(e) => setNewCar((prev: Partial<Tables['cars']>) => ({ ...prev, plate_number: e.target.value }))}
+                  className="w-full p-2 border rounded"
                   required
                 />
+                {validationErrors.find(err => err.field === 'plate_number') && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {validationErrors.find(err => err.field === 'plate_number')?.message}
+                  </p>
+                )}
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700">VIN</label>
+                <label htmlFor="vin" className="block text-sm font-medium mb-1">VIN</label>
                 <input
                   type="text"
+                  id="vin"
                   value={newCar.vin}
-                  onChange={(e) => setNewCar({ ...newCar, vin: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  onChange={(e) => setNewCar((prev: Partial<Tables['cars']>) => ({ ...prev, vin: e.target.value }))}
+                  className="w-full p-2 border rounded"
                 />
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700">Mileage</label>
+                <label htmlFor="mileage" className="block text-sm font-medium mb-1">Mileage</label>
                 <input
                   type="number"
+                  id="mileage"
                   value={newCar.mileage}
-                  onChange={(e) => setNewCar({ ...newCar, mileage: parseInt(e.target.value) })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  onChange={(e) => setNewCar((prev: Partial<Tables['cars']>) => ({ ...prev, mileage: Number(e.target.value) }))}
+                  className="w-full p-2 border rounded"
                 />
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700">User ID</label>
+                <label htmlFor="image" className="block text-sm font-medium mb-1">Car Image</label>
                 <input
-                  type="text"
-                  value={newCar.user_id}
-                  onChange={(e) => setNewCar({ ...newCar, user_id: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  type="file"
+                  id="image"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const fileErrors = validateImageFile(file);
+                      if (fileErrors.length === 0) {
+                        setSelectedImage(file);
+                      } else {
+                        setValidationErrors(fileErrors);
+                      }
+                    }
+                  }}
+                  className="w-full p-2 border rounded"
                 />
+                {validationErrors.find(err => err.field === 'image') && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {validationErrors.find(err => err.field === 'image')?.message}
+                  </p>
+                )}
+                {selectedImage && (
+                  <p className="text-sm text-green-600 mt-1">
+                    {selectedImage.name} selected
+                  </p>
+                )}
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Car Image</label>
-                <div className="mt-1 flex items-center">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                    className="mt-1 block w-full text-sm text-gray-500
-                      file:mr-4 file:py-2 file:px-4
-                      file:rounded-md file:border-0
-                      file:text-sm file:font-semibold
-                      file:bg-blue-50 file:text-blue-700
-                      hover:file:bg-blue-100"
-                  />
-                </div>
-              </div>
-              {validationErrors.length > 0 && (
-                <div className="text-red-600">
-                  {validationErrors.map((error, index) => (
-                    <p key={index}>{error.message}</p>
-                  ))}
-                </div>
-              )}
-              <div className="flex justify-end space-x-3">
-                <Button
-                  type="button"
+              
+              <div className="flex justify-end space-x-2">
+                <button 
+                  type="button" 
                   onClick={() => {
                     setIsAddingCar(false);
                     setIsEditingCar(false);
@@ -485,26 +398,114 @@ export default function CarProfiles() {
                       plate_number: '',
                       vin: '',
                       mileage: 0,
-                      user_id: '',
+                      user_id: user?.id || '',
                       image_url: null,
                     });
                     setSelectedImage(null);
+                    setValidationErrors([]);
                   }}
-                  variant="primary"
+                  className="px-4 py-2 bg-neutral-200 text-neutral-800 rounded hover:bg-neutral-300 transition-colors"
                 >
                   Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  
+                </button>
+                <button 
+                  type="submit" 
+                  className="px-4 py-2 bg-primary-500 text-white rounded hover:bg-primary-600 transition-colors"
                 >
-                  {isAddingCar ? 'Add Car' : 'Save Changes'}
-                </Button>
+                  {isAddingCar ? 'Add Car' : 'Update Car'}
+                </button>
               </div>
             </form>
           </div>
+        )}
+
+        {/* Car List */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {cars.map(car => (
+            <div 
+              key={car.id} 
+              className="bg-white dark:bg-dark-surface rounded-lg shadow-md p-4 flex flex-col"
+            >
+              <div className="flex-grow">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">
+                    {car.year} {car.make} {car.model}
+                  </h2>
+                  <div className="flex space-x-2">
+                    <button 
+                      onClick={() => {
+                        setSelectedCar(car);
+                        setNewCar({
+                          make: car.make,
+                          model: car.model,
+                          year: car.year,
+                          plate_number: car.plate_number,
+                          vin: car.vin,
+                          mileage: car.mileage,
+                          user_id: car.user_id,
+                          image_url: car.image_url,
+                        });
+                        setIsEditingCar(true);
+                      }}
+                      className="text-neutral-600 dark:text-neutral-300 hover:text-primary-500 dark:hover:text-primary-400"
+                    >
+                      <PencilIcon className="w-5 h-5" />
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteCar(car.id)}
+                      className="text-neutral-600 dark:text-neutral-300 hover:text-red-500 dark:hover:text-red-400"
+                    >
+                      <TrashIcon className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-4 mb-4">
+                  {car.image_url ? (
+                    <img 
+                      src={car.image_url} 
+                      alt={`${car.make} ${car.model}`} 
+                      className="w-24 h-24 object-cover rounded-lg"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 bg-neutral-200 dark:bg-dark-border rounded-lg flex items-center justify-center">
+                      <PhotoIcon className="w-12 h-12 text-neutral-500 dark:text-neutral-400" />
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                      Plate: {car.plate_number}
+                    </p>
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                      Mileage: {car.mileage.toLocaleString()} km
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => {
+                  setSelectedCar(car);
+                  setIsViewingProfile(true);
+                }}
+                className="w-full bg-primary-500 text-white px-4 py-2 rounded hover:bg-primary-600 transition-colors"
+              >
+                View Details
+              </button>
+            </div>
+          ))}
         </div>
-      )}
-    </div>
-  );
+
+        {/* Car Profile View Modal */}
+        {isViewingProfile && selectedCar && (
+          <CarProfileView 
+            car={selectedCar} 
+            onClose={() => {
+              setIsViewingProfile(false);
+              setSelectedCar(null);
+            }} 
+          />
+        )}
+      </div>
+    );
 }
