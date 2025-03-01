@@ -215,9 +215,15 @@ export default function Maintenance() {
   async function addMaintenanceSchedule() {
     if (!selectedCar) return;
 
+    console.log('Adding maintenance schedule:', {
+      selectedCar,
+      newSchedule,
+      user
+    });
+
     const scheduleToAdd = {
       car_id: selectedCar.id,
-      event_type: newSchedule.service_type,
+      event_type: newSchedule.service_type, // Matches database schema
       date: newSchedule.due_date,
       mileage_due: newSchedule.mileage_due,
       notes: newSchedule.description,
@@ -225,17 +231,23 @@ export default function Maintenance() {
       user_id: user?.id || ''
     };
 
+    console.log('Schedule to add:', scheduleToAdd);
+
     const { data, error } = await supabaseClient
       .from('maintenance_events')
       .insert(scheduleToAdd)
       .select();
 
     if (error) {
-      console.error('Error adding maintenance schedule:', error);
+      console.error('Error adding maintenance schedule:', {
+        error,
+        scheduleToAdd
+      });
       return;
     }
 
     if (data) {
+      console.log('Maintenance schedule added:', data);
       setSchedules([...schedules, data[0]]);
       setShowAddScheduleModal(false);
       setNewSchedule({
