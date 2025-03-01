@@ -37,43 +37,34 @@ export interface Database {
       }
       maintenance_events: {
         Row: {
-          id: string
-          user_id: string
-          car_id: string
+          id: number
+          car_id: number
           title: string
           description?: string
-          event_type: 'maintenance' | 'inspection' | 'insurance' | 'tax' | 'other'
-          start_date: string
-          end_date?: string
-          status: 'scheduled' | 'completed' | 'cancelled'
-          recurrence_type: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly'
+          date: string
+          completed: boolean
           created_at: string
+          updated_at: string
         }
         Insert: {
-          id?: string
-          user_id: string
-          car_id: string
+          id?: number
+          car_id: number
           title: string
           description?: string
-          event_type?: 'maintenance' | 'inspection' | 'insurance' | 'tax' | 'other'
-          start_date: string
-          end_date?: string
-          status?: 'scheduled' | 'completed' | 'cancelled'
-          recurrence_type?: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly'
+          date: string
+          completed: boolean
           created_at?: string
+          updated_at?: string
         }
         Update: {
-          id?: string
-          user_id?: string
-          car_id?: string
+          id?: number
+          car_id?: number
           title?: string
           description?: string
-          event_type?: 'maintenance' | 'inspection' | 'insurance' | 'tax' | 'other'
-          start_date?: string
-          end_date?: string
-          status?: 'scheduled' | 'completed' | 'cancelled'
-          recurrence_type?: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly'
+          date?: string
+          completed?: boolean
           created_at?: string
+          updated_at?: string
         }
       }
     }

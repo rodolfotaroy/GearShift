@@ -240,14 +240,11 @@ export default function Maintenance() {
     }
 
     const scheduleToAdd = {
-      user_id: user.id,
       car_id: selectedCar.id,
-      title: newSchedule.title || 'Maintenance Event',
-      description: newSchedule.description,
-      event_type: newSchedule.event_type,
-      start_date: newSchedule.start_date,
-      status: newSchedule.status,
-      recurrence_type: newSchedule.recurrence_type,
+      title: newSchedule.title || 'Maintenance Event', 
+      description: newSchedule.description || '',
+      date: newSchedule.start_date || DateTime.now().plus({ months: 1 }).toISODate(),
+      completed: false, // Default to not completed
     };
 
     console.log('Formatted Schedule to add:', scheduleToAdd);
@@ -265,12 +262,13 @@ export default function Maintenance() {
           details: error.details,
           hint: error.hint,
           message: error.message,
-          fullError: error
+          fullError: error,
+          scheduleData: scheduleToAdd
         });
 
         // Additional debugging for potential type mismatches
-        Object.keys(scheduleToAdd).forEach(key => {
-          console.log(`Type of ${key}:`, typeof scheduleToAdd[key as keyof typeof scheduleToAdd]);
+        Object.entries(scheduleToAdd).forEach(([key, value]) => {
+          console.log(`Type of ${key}:`, typeof value, 'Value:', value);
         });
 
         return;
@@ -285,11 +283,7 @@ export default function Maintenance() {
         setNewSchedule({
           title: '',
           description: '',
-          event_type: 'maintenance',
           start_date: DateTime.now().plus({ months: 1 }).toISODate() || '',
-          status: 'scheduled',
-          recurrence_type: 'none',
-          mileage_due: 0
         });
       }
     } catch (catchError) {
@@ -590,75 +584,123 @@ export default function Maintenance() {
         {/* Add Maintenance Schedule Modal */}
         {showAddScheduleModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg w-96">
-              <h2 className="text-xl font-semibold mb-4">Add Maintenance Schedule</h2>
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                addMaintenanceSchedule();
-              }}>
-                <div className="mb-4">
-                  <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                    Title
-                  </label>
-                  <input
-                    type="text"
-                    id="title"
-                    value={newSchedule.title}
-                    onChange={(e) => handleNewScheduleChange('title', e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                    Description
-                  </label>
-                  <textarea
-                    id="description"
-                    value={newSchedule.description}
-                    onChange={(e) => handleNewScheduleChange('description', e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label htmlFor="start-date" className="block text-sm font-medium text-gray-700">
-                    Start Date
-                  </label>
-                  <input
-                    type="date"
-                    id="start-date"
-                    value={newSchedule.start_date}
-                    onChange={(e) => handleNewScheduleChange('start_date', e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label htmlFor="mileage-due" className="block text-sm font-medium text-gray-700">
-                    Mileage Due
-                  </label>
-                  <input
-                    type="number"
-                    id="mileage-due"
-                    value={newSchedule.mileage_due}
-                    onChange={(e) => handleNewScheduleChange('mileage_due', parseInt(e.target.value))}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                  />
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button 
-                    type="button"
-                    onClick={() => setShowAddScheduleModal(false)}
-                    variant="default"
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit"
-                    
-                  >
-                    Add Schedule
-                  </Button>
-                </div>
-              </form>
+            <div className="bg-white p-6 rounded-lg shadow-xl w-96">
+              <h2 className="text-2xl font-bold mb-4">Add Maintenance Schedule</h2>
+              
+              {/* Title Input */}
+              <div className="mb-4">
+                <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  id="title"
+                  value={newSchedule.title}
+                  onChange={(e) => handleNewScheduleChange('title', e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                  placeholder="Enter maintenance event title"
+                />
+              </div>
+
+              {/* Service Type Dropdown */}
+              <div className="mb-4">
+                <label htmlFor="event_type" className="block text-sm font-medium text-gray-700">
+                  Event Type
+                </label>
+                <select
+                  id="event_type"
+                  value={newSchedule.event_type}
+                  onChange={(e) => handleNewScheduleChange('event_type', e.target.value as typeof newSchedule.event_type)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                >
+                  <option value="maintenance">Maintenance</option>
+                  <option value="inspection">Inspection</option>
+                  <option value="insurance">Insurance</option>
+                  <option value="tax">Tax</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              {/* Description Input */}
+              <div className="mb-4">
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                  Description
+                </label>
+                <textarea
+                  id="description"
+                  value={newSchedule.description}
+                  onChange={(e) => handleNewScheduleChange('description', e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                  placeholder="Enter maintenance event details"
+                  rows={3}
+                />
+              </div>
+
+              {/* Start Date Input */}
+              <div className="mb-4">
+                <label htmlFor="start_date" className="block text-sm font-medium text-gray-700">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  id="start_date"
+                  value={newSchedule.start_date}
+                  onChange={(e) => handleNewScheduleChange('start_date', e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                />
+              </div>
+
+              {/* Status Dropdown */}
+              <div className="mb-4">
+                <label htmlFor="status" className="block text-sm font-medium text-gray-700">
+                  Status
+                </label>
+                <select
+                  id="status"
+                  value={newSchedule.status}
+                  onChange={(e) => handleNewScheduleChange('status', e.target.value as typeof newSchedule.status)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                >
+                  <option value="scheduled">Scheduled</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              {/* Recurrence Type */}
+              <div className="mb-4">
+                <label htmlFor="recurrence_type" className="block text-sm font-medium text-gray-700">
+                  Recurrence
+                </label>
+                <select
+                  id="recurrence_type"
+                  value={newSchedule.recurrence_type}
+                  onChange={(e) => handleNewScheduleChange('recurrence_type', e.target.value as typeof newSchedule.recurrence_type)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                >
+                  <option value="none">None</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-3 mt-6">
+                <Button 
+                  variant="secondary" 
+                  onClick={() => setShowAddScheduleModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="primary" 
+                  onClick={addMaintenanceSchedule}
+                >
+                  Add Schedule
+                </Button>
+              </div>
             </div>
           </div>
         )}
