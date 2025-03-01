@@ -53,7 +53,7 @@ export default function Maintenance() {
   const [loading, setLoading] = useState(true);
   const [newSchedule, setNewSchedule] = useState<MaintenanceSchedule>({
     id: 0,
-    car_id: selectedCar?.id || 0,
+    car_id: String(selectedCar?.id || 0), // Explicitly convert to string
     title: '',
     description: '',
     date: DateTime.now().plus({ months: 1 }).toISODate() || '',
@@ -219,12 +219,22 @@ export default function Maintenance() {
     const { name, value } = e.target;
     setNewSchedule(prev => ({
       ...prev,
-      [name]: value
+      [name]: name === 'car_id' ? String(value) : value
     }));
   };
 
   async function addMaintenanceSchedule() {
     if (!selectedCar) return;
+
+    const scheduleToAdd = {
+      car_id: String(selectedCar.id), // Ensure string conversion
+      title: newSchedule.title || 'Maintenance Event', 
+      description: newSchedule.description || '',
+      date: newSchedule.date || DateTime.now().plus({ months: 1 }).toISODate(),
+      completed: false,
+      notes: newSchedule.notes,
+      event_type: 'maintenance' as const
+    };
 
     console.log('Adding maintenance schedule:', {
       selectedCar,
@@ -237,16 +247,6 @@ export default function Maintenance() {
       console.error('No car selected');
       return;
     }
-
-    const scheduleToAdd = {
-      car_id: selectedCar.id,
-      title: newSchedule.title || 'Maintenance Event', 
-      description: newSchedule.description || '',
-      date: newSchedule.date || DateTime.now().plus({ months: 1 }).toISODate(),
-      completed: false,
-      notes: newSchedule.notes,
-      event_type: newSchedule.event_type || 'maintenance'
-    };
 
     console.log('Formatted Schedule to add:', scheduleToAdd);
 
@@ -278,7 +278,7 @@ export default function Maintenance() {
         // Reset to default state
         setNewSchedule({
           id: 0,
-          car_id: selectedCar.id,
+          car_id: String(selectedCar.id), // Explicitly convert to string
           title: '',
           description: '',
           date: DateTime.now().plus({ months: 1 }).toISODate() || '',

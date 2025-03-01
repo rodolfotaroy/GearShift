@@ -148,6 +148,30 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
         }
     }
 
+    const updateStatusFilter = (status: string) => {
+        setSelectedStatus(status);
+    };
+
+    const filteredSchedules = schedules.filter(schedule => {
+        const scheduleDate = DateTime.fromISO(schedule.date);
+        const today = DateTime.now();
+
+        const isOverdue = scheduleDate < today && !schedule.completed;
+        const isCompleted = schedule.completed;
+        const isUpcoming = scheduleDate >= today && !schedule.completed;
+
+        switch (selectedStatus) {
+          case 'Overdue':
+            return isOverdue;
+          case 'Completed':
+            return isCompleted;
+          case 'Upcoming':
+            return isUpcoming;
+          default:
+            return true;
+        }
+    });
+
     const handleServiceAdd = async () => {
         if (!car) return;
 
@@ -191,26 +215,6 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
           }
         }
     }
-
-    const filteredSchedules = schedules.filter(schedule => {
-        const scheduleDate = DateTime.fromISO(schedule.date);
-        const today = DateTime.now();
-
-        const isOverdue = scheduleDate < today && !schedule.completed;
-        const isCompleted = schedule.completed;
-        const isUpcoming = scheduleDate >= today && !schedule.completed;
-
-        switch (selectedStatus) {
-          case 'Overdue':
-            return isOverdue;
-          case 'Completed':
-            return isCompleted;
-          case 'Upcoming':
-            return isUpcoming;
-          default:
-            return true;
-        }
-    });
 
     if (loading || !car) {
         return (
