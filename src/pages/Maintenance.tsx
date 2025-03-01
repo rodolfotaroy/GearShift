@@ -220,8 +220,34 @@ const Maintenance: React.FC = () => {
   }, [user, authLoading, supabaseClient]);
 
   useEffect(() => {
+    const fetchMaintenanceInRange = async () => {
+      if (!selectedCar) return;
+
+      const startDate = DateTime.now().minus({ months: 1 }).toISODate();
+      const endDate = DateTime.now().plus({ months: 1 }).toISODate();
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('maintenance_events')
+          .select('*')
+          .eq('car_id', selectedCar.id)
+          .gte('date', startDate)
+          .lte('date', endDate)
+          .order('date', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching maintenance events:', error);
+          return;
+        }
+
+        setSchedules(data || []);
+      } catch (error) {
+        console.error('Unexpected error fetching maintenance events:', error);
+      }
+    };
+
     if (selectedCar) {
-      fetchMaintenanceSchedule(selectedCar.id);
+      fetchMaintenanceInRange();
       fetchServiceHistory(selectedCar.id);
     }
   }, [selectedCar, supabaseClient]);
