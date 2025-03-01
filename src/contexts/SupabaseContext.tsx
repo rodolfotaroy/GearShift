@@ -1,29 +1,39 @@
 /// <reference types="vite/client" />
-import { createClient } from '@supabase/supabase-js';
-import { createContext, useContext } from 'react';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createContext, useContext, useMemo } from 'react';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Create a single client instance
+const createSupabaseClient = () => {
+  console.log('Creating Supabase Client');
+  return createClient(supabaseUrl, supabaseAnonKey);
+};
 
-const SupabaseContext = createContext(supabase);
+const SupabaseContext = createContext<SupabaseClient | null>(null);
 
 export const useSupabase = () => {
-  const supabase = useContext(SupabaseContext);
+  const supabaseClient = useContext(SupabaseContext);
+  
+  if (!supabaseClient) {
+    throw new Error('Supabase client not initialized');
+  }
+
   return {
-    supabaseClient: supabase,
-    supabaseAuth: supabase.auth,
-    supabaseStorage: supabase.storage
+    supabaseClient,
+    supabaseAuth: supabaseClient.auth,
+    supabaseStorage: supabaseClient.storage
   };
 };
 
 export const SupabaseProvider = ({ children }: { children: React.ReactNode }) => {
+  // Use useMemo to ensure only one client is created
+  const supabase = useMemo(() => createSupabaseClient(), []);
+
   return (
     <SupabaseContext.Provider value={supabase}>
       {children}
     </SupabaseContext.Provider>
   );
 };
-
-

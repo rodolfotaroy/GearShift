@@ -256,7 +256,8 @@ const Maintenance: React.FC = () => {
     console.log('Adding maintenance schedule:', {
       selectedCar,
       newSchedule,
-      user
+      user,
+      scheduleToAdd
     });
 
     // Validate required fields
@@ -265,8 +266,6 @@ const Maintenance: React.FC = () => {
       return;
     }
 
-    console.log('Formatted Schedule to add:', scheduleToAdd);
-
     try {
       const { data, error } = await supabaseClient
         .from('maintenance_events')
@@ -274,7 +273,12 @@ const Maintenance: React.FC = () => {
         .select('*');
 
       if (error) {
-        console.error('Error adding maintenance schedule:', { error, scheduleToAdd });
+        console.error('Error adding maintenance schedule:', { 
+          errorCode: error.code,
+          errorMessage: error.message,
+          errorDetails: error.details,
+          scheduleToAdd 
+        });
         return;
       }
 
