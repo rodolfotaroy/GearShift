@@ -102,19 +102,19 @@ export default function Login() {
                     </div>
 
                     <div className="flex justify-between">
-                        <button
+                        <Button
                             type="submit"
                             disabled={loading}
                             className="group relative w-1/2 flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                        >
+                         variant="default">
                             {loading ? 'Signing in...' : 'Sign in'}
                         </Button>
-                        <button
+                        <Button
                             type="button"
                             disabled={loading}
                             onClick={handleSignUp}
                             className="group relative w-1/2 ml-4 flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                        >
+                         variant="default">
                             {loading ? 'Signing up...' : 'Sign up'}
                         </Button>
                     </div>

@@ -155,9 +155,9 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
             <div>
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-medium text-gray-900">Maintenance Schedule</h3>
-                    <button
+                    <Button
                         type="button"
-                        onClick={() => setShowAddSchedule(true)}
+                        onClick={() = variant="default"> setShowAddSchedule(true)}
                         className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
                     >
                         <PlusIcon className="h-4 w-4 mr-2" />
@@ -199,9 +199,9 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
             <div>
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-medium text-gray-900">Service History</h3>
-                    <button
+                    <Button
                         type="button"
-                        onClick={() => setShowAddService(true)}
+                        onClick={() = variant="default"> setShowAddService(true)}
                         className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
                     >
                         <PlusIcon className="h-4 w-4 mr-2" />
@@ -291,9 +291,9 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                             </div>
                         </div>
                         <div className="mt-6 flex justify-end space-x-3">
-                            <button
+                            <Button
                                 type="button"
-                                onClick={() => setShowAddSchedule(false)}
+                                onClick={() = variant="default"> setShowAddSchedule(false)}
                                 variant="default"
                             >
                                 Cancel
@@ -302,7 +302,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                                 type="button"
                                 onClick={addMaintenanceSchedule}
                                 
-                            >
+                             variant="default">
                                 Add Schedule
                             </Button>
                         </div>
@@ -374,9 +374,9 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                             </div>
                         </div>
                         <div className="mt-6 flex justify-end space-x-3">
-                            <button
+                            <Button
                                 type="button"
-                                onClick={() => setShowAddService(false)}
+                                onClick={() = variant="default"> setShowAddService(false)}
                                 variant="default"
                             >
                                 Cancel
@@ -385,7 +385,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                                 type="button"
                                 onClick={addServiceHistory}
                                 
-                            >
+                             variant="default">
                                 Add Service
                             </Button>
                         </div>

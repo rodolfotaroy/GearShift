@@ -17,6 +17,7 @@ import {
 } from '@heroicons/react/24/outline';
 import type { ComponentType } from 'react';
 import { useState, useEffect } from 'react';
+import Button from '../components/Button'; // Assuming Button component is in this location
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -114,19 +115,21 @@ export default function Layout({ children }: LayoutProps) {
                   </div>
                 </div>
                 <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-4">
-                  <button 
+                  <Button 
                     onClick={toggleDarkMode} 
                     className="p-2 rounded-md transition-colors duration-300 
                       bg-button-secondary dark:bg-button-secondary-dark 
                       text-button-secondary-text dark:text-button-secondary-dark-text
                       hover:bg-button-secondary-hover dark:hover:bg-button-secondary-dark-hover
                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                    variant="default"
                   >
                     {isDarkMode ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
                   </Button>
-                  <button
+                  <Button
                     onClick={() => signOut()}
                     className="bg-neutral-100 dark:bg-dark-surface p-2 rounded-full text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-dark-border hover:text-neutral-800 dark:hover:text-neutral-100 transition-colors"
+                    variant="default"
                   >
                     <UserIcon className="h-6 w-6" />
                   </Button>

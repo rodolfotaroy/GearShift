@@ -199,9 +199,9 @@ export default function ExpenseTracker() {
           </p>
         </div>
         <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-          <button
+          <Button
             type="button"
-            onClick={() => setIsAddingExpense(true)}
+            onClick={() = variant="default"> setIsAddingExpense(true)}
             variant="primary"
           >
             <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
@@ -283,14 +283,14 @@ export default function ExpenseTracker() {
                         {expense.description}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        <button
-                          onClick={() => startEditExpense(expense)}
+                        <Button
+                          onClick={() = variant="default"> startEditExpense(expense)}
                           className="text-indigo-600 hover:text-indigo-900 mr-4"
                         >
                           <PencilIcon className="h-5 w-5" />
                         </Button>
-                        <button
-                          onClick={() => handleDeleteExpense(expense.id)}
+                        <Button
+                          onClick={() = variant="default"> handleDeleteExpense(expense.id)}
                           className="text-red-600 hover:text-red-900"
                         >
                           <TrashIcon className="h-5 w-5" />
@@ -388,12 +388,12 @@ export default function ExpenseTracker() {
                 <Button
                   type="submit"
                   
-                >
+                 variant="default">
                   {isEditingExpense ? 'Save Changes' : 'Add Expense'}
                 </Button>
-                <button
+                <Button
                   type="button"
-                  onClick={() => {
+                  onClick={() = variant="default"> {
                     setIsAddingExpense(false);
                     setIsEditingExpense(false);
                     setSelectedExpense(null);
