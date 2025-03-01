@@ -252,7 +252,9 @@ const Maintenance: React.FC = () => {
     }
   }, [selectedCar, supabaseClient]);
 
-  const handleNewScheduleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNewScheduleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setNewSchedule(prev => ({
       ...prev,
