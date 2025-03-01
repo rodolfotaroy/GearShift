@@ -36,17 +36,19 @@ interface Car {
   year: number;
   make: string;
   model: string;
+  user_id: string;
 }
 
 export default function Maintenance() {
-  const { supabaseClient, supabaseAuth } = useSupabase();
-  const [user, setUser] = useState<any>(null);
+  const { supabaseClient } = useSupabase();
+  const [user, setUser] = useState<{ id: string } | null>(null);
   const [cars, setCars] = useState<Car[]>([]);
   const [selectedCar, setSelectedCar] = useState<Car | null>(null);
   const [schedules, setSchedules] = useState<MaintenanceSchedule[]>([]);
   const [history, setHistory] = useState<ServiceHistory[]>([]);
   const [showAddScheduleModal, setShowAddScheduleModal] = useState(false);
   const [showAddServiceModal, setShowAddServiceModal] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [newSchedule, setNewSchedule] = useState<MaintenanceSchedule>({
     car_id: 0,
     service_type: SERVICE_TYPES[0],
@@ -65,74 +67,99 @@ export default function Maintenance() {
   });
 
   useEffect(() => {
-    async function fetchInitialData() {
+    async function fetchUserAndCars() {
+      setLoading(true);
       try {
-        const { data: fetchedCars } = await supabaseClient
+        // Fetch current user
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        
+        if (!user) {
+          setUser(null);
+          setCars([]);
+          setSelectedCar(null);
+          return;
+        }
+
+        setUser({ id: user.id });
+
+        // Fetch user's cars
+        const { data: fetchedCars, error: carError } = await supabaseClient
           .from('cars')
           .select('*')
-          .eq('user_id', user?.id);
+          .eq('user_id', user.id);
+
+        if (carError) throw carError;
 
         if (fetchedCars && fetchedCars.length > 0) {
           setCars(fetchedCars);
-          // Set first car as default if no car is selected
-          if (!selectedCar) {
-            setSelectedCar(fetchedCars[0]);
-          }
+          setSelectedCar(fetchedCars[0]);
+        } else {
+          setCars([]);
+          setSelectedCar(null);
         }
       } catch (error) {
-        console.error('Error fetching cars:', error);
+        console.error('Error fetching user and cars:', error);
+        setCars([]);
+        setSelectedCar(null);
+      } finally {
+        setLoading(false);
       }
     }
 
-    if (user) {
-      fetchInitialData();
-    }
-  }, [user]);
+    fetchUserAndCars();
+  }, []);
 
   useEffect(() => {
-    if (selectedCar) {
-      fetchMaintenanceData();
+    async function fetchMaintenanceData() {
+      if (!selectedCar) return;
+
+      try {
+        const [scheduleData, historyData] = await Promise.all([
+          supabaseClient
+            .from('maintenance_events')
+            .select('*')
+            .eq('car_id', selectedCar.id)
+            .order('due_date', { ascending: true }),
+          supabaseClient
+            .from('service_history')
+            .select('*')
+            .eq('car_id', selectedCar.id)
+            .order('service_date', { ascending: false })
+        ]);
+
+        if (scheduleData.data) setSchedules(scheduleData.data);
+        if (historyData.data) setHistory(historyData.data);
+      } catch (error) {
+        console.error('Error fetching maintenance data:', error);
+      }
     }
+
+    fetchMaintenanceData();
   }, [selectedCar]);
 
-  async function fetchMaintenanceData() {
-    try {
-      const [scheduleData, historyData] = await Promise.all([
-        supabaseClient
-          .from('maintenance_schedule')
-          .select('*')
-          .eq('car_id', selectedCar?.id)
-          .order('due_date', { ascending: true }),
-        supabaseClient
-          .from('service_history')
-          .select('*')
-          .eq('car_id', selectedCar?.id)
-          .order('service_date', { ascending: false })
-      ]);
-
-      if (scheduleData.data) setSchedules(scheduleData.data);
-      if (historyData.data) setHistory(historyData.data);
-    } catch {
-      console.error('Error fetching maintenance data');
-    }
-  }
-
   async function addMaintenanceSchedule() {
+    if (!selectedCar) return;
+
     const scheduleToAdd = {
       ...newSchedule,
-      car_id: selectedCar?.id
+      car_id: selectedCar.id
     };
 
-    const { data } = await supabaseClient
-      .from('maintenance_schedule')
+    const { data, error } = await supabaseClient
+      .from('maintenance_events')
       .insert(scheduleToAdd)
       .select();
+
+    if (error) {
+      console.error('Error adding maintenance schedule:', error);
+      return;
+    }
 
     if (data) {
       setSchedules([...schedules, data[0]]);
       setShowAddScheduleModal(false);
       setNewSchedule({
-        car_id: selectedCar?.id,
+        car_id: selectedCar.id,
         service_type: SERVICE_TYPES[0],
         due_date: DateTime.now().plus({ months: 1 }).toISODate() || '',
         mileage_due: 0,
@@ -143,21 +170,28 @@ export default function Maintenance() {
   }
 
   async function addServiceHistory() {
+    if (!selectedCar) return;
+
     const serviceToAdd = {
       ...newService,
-      car_id: selectedCar?.id
+      car_id: selectedCar.id
     };
 
-    const { data } = await supabaseClient
+    const { data, error } = await supabaseClient
       .from('service_history')
       .insert(serviceToAdd)
       .select();
+
+    if (error) {
+      console.error('Error adding service history:', error);
+      return;
+    }
 
     if (data) {
       setHistory([...history, data[0]]);
       setShowAddServiceModal(false);
       setNewService({
-        car_id: selectedCar?.id,
+        car_id: selectedCar.id,
         service_type: SERVICE_TYPES[0],
         service_date: DateTime.now().toISODate() || '',
         mileage: 0,
@@ -174,18 +208,27 @@ export default function Maintenance() {
 
       if (relatedSchedule) {
         await supabaseClient
-          .from('maintenance_schedule')
+          .from('maintenance_events')
           .update({ status: 'Completed' })
           .eq('id', relatedSchedule.id);
       }
     }
   }
 
-  // Render loading state if cars are being fetched
-  if (!cars.length) {
+  // Render loading state
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  // Render no user state
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-gray-500">Please sign in to view maintenance information.</p>
       </div>
     );
   }
@@ -203,8 +246,8 @@ export default function Maintenance() {
     <div className="p-6 bg-gray-100 min-h-screen">
       <div className="container mx-auto max-w-6xl">
         <h1 className="text-3xl font-bold mb-6 flex items-center">
-          <WrenchScrewdriverIcon className="h-8 w-8 mr-3 text-gray-600" /> 
-          Maintenance Tracking
+          <WrenchScrewdriverIcon className="h-8 w-8 mr-3 text-gray-600" />
+          Maintenance
         </h1>
 
         {/* Car Selection */}
@@ -214,7 +257,7 @@ export default function Maintenance() {
           </label>
           <select
             id="car-select"
-            value={selectedCar?.id || ''}
+            value={selectedCar.id}
             onChange={(e) => {
               const car = cars.find(c => c.id === parseInt(e.target.value));
               setSelectedCar(car || null);
