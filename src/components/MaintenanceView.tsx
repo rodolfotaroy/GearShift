@@ -6,7 +6,7 @@ import { PlusIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outl
 import { DateTime } from 'luxon';
 
 interface MaintenanceViewProps {
-    car: Car;
+    car?: Car | null;
 }
 
 export default function MaintenanceView({ car }: MaintenanceViewProps) {
@@ -30,10 +30,10 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
         description: ''
     });
     const [newService, setNewService] = useState<ServiceHistory>({
-        car_id: car.id || 0,
+        car_id: car?.id || 0,
         service_type: SERVICE_TYPES[0],
         service_date: DateTime.now().toISODate() || '',
-        mileage: car.mileage || 0,
+        mileage: car?.mileage || 0,
         cost: 0,
         description: ''
     });
@@ -46,40 +46,25 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
     }[]>([]);
 
     useEffect(() => {
-        // Check authentication status
-        supabaseAuth.getUser().then(({ data: { user } }) => {
-            setUser(user);
-            if (user) {
-                fetchMaintenanceData();
-                fetchCars();
-            }
-        });
-    }, [car.id]);
-
-    async function fetchMaintenanceData() {
-        setLoading(true);
-        try {
-            const [scheduleData, historyData] = await Promise.all([
-                supabaseClient
-                    .from('maintenance_schedule')
-                    .select('*')
-                    .eq('car_id', car.id)
-                    .order('due_date', { ascending: true }),
-                supabaseClient
-                    .from('service_history')
-                    .select('*')
-                    .eq('car_id', car.id)
-                    .order('service_date', { ascending: false })
-            ]);
-
-            if (scheduleData.data) setSchedules(scheduleData.data);
-            if (historyData.data) setHistory(historyData.data);
-        } catch {
-            console.error('Error fetching maintenance data');
-        } finally {
+        if (!car) {
             setLoading(false);
+            return;
         }
-    }
+
+        async function fetchData() {
+            try {
+                await fetchCars();
+                await fetchSchedules();
+                await fetchServiceHistory();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchData();
+    }, [car]);
 
     async function fetchCars() {
         try {
@@ -91,6 +76,28 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
         } catch {
             console.error('Error fetching cars');
         }
+    }
+
+    async function fetchSchedules() {
+        if (!car) return;
+
+        const { data } = await supabaseClient
+            .from('maintenance_events')
+            .select('*')
+            .eq('car_id', car.id);
+
+        if (data) setSchedules(data);
+    }
+
+    async function fetchServiceHistory() {
+        if (!car) return;
+
+        const { data } = await supabaseClient
+            .from('service_history')
+            .select('*')
+            .eq('car_id', car.id);
+
+        if (data) setHistory(data);
     }
 
     async function addMaintenanceSchedule() {
@@ -118,6 +125,8 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
     }
 
     async function addServiceHistory() {
+        if (!car) return;
+
         const serviceToAdd = {
             ...newService,
             car_id: car.id || 0
@@ -149,7 +158,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
 
             if (relatedSchedule) {
                 await supabaseClient
-                    .from('maintenance_schedule')
+                    .from('maintenance_events')
                     .update({ status: 'Completed' })
                     .eq('id', relatedSchedule.id);
             }
@@ -164,10 +173,10 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
         );
     }
 
-    if (loading) {
+    if (loading || !car) {
         return (
             <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <div>Loading... or No Car Selected</div>
             </div>
         );
     }
