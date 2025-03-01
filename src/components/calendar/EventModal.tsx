@@ -1,4 +1,4 @@
-import { Button } from '../Button';
+import { Button } from '../../components';
 import { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { EVENT_TYPES } from '../../types';
@@ -260,4 +260,3 @@ export default function EventModal({
     </Transition.Root>
   );
 }
-

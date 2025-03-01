@@ -54,7 +54,8 @@ export default function ListView({
                 <Button
                   key={event.id}
                   className="w-full px-4 py-3 flex items-center space-x-4 hover:bg-gray-50 focus:outline-none focus:bg-gray-50"
-                  onClick={() = variant="default"> onEventClick(event)}
+                  onClick={() => onEventClick(event)}
+                  variant="default"
                 >
                   <div className="flex-shrink-0 w-16 text-center">
                     <div className="text-2xl font-bold">{date.toFormat('d')}</div>
@@ -95,5 +96,3 @@ export default function ListView({
     </div>
   );
 }
-
-

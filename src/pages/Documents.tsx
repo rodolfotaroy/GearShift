@@ -145,7 +145,7 @@ export default function Documents() {
             className="inline-block"
           >
             <Button
-              onClick={() = variant="default"> {
+              onClick={() => {
                 if (selectedFile) {
                   handleUpload(selectedFile);
                 }
@@ -195,7 +195,8 @@ export default function Documents() {
                   <td className="px-6 py-4 whitespace-nowrap">{doc.type}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <Button
-                      onClick={() = variant="default"> handleDeleteDocument(doc.id)}
+                      onClick={() => handleDeleteDocument(doc.id)}
+                      variant="default"
                       className="text-red-600 hover:text-red-900"
                     >
                       <TrashIcon className="h-5 w-5" />

@@ -17,7 +17,7 @@ import {
 } from '@heroicons/react/24/outline';
 import type { ComponentType } from 'react';
 import { useState, useEffect } from 'react';
-import Button from '../components/Button'; // Assuming Button component is in this location
+import { Button } from '../components';
 
 interface LayoutProps {
   children: React.ReactNode;

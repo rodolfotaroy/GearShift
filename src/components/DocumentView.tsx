@@ -128,7 +128,8 @@ export default function DocumentView({ car }: DocumentViewProps) {
                 <h3 className="text-lg font-medium text-gray-900">Documents</h3>
                 <Button
                     type="button"
-                    onClick={() = variant="default"> setShowAddDocument(true)}
+                    onClick={() => setShowAddDocument(true)}
+                    variant="default"
                     className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
                 >
                     <PlusIcon className="h-4 w-4 mr-2" />
@@ -168,7 +169,8 @@ export default function DocumentView({ car }: DocumentViewProps) {
                                     </a>
                                     <Button
                                         type="button"
-                                        onClick={() = variant="default"> deleteDocument(document)}
+                                        onClick={() => deleteDocument(document)}
+                                        variant="default"
                                         className="inline-flex items-center p-2 border border-transparent rounded-full text-red-600 hover:bg-red-100"
                                     >
                                         <TrashIcon className="h-4 w-4" />
@@ -242,7 +244,7 @@ export default function DocumentView({ car }: DocumentViewProps) {
                         <div className="mt-6 flex justify-end space-x-3">
                             <Button
                                 type="button"
-                                onClick={() = variant="default"> setShowAddDocument(false)}
+                                onClick={() => setShowAddDocument(false)}
                                 variant="default"
                             >
                                 Cancel
@@ -251,8 +253,8 @@ export default function DocumentView({ car }: DocumentViewProps) {
                                 type="button"
                                 onClick={uploadDocument}
                                 disabled={!selectedFile || !newDocument.title}
-                                
-                             variant="default">
+                                variant="default"
+                            >
                                 Upload
                             </Button>
                         </div>
@@ -262,5 +264,3 @@ export default function DocumentView({ car }: DocumentViewProps) {
         </div>
     );
 }
-
-

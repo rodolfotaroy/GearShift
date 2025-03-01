@@ -201,7 +201,7 @@ export default function ExpenseTracker() {
         <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
           <Button
             type="button"
-            onClick={() = variant="default"> setIsAddingExpense(true)}
+            onClick={() => setIsAddingExpense(true)}
             variant="primary"
           >
             <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
@@ -284,13 +284,15 @@ export default function ExpenseTracker() {
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         <Button
-                          onClick={() = variant="default"> startEditExpense(expense)}
+                          onClick={() => startEditExpense(expense)}
+                          variant="default"
                           className="text-indigo-600 hover:text-indigo-900 mr-4"
                         >
                           <PencilIcon className="h-5 w-5" />
                         </Button>
                         <Button
-                          onClick={() = variant="default"> handleDeleteExpense(expense.id)}
+                          onClick={() => handleDeleteExpense(expense.id)}
+                          variant="default"
                           className="text-red-600 hover:text-red-900"
                         >
                           <TrashIcon className="h-5 w-5" />
@@ -387,13 +389,13 @@ export default function ExpenseTracker() {
               <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3">
                 <Button
                   type="submit"
-                  
-                 variant="default">
+                  variant="default"
+                >
                   {isEditingExpense ? 'Save Changes' : 'Add Expense'}
                 </Button>
                 <Button
                   type="button"
-                  onClick={() = variant="default"> {
+                  onClick={() => {
                     setIsAddingExpense(false);
                     setIsEditingExpense(false);
                     setSelectedExpense(null);
@@ -411,5 +413,3 @@ export default function ExpenseTracker() {
     </div>
   );
 }
-
-
