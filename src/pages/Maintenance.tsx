@@ -13,14 +13,15 @@ import { DateTime } from 'luxon';
 const SERVICE_TYPES = ['Oil Change', 'Tire Rotation', 'Brake Service', 'Engine Tune-up', 'Other'] as const;
 
 interface MaintenanceSchedule {
-  id?: number;
-  car_id: string;
+  id: number;
+  car_id: number;
   title: string;
-  description: string;
+  description?: string;
   date: string;
   completed: boolean;
-  notes: string;
-  event_type: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 interface ServiceHistory {
@@ -53,13 +54,14 @@ export default function Maintenance() {
   const [loading, setLoading] = useState(true);
   const [newSchedule, setNewSchedule] = useState<MaintenanceSchedule>({
     id: 0,
-    car_id: String(selectedCar?.id || 0), // Explicitly convert to string
+    car_id: selectedCar?.id ? Number(selectedCar.id) : 0,
     title: '',
     description: '',
-    date: DateTime.now().plus({ months: 1 }).toISODate() || '',
+    date: DateTime.now().plus({ months: 1 }).toISODate(),
     completed: false,
     notes: '',
-    event_type: 'maintenance'
+    created_at: DateTime.now().toISODate(),
+    updated_at: DateTime.now().toISODate()
   });
   const [newService, setNewService] = useState<ServiceHistory>({
     car_id: '',
@@ -150,67 +152,85 @@ export default function Maintenance() {
   }, [user, authLoading, supabaseClient]);
 
   useEffect(() => {
-    async function fetchMaintenanceData() {
-      if (!selectedCar) {
-        console.log('No selected car, skipping maintenance data fetch');
+    async function fetchMaintenanceSchedule(carId: string) {
+      if (!carId) {
+        console.log('No car ID provided, skipping maintenance schedule fetch');
         return;
       }
 
-      console.log('Fetching maintenance data for car:', {
-        carId: selectedCar.id,
-        carDetails: selectedCar
+      console.log('Fetching maintenance schedule for car:', {
+        carId: carId
       });
 
       try {
-        const [scheduleData, historyData] = await Promise.all([
-          supabaseClient
-            .from('maintenance_events')
-            .select('*')
-            .eq('car_id', selectedCar.id)
-            .order('date', { ascending: false }),
-          
-          supabaseClient
-            .from('service_history')
-            .select('*')
-            .eq('car_id', selectedCar.id)
-            .order('service_date', { ascending: false })
-        ]);
+        const { data, error } = await supabaseClient
+          .from('maintenance_events')
+          .select('*')
+          .eq('car_id', carId)
+          .order('date', { ascending: false });
 
         console.log('Maintenance Schedule Data:', {
-          data: scheduleData.data,
-          error: scheduleData.error
-        });
-        console.log('Service History Data:', {
-          data: historyData.data,
-          error: historyData.error
+          data: data,
+          error: error
         });
 
-        if (scheduleData.error) {
-          console.error('Error fetching maintenance schedule:', scheduleData.error);
-        }
-        if (historyData.error) {
-          console.error('Error fetching service history:', historyData.error);
+        if (error) {
+          console.error('Error fetching maintenance schedule:', error);
         }
 
         // Update state only if no errors
-        if (!scheduleData.error) {
+        if (!error) {
           setSchedules(
-            scheduleData.data || []
-          );
-        }
-
-        if (!historyData.error) {
-          setHistory(
-            historyData.data || []
+            data || []
           );
         }
       } catch (error) {
-        console.error('Error in fetchMaintenanceData:', error);
+        console.error('Error in fetchMaintenanceSchedule:', error);
+      }
+    }
+
+    async function fetchServiceHistory(carId: string) {
+      if (!carId) {
+        console.log('No car ID provided, skipping service history fetch');
+        return;
+      }
+
+      console.log('Fetching service history for car:', {
+        carId: carId
+      });
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('service_history')
+          .select('*')
+          .eq('car_id', carId)
+          .order('service_date', { ascending: false });
+
+        console.log('Service History Data:', {
+          data: data,
+          error: error
+        });
+
+        if (error) {
+          console.error('Error fetching service history:', error);
+        }
+
+        // Update state only if no errors
+        if (!error) {
+          setHistory(
+            data || []
+          );
+        }
+      } catch (error) {
+        console.error('Error in fetchServiceHistory:', error);
       }
     }
 
     // Trigger maintenance data fetch whenever selectedCar changes
-    fetchMaintenanceData();
+    if (selectedCar) {
+      fetchMaintenanceSchedule(selectedCar.id);
+      fetchServiceHistory(selectedCar.id);
+    }
   }, [selectedCar, supabaseClient]);
 
   const handleNewScheduleChange = (
@@ -219,20 +239,21 @@ export default function Maintenance() {
     const { name, value } = e.target;
     setNewSchedule(prev => ({
       ...prev,
-      [name]: name === 'car_id' ? String(value) : value
+      [name]: name === 'car_id' ? Number(value) : value
     }));
   };
 
   async function addMaintenanceSchedule() {
     if (!selectedCar) return;
 
-    const scheduleToAdd = {
+    const scheduleToAdd: MaintenanceSchedule = {
+      id: 0,
       car_id: Number(selectedCar.id), // Convert to number
       title: newSchedule.title || 'Maintenance Event', 
       description: newSchedule.description || '',
       date: newSchedule.date || DateTime.now().plus({ months: 1 }).toISODate(),
       completed: false,
-      notes: newSchedule.notes,
+      notes: newSchedule.notes || '',
       created_at: DateTime.now().toISODate(),
       updated_at: DateTime.now().toISODate()
     };
@@ -266,15 +287,22 @@ export default function Maintenance() {
 
       // Reset form and update local state
       setNewSchedule({
+        id: 0,
+        car_id: Number(selectedCar.id),
         title: '',
         description: '',
         date: DateTime.now().plus({ months: 1 }).toISODate(),
-        notes: ''
+        completed: false,
+        notes: '',
+        created_at: DateTime.now().toISODate(),
+        updated_at: DateTime.now().toISODate()
       });
       setShowAddScheduleModal(false);
 
-      // Optionally refresh maintenance schedules
-      await fetchMaintenanceSchedules();
+      // Refresh maintenance schedules
+      if (selectedCar) {
+        await fetchMaintenanceSchedule(selectedCar.id);
+      }
     } catch (err) {
       console.error('Unexpected error adding maintenance schedule:', err);
     }
