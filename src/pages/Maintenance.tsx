@@ -141,7 +141,12 @@ export default function Maintenance() {
 
   useEffect(() => {
     async function fetchMaintenanceData() {
-      if (!selectedCar) return;
+      if (!selectedCar) {
+        console.log('No selected car, skipping maintenance data fetch');
+        return;
+      }
+
+      console.log('Fetching maintenance data for car:', selectedCar.id);
 
       try {
         const [scheduleData, historyData] = await Promise.all([
@@ -149,7 +154,8 @@ export default function Maintenance() {
             .from('maintenance_events')
             .select('*')
             .eq('car_id', selectedCar.id)
-            .order('date', { ascending: true }),
+            .order('date', { ascending: false }),
+          
           supabaseClient
             .from('service_history')
             .select('*')
@@ -157,15 +163,36 @@ export default function Maintenance() {
             .order('service_date', { ascending: false })
         ]);
 
-        if (scheduleData.data) setSchedules(scheduleData.data);
-        if (historyData.data) setHistory(historyData.data);
+        console.log('Maintenance Schedule Data:', scheduleData);
+        console.log('Service History Data:', historyData);
+
+        if (scheduleData.error) {
+          console.error('Error fetching maintenance schedule:', scheduleData.error);
+        }
+        if (historyData.error) {
+          console.error('Error fetching service history:', historyData.error);
+        }
+
+        // Update state only if no errors
+        if (!scheduleData.error) {
+          setSchedules(
+            scheduleData.data || []
+          );
+        }
+
+        if (!historyData.error) {
+          setHistory(
+            historyData.data || []
+          );
+        }
       } catch (error) {
-        console.error('Error fetching maintenance data:', error);
+        console.error('Error in fetchMaintenanceData:', error);
       }
     }
 
+    // Trigger maintenance data fetch whenever selectedCar changes
     fetchMaintenanceData();
-  }, [selectedCar]);
+  }, [selectedCar, supabaseClient]);
 
   async function addMaintenanceSchedule() {
     if (!selectedCar) return;
@@ -357,9 +384,18 @@ export default function Maintenance() {
             id="car-select"
             value={selectedCar?.id || ''}
             onChange={(e) => {
-              const car = cars.find(c => c.id === e.target.value);
-              if (car) {
+              console.log('Car selection changed. Available cars:', cars);
+              console.log('Selected car ID:', e.target.value);
+              console.log('Selected car index:', cars.findIndex(car => car.id === e.target.value));
+              const carIndex = cars.findIndex(car => car.id === e.target.value);
+              console.log('Car index found:', carIndex);
+              if (carIndex !== -1) {
+                console.log('Found car at index:', carIndex);
+                const car = cars[carIndex];
+                console.log('Found car:', car);
                 setSelectedCar(car);
+              } else {
+                console.error('No car found for ID:', e.target.value);
               }
             }}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
