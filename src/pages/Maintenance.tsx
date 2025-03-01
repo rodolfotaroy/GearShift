@@ -19,6 +19,8 @@ interface MaintenanceSchedule {
   mileage_due: number;
   description?: string;
   status: string;
+  date?: string;
+  title?: string;
 }
 
 interface ServiceHistory {
@@ -258,6 +260,7 @@ export default function Maintenance() {
     }
 
     try {
+      let carData;
       const { data, error } = await supabaseClient
         .from('cars')
         .insert({
@@ -286,12 +289,14 @@ export default function Maintenance() {
           return;
         }
 
-        data = fallbackInsert.data;
+        carData = fallbackInsert.data;
+      } else {
+        carData = data;
       }
 
-      if (data && data.length > 0) {
-        setCars([...cars, data[0]]);
-        setSelectedCar(data[0]);
+      if (carData && carData.length > 0) {
+        setCars([...cars, carData[0]]);
+        setSelectedCar(carData[0]);
       }
     } catch (error) {
       console.error('Unexpected error adding car:', error);

@@ -1,9 +1,23 @@
 import { Button } from '../components';
 import { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
-import { MaintenanceSchedule, ServiceHistory, Car, SERVICE_TYPES } from '../types';
+import { Database } from '../types/database.types';
+import { Car, SERVICE_TYPES } from '../types';
 import { PlusIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import { DateTime } from 'luxon';
+
+type MaintenanceEvent = Database['public']['Tables']['maintenance_events']['Row'];
+
+interface ServiceHistoryRow {
+    id?: string;
+    car_id: string;
+    service_type: string;
+    service_date: string;
+    mileage: number;
+    cost: number;
+    description?: string;
+    user_id?: string;
+}
 
 interface MaintenanceViewProps {
     car?: Car | null;
@@ -11,34 +25,29 @@ interface MaintenanceViewProps {
 
 export default function MaintenanceView({ car }: MaintenanceViewProps) {
     const { supabaseClient } = useSupabase();
-    const [schedules, setSchedules] = useState<MaintenanceSchedule[]>([]);
-    const [history, setHistory] = useState<ServiceHistory[]>([]);
+    const [schedules, setSchedules] = useState<MaintenanceEvent[]>([]);
+    const [history, setHistory] = useState<ServiceHistoryRow[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAddSchedule, setShowAddSchedule] = useState(false);
     const [showAddService, setShowAddService] = useState(false);
     const [newSchedule, setNewSchedule] = useState<{
-        title: string;
-        description: string;
+        event_type: string;
+        notes?: string;
         date: string;
     }>({
-        title: '',
-        description: '',
+        event_type: SERVICE_TYPES[0],
+        notes: '',
         date: DateTime.now().toISO() || ''
     });
-    const [newService, setNewService] = useState<ServiceHistory>({
-        car_id: car?.id || 0,
+    const [newService, setNewService] = useState<ServiceHistoryRow>({
+        car_id: car?.id ? String(car.id) : '',
         service_type: SERVICE_TYPES[0],
         service_date: DateTime.now().toISODate() || '',
-        mileage: car?.mileage || 0,
+        mileage: 0,
         cost: 0,
-        description: ''
+        description: '',
+        user_id: car?.user_id || ''
     });
-    const [cars, setCars] = useState<{
-        id: number;
-        make: string;
-        model: string;
-        plate_number: string;
-    }[]>([]);
 
     useEffect(() => {
         if (!car) {
@@ -48,7 +57,6 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
 
         async function fetchData() {
             try {
-                await fetchCars();
                 await fetchSchedules();
                 await fetchServiceHistory();
             } catch (error) {
@@ -60,18 +68,6 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
 
         fetchData();
     }, [car]);
-
-    async function fetchCars() {
-        try {
-            const { data } = await supabaseClient
-                .from('cars')
-                .select('*');
-
-            if (data) setCars(data);
-        } catch {
-            console.error('Error fetching cars');
-        }
-    }
 
     async function fetchSchedules() {
         if (!car) return;
@@ -114,10 +110,11 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
 
         const scheduleToAdd = {
             car_id: car.id,
-            title: newSchedule.title,
-            description: newSchedule.description,
+            event_type: newSchedule.event_type,
+            notes: newSchedule.notes,
             date: newSchedule.date,
-            completed: false
+            status: 'Pending',
+            user_id: car.user_id || ''
         };
 
         try {
@@ -135,8 +132,8 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                 setSchedules([...schedules, ...data]);
                 setShowAddSchedule(false);
                 setNewSchedule({
-                    title: '',
-                    description: '',
+                    event_type: SERVICE_TYPES[0],
+                    notes: '',
                     date: DateTime.now().toISO() || ''
                 });
             }
@@ -150,7 +147,8 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
 
         const serviceToAdd = {
             ...newService,
-            car_id: car.id || 0
+            car_id: car.id ? String(car.id) : '',
+            user_id: car.user_id || ''
         };
 
         const { data } = await supabaseClient
@@ -162,18 +160,19 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
             setHistory([...history, data[0]]);
             setShowAddService(false);
             setNewService({
-                car_id: car.id || 0,
+                car_id: car.id ? String(car.id) : '',
                 service_type: SERVICE_TYPES[0],
                 service_date: DateTime.now().toISODate() || '',
-                mileage: car.mileage || 0,
+                mileage: 0,
                 cost: 0,
-                description: ''
+                description: '',
+                user_id: car.user_id || ''
             });
 
             // Update related maintenance schedule if exists
             const relatedSchedule = schedules.find(
                 schedule => 
-                    schedule.service_type === serviceToAdd.service_type && 
+                    schedule.event_type === serviceToAdd.service_type && 
                     schedule.status !== 'Completed'
             );
 
@@ -215,18 +214,22 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium mb-1">
-                                        Title
+                                        Event Type
                                     </label>
-                                    <input
-                                        type="text"
-                                        value={newSchedule.title}
+                                    <select
+                                        className="w-full p-2 border rounded dark:bg-gray-700"
+                                        value={newSchedule.event_type}
                                         onChange={(e) => setNewSchedule({
                                             ...newSchedule,
-                                            title: e.target.value
+                                            event_type: e.target.value
                                         })}
-                                        className="w-full p-2 border rounded dark:bg-gray-700"
                                         required
-                                    />
+                                    >
+                                        <option value="">Select an event type</option>
+                                        {SERVICE_TYPES.map((type) => (
+                                            <option key={type} value={type}>{type}</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium mb-1">
@@ -245,13 +248,13 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium mb-1">
-                                        Description
+                                        Notes
                                     </label>
                                     <textarea
-                                        value={newSchedule.description}
+                                        value={newSchedule.notes}
                                         onChange={(e) => setNewSchedule({
                                             ...newSchedule,
-                                            description: e.target.value
+                                            notes: e.target.value
                                         })}
                                         className="w-full p-2 border rounded dark:bg-gray-700"
                                         rows={3}
@@ -289,14 +292,14 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                                 </div>
                                 <div className="ml-4">
                                     <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        {schedule.title}
+                                        {schedule.event_type}
                                     </div>
                                     <div className="text-sm text-gray-500 dark:text-gray-400">
                                         Due: {DateTime.fromISO(schedule.date).toFormat('yyyy/MM/dd')}
                                     </div>
-                                    {schedule.description && (
+                                    {schedule.notes && (
                                         <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                            {schedule.description}
+                                            {schedule.notes}
                                         </div>
                                     )}
                                 </div>
