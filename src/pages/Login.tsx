@@ -52,76 +52,87 @@ export default function Login() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full space-y-8">
-                <div>
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">GearShift</h2>
-                    <p className="mt-2 text-center text-sm text-gray-600">
-                        Sign in to manage your car expenses
-                    </p>
-                </div>
-                <form className="mt-8 space-y-6" onSubmit={handleLogin}>
-                    {error && (
-                        <div className="rounded-md bg-red-50 p-4">
-                            <div className="text-sm text-red-700">{error}</div>
-                        </div>
-                    )}
-                    <div className="rounded-md shadow-sm -space-y-px">
-                        <div>
-                            <label htmlFor="email-address" className="sr-only">
-                                Email address
-                            </label>
-                            <input
-                                id="email-address"
-                                name="email"
-                                type="email"
-                                autoComplete="email"
-                                required
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                                placeholder="Email address"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="password" className="sr-only">
-                                Password
-                            </label>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                autoComplete="current-password"
-                                required
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                                placeholder="Password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
-                        </div>
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+            <div className="relative w-full max-w-md transform transition-all duration-300 hover:scale-[1.01]">
+                {/* Decorative elements */}
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/30 to-purple-500/30 transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 rounded-3xl blur-2xl opacity-40"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/30 to-purple-500/30 transform skew-y-6 sm:skew-y-0 sm:rotate-6 rounded-3xl blur-2xl opacity-40"></div>
+                
+                {/* Main card */}
+                <div className="relative bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-xl rounded-3xl p-8 space-y-6 border border-gray-200/50 dark:border-gray-700/50">
+                    <div className="space-y-2 text-center">
+                        <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                            GearShift
+                        </h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Sign in to manage your car expenses
+                        </p>
                     </div>
 
-                    <div className="flex justify-between">
-                        <Button
-                            type="submit"
-                            disabled={loading}
-                            className="group relative w-1/2 flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                         variant="default">
-                            {loading ? 'Signing in...' : 'Sign in'}
-                        </Button>
-                        <Button
-                            type="button"
-                            disabled={loading}
-                            onClick={handleSignUp}
-                            className="group relative w-1/2 ml-4 flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                         variant="default">
-                            {loading ? 'Signing up...' : 'Sign up'}
-                        </Button>
-                    </div>
-                </form>
+                    <form className="space-y-6" onSubmit={handleLogin}>
+                        {error && (
+                            <div className="p-4 rounded-xl bg-red-50/50 backdrop-blur-sm border border-red-100 dark:bg-red-900/20 dark:border-red-800/50">
+                                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                            </div>
+                        )}
+
+                        <div className="space-y-4">
+                            <div>
+                                <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Email address
+                                </label>
+                                <input
+                                    id="email-address"
+                                    name="email"
+                                    type="email"
+                                    autoComplete="email"
+                                    required
+                                    className="block w-full px-4 py-3 rounded-xl bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 placeholder-gray-400 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+                                    placeholder="Enter your email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Password
+                                </label>
+                                <input
+                                    id="password"
+                                    name="password"
+                                    type="password"
+                                    autoComplete="current-password"
+                                    required
+                                    className="block w-full px-4 py-3 rounded-xl bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 placeholder-gray-400 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+                                    placeholder="Enter your password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-4">
+                            <Button
+                                type="submit"
+                                disabled={loading}
+                                className="flex-1 py-3 px-4 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transform transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                                variant="default"
+                            >
+                                {loading ? 'Signing in...' : 'Sign in'}
+                            </Button>
+                            <Button
+                                type="button"
+                                disabled={loading}
+                                onClick={handleSignUp}
+                                className="flex-1 py-3 px-4 rounded-xl text-sm font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500/20 transform transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                                variant="default"
+                            >
+                                {loading ? 'Signing up...' : 'Sign up'}
+                            </Button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     );
 }
-
-
