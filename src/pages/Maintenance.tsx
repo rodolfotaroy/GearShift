@@ -74,76 +74,82 @@ export default function Maintenance() {
         const { data: { user } } = await supabaseClient.auth.getUser();
         
         if (!user) {
+          console.error('No authenticated user found');
           setUser(null);
           setCars([]);
           setSelectedCar(null);
           return;
         }
 
-        setUser({ id: user.id });
+        // Log user ID for debugging
+        console.log('Authenticated User ID:', user.id);
 
-        // Fetch user's cars with fallback and error handling
-        let fetchedCars: Car[] = [];
-        try {
-          const { data, error } = await supabaseClient
+        // Extremely basic query with minimal assumptions
+        const { data, error } = await supabaseClient
+          .from('cars')
+          .select()
+          .filter('user_id', 'eq', user.id);
+
+        // Log raw query results for debugging
+        console.log('Raw Query Data:', data);
+        console.log('Raw Query Error:', error);
+
+        if (error) {
+          console.error('Detailed car fetch error:', {
+            code: error.code,
+            message: error.message,
+            details: error.details
+          });
+
+          // Emergency fallback: try without filtering
+          const { data: fallbackData, error: fallbackError } = await supabaseClient
             .from('cars')
-            .select('*')  // Fallback to selecting all columns
-            .eq('user_id', user.id);
+            .select();
 
-          if (error) {
-            console.error('Car fetch error (detailed):', error);
-            
-            // Attempt alternative query without specific columns
-            const { data: fallbackData, error: fallbackError } = await supabaseClient
-              .from('cars')
-              .select()
-              .eq('id', user.id);
+          console.log('Fallback Query Data:', fallbackData);
+          console.log('Fallback Query Error:', fallbackError);
 
-            if (fallbackError) {
-              console.error('Fallback car fetch error:', fallbackError);
-              throw fallbackError;
-            }
-
-            fetchedCars = fallbackData || [];
-          } else {
-            fetchedCars = data || [];
+          if (fallbackError) {
+            throw fallbackError;
           }
-        } catch (fetchError) {
-          console.error('Comprehensive car fetch error:', fetchError);
-          
-          // Emergency car creation if no cars exist
-          if (fetchedCars.length === 0) {
-            try {
-              const { data: newCarData, error: newCarError } = await supabaseClient
-                .from('cars')
-                .insert({
-                  user_id: user.id,
-                  make: 'Default Car',
-                  model: 'First Car',
-                  year: new Date().getFullYear()
-                })
-                .select();
 
-              if (newCarError) {
-                console.error('Error creating emergency car:', newCarError);
-              } else if (newCarData) {
-                fetchedCars = newCarData;
-              }
-            } catch (emergencyError) {
-              console.error('Critical error creating car:', emergencyError);
-            }
+          // If fallback succeeds, use that data
+          if (fallbackData && fallbackData.length > 0) {
+            setCars(fallbackData);
+            setSelectedCar(fallbackData[0]);
+            return;
           }
         }
 
-        if (fetchedCars && fetchedCars.length > 0) {
-          setCars(fetchedCars);
-          setSelectedCar(fetchedCars[0]);
+        // Process successful query
+        if (data && data.length > 0) {
+          setCars(data);
+          setSelectedCar(data[0]);
         } else {
-          setCars([]);
-          setSelectedCar(null);
+          // No cars found, attempt to create a default car
+          try {
+            const { data: newCarData, error: newCarError } = await supabaseClient
+              .from('cars')
+              .insert({
+                user_id: user.id,
+                make: 'Default Car',
+                model: 'First Vehicle',
+                year: new Date().getFullYear()
+              })
+              .select();
+
+            if (newCarError) {
+              console.error('Error creating default car:', newCarError);
+            } else if (newCarData && newCarData.length > 0) {
+              setCars(newCarData);
+              setSelectedCar(newCarData[0]);
+            }
+          } catch (createError) {
+            console.error('Critical error creating default car:', createError);
+          }
         }
       } catch (error) {
-        console.error('Catastrophic error fetching user and cars:', error);
+        console.error('Catastrophic error in car fetching process:', error);
         setCars([]);
         setSelectedCar(null);
       } finally {
