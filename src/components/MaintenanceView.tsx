@@ -33,7 +33,12 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
         description: ''
     });
     const [user, setUser] = useState<any>(null);
-    const [cars, setCars] = useState<Car[]>([]);
+    const [cars, setCars] = useState<{
+        id: number;
+        make: string;
+        model: string;
+        plate_number: string;
+    }[]>([]);
 
     useEffect(() => {
         // Check authentication status
@@ -90,7 +95,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
         };
 
         const { data } = await supabaseClient
-            .from('maintenance_schedule')
+            .from('maintenance_events')
             .insert(scheduleToAdd)
             .select();
 
@@ -98,12 +103,10 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
             setSchedules([...schedules, data[0]]);
             setShowAddSchedule(false);
             setNewSchedule({
-                car_id: car.id || 0,
-                service_type: SERVICE_TYPES[0],
-                due_date: DateTime.now().plus({ months: 1 }).toISODate() || '',
-                mileage_due: car.mileage ? car.mileage + 5000 : 0,
-                description: '',
-                status: 'Pending'
+                service_type: '',
+                due_date: '',
+                mileage_due: null,
+                description: ''
             });
         }
     }
@@ -269,7 +272,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                                     value={newSchedule.car_id || ''}
                                     onChange={(e) => setNewSchedule({ 
                                         ...newSchedule, 
-                                        car_id: e.target.value ? parseInt(e.target.value) : undefined 
+                                        car_id: e.target.value ? parseInt(e.target.value) : null 
                                     })}
                                 >
                                     <option value="">Select a car</option>
