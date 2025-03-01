@@ -1,4 +1,4 @@
-import { Button } from './Button';
+import { Button } from '../components';
 import { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
@@ -206,7 +206,7 @@ export default function ExpenseTracker() {
           >
             <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
             Add Expense
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -288,13 +288,13 @@ export default function ExpenseTracker() {
                           className="text-indigo-600 hover:text-indigo-900 mr-4"
                         >
                           <PencilIcon className="h-5 w-5" />
-                        </button>
+                        </Button>
                         <button
                           onClick={() => handleDeleteExpense(expense.id)}
                           className="text-red-600 hover:text-red-900"
                         >
                           <TrashIcon className="h-5 w-5" />
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -385,12 +385,12 @@ export default function ExpenseTracker() {
                 />
               </div>
               <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3">
-                <button
+                <Button
                   type="submit"
-                  variant="primary"
+                  
                 >
                   {isEditingExpense ? 'Save Changes' : 'Add Expense'}
-                </button>
+                </Button>
                 <button
                   type="button"
                   onClick={() => {
@@ -402,7 +402,7 @@ export default function ExpenseTracker() {
                   variant="default"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             </form>
           </div>

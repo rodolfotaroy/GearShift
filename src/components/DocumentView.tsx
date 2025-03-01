@@ -1,4 +1,4 @@
-import { Button } from './Button';
+import { Button } from '../components';
 import { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { Document, Car, DOCUMENT_TYPES } from '../types';
@@ -133,7 +133,7 @@ export default function DocumentView({ car }: DocumentViewProps) {
                 >
                     <PlusIcon className="h-4 w-4 mr-2" />
                     Add Document
-                </button>
+                </Button>
             </div>
 
             <div className="bg-white shadow overflow-hidden sm:rounded-md">
@@ -172,7 +172,7 @@ export default function DocumentView({ car }: DocumentViewProps) {
                                         className="inline-flex items-center p-2 border border-transparent rounded-full text-red-600 hover:bg-red-100"
                                     >
                                         <TrashIcon className="h-4 w-4" />
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
                         </li>
@@ -246,15 +246,15 @@ export default function DocumentView({ car }: DocumentViewProps) {
                                 variant="default"
                             >
                                 Cancel
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 type="button"
                                 onClick={uploadDocument}
                                 disabled={!selectedFile || !newDocument.title}
-                                variant="primary"
+                                
                             >
                                 Upload
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>

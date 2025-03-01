@@ -1,4 +1,4 @@
-import { Button } from './Button';
+import { Button } from '../components';
 import { DateTime } from 'luxon';
 import { EVENT_TYPES } from '../../constants/calendar';
 import type { MaintenanceEvent, Car } from '../../types/calendar';
@@ -81,7 +81,7 @@ export default function ListView({
                     )}
                   </div>
                   <ChevronRightIcon className="flex-shrink-0 h-5 w-5 text-gray-400" />
-                </button>
+                </Button>
               );
             })}
           </div>

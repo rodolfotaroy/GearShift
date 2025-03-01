@@ -239,14 +239,14 @@ export default function EventModal({
                 <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
                   <Button 
                     type="submit"
-                    variant="primary"
+                    
                     onClick={handleSubmit}
                   >
                     {mode === 'add' ? 'Create Event' : 'Update Event'}
                   </Button>
                   <Button 
                     type="button"
-                    variant="default"
+                    
                     onClick={onClose}
                   >
                     Cancel

@@ -1,4 +1,4 @@
-import { Button } from './Button';
+import { Button } from '../components';
 import { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import {
@@ -168,25 +168,25 @@ export default function Calendar() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <div className="flex space-x-4">
-          <button
+          <Button
             type="button"
             onClick={() => setShowAddEvent(true)}
             variant="primary"
           >
             <PlusIcon className="h-5 w-5 mr-2" />
             Add Event
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="button"
             onClick={() => setShowFilters(!showFilters)}
             variant="default"
           >
             <FunnelIcon className="h-5 w-5 mr-2" />
             Filters
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="button"
             onClick={() => setViewMode(viewMode === 'calendar' ? 'list' : 'calendar')}
             variant="default"
@@ -202,27 +202,27 @@ export default function Calendar() {
                 Calendar View
               </>
             )}
-          </button>
+          </Button>
         </div>
 
         <div>
-          <button
+          <Button
             type="button"
             onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1))}
             className="p-2 rounded hover:bg-gray-100"
           >
             <ChevronLeftIcon className="h-5 w-5" />
-          </button>
+          </Button>
           <span className="mx-4 text-lg font-semibold">
             {selectedDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
           </span>
-          <button
+          <Button
             type="button"
             onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1))}
             className="p-2 rounded hover:bg-gray-100"
           >
             <ChevronRightIcon className="h-5 w-5" />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -342,21 +342,21 @@ export default function Calendar() {
             </div>
 
             <div className="mt-6 flex justify-end space-x-3">
-              <button
+              <Button
                 type="button"
                 onClick={() => handleDeleteEvent(selectedEvent.id)}
                 variant="danger"
               >
                 <TrashIcon className="h-5 w-5 mr-2" />
                 Delete
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 onClick={() => setSelectedEvent(null)}
                 variant="default"
               >
                 Close
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -364,5 +364,3 @@ export default function Calendar() {
     </div>
   );
 }
-
-

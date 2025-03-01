@@ -1,9 +1,8 @@
-import { Button } from './Button';
 import React, { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { PencilIcon, TrashIcon, PhotoIcon } from '@heroicons/react/24/outline';
 import CarProfileView from '../components/CarProfileView';
-import { Button } from './Button';
+import { Button } from '../components';
 
 interface Car {
   id: number;
@@ -289,7 +288,6 @@ export default function CarProfiles() {
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Car Profiles</h1>
         <Button
           onClick={() => setIsAddingCar(true)}
-          variant="gradient"
           variant="primary"
         >
           Add Car
@@ -342,14 +340,14 @@ export default function CarProfiles() {
                 <div className="flex space-x-1 sm:space-x-2 ml-2" onClick={(e) => e.stopPropagation()}>
                   <Button
                     onClick={() => startEditCar(car)}
-                    variant="gradient"
+                    variant="primary"
                     className="p-1 sm:p-1.5 rounded-full hover:bg-gray-100 transition-colors duration-200"
                   >
                     <PencilIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-600 hover:text-indigo-600" />
                   </Button>
                   <Button
                     onClick={() => handleDeleteCar(car.id)}
-                    variant="gradient"
+                    variant="primary"
                     className="p-1 sm:p-1.5 rounded-full hover:bg-gray-100 transition-colors duration-200"
                   >
                     <TrashIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-600 hover:text-red-600" />
@@ -492,15 +490,13 @@ export default function CarProfiles() {
                     });
                     setSelectedImage(null);
                   }}
-                  variant="gradient"
                   variant="primary"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
-                  variant="gradient"
-                  variant="primary"
+                  
                 >
                   {isAddingCar ? 'Add Car' : 'Save Changes'}
                 </Button>
@@ -512,5 +508,3 @@ export default function CarProfiles() {
     </div>
   );
 }
-
-

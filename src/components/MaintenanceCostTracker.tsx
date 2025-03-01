@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { MaintenanceCost } from '../types';
 import { formatCurrency } from '../utils/formatting';
 import { createClient } from '@supabase/supabase-js';
-import { Button } from './Button';
+import { Button } from '../components';
 
 interface Car {
   id: string;

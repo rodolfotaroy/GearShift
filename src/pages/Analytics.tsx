@@ -1,4 +1,3 @@
-import { Button } from './Button';
 import { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import {

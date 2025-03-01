@@ -1,4 +1,4 @@
-import { Button } from './Button';
+import { Button } from '../components';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSupabase } from '../contexts/SupabaseContext';
@@ -108,7 +108,7 @@ export default function Login() {
                             className="group relative w-1/2 flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         >
                             {loading ? 'Signing in...' : 'Sign in'}
-                        </button>
+                        </Button>
                         <button
                             type="button"
                             disabled={loading}
@@ -116,7 +116,7 @@ export default function Login() {
                             className="group relative w-1/2 ml-4 flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                         >
                             {loading ? 'Signing up...' : 'Sign up'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>

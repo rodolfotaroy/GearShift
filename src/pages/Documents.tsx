@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { TrashIcon } from '@heroicons/react/24/outline';
-import { Button } from './Button';
+import { Button } from '../components';
 
 interface Document {
   id: number;
@@ -199,7 +199,7 @@ export default function Documents() {
                       className="text-red-600 hover:text-red-900"
                     >
                       <TrashIcon className="h-5 w-5" />
-                    </button>
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -210,5 +210,3 @@ export default function Documents() {
     </div>
   );
 }
-
-

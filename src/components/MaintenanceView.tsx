@@ -1,4 +1,4 @@
-import { Button } from './Button';
+import { Button } from '../components';
 import { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { MaintenanceSchedule, ServiceHistory, Car, SERVICE_TYPES } from '../types';
@@ -162,7 +162,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                     >
                         <PlusIcon className="h-4 w-4 mr-2" />
                         Add Schedule
-                    </button>
+                    </Button>
                 </div>
 
                 <div className="bg-white shadow overflow-hidden sm:rounded-md">
@@ -206,7 +206,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                     >
                         <PlusIcon className="h-4 w-4 mr-2" />
                         Add Service
-                    </button>
+                    </Button>
                 </div>
 
                 <div className="bg-white shadow overflow-hidden sm:rounded-md">
@@ -297,14 +297,14 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                                 variant="default"
                             >
                                 Cancel
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 type="button"
                                 onClick={addMaintenanceSchedule}
-                                variant="primary"
+                                
                             >
                                 Add Schedule
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>
@@ -380,14 +380,14 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                                 variant="default"
                             >
                                 Cancel
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 type="button"
                                 onClick={addServiceHistory}
-                                variant="primary"
+                                
                             >
                                 Add Service
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>

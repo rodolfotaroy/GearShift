@@ -1,4 +1,3 @@
-import { Button } from './Button';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Disclosure } from '@headlessui/react';
@@ -124,13 +123,13 @@ export default function Layout({ children }: LayoutProps) {
                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                   >
                     {isDarkMode ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
-                  </button>
+                  </Button>
                   <button
                     onClick={() => signOut()}
                     className="bg-neutral-100 dark:bg-dark-surface p-2 rounded-full text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-dark-border hover:text-neutral-800 dark:hover:text-neutral-100 transition-colors"
                   >
                     <UserIcon className="h-6 w-6" />
-                  </button>
+                  </Button>
                 </div>
                 <div className="-mr-2 flex items-center sm:hidden">
                   <Disclosure.Button className="bg-neutral-100 dark:bg-dark-surface inline-flex items-center justify-center p-2 rounded-md text-neutral-600 dark:text-neutral-300 hover:text-neutral-800 dark:hover:text-neutral-100 hover:bg-neutral-200 dark:hover:bg-dark-border">
@@ -182,5 +181,3 @@ export default function Layout({ children }: LayoutProps) {
     </div>
   );
 }
-
-

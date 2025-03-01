@@ -1,4 +1,4 @@
-import { Button } from './Button';
+import { Button } from '../components';
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSupabase } from '../contexts/SupabaseContext';
@@ -126,12 +126,12 @@ export default function Settings() {
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100"
                 />
               </div>
-              <button
+              <Button
                 onClick={updateProfile}
                 className="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition"
               >
                 Update Profile
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -175,18 +175,18 @@ export default function Settings() {
               Theme
             </h2>
             <div className="flex space-x-4">
-              <button
+              <Button
                 onClick={() => handleThemeChange('light')}
                 className={`px-4 py-2 rounded-md ${theme === 'light' ? 'bg-indigo-600 text-white' : 'bg-gray-200'}`}
               >
                 Light
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => handleThemeChange('dark')}
                 className={`px-4 py-2 rounded-md ${theme === 'dark' ? 'bg-indigo-600 text-white' : 'bg-gray-200'}`}
               >
                 Dark
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -196,23 +196,21 @@ export default function Settings() {
               <LockClosedIcon className="h-6 w-6 mr-2 text-gray-600" />
               Security
             </h2>
-            <button
+            <Button
               onClick={() => {/* Implement password reset logic */}}
               className="w-full bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition"
             >
               Reset Password
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={signOut}
               className="w-full bg-gray-600 text-white py-2 rounded-md hover:bg-gray-700 transition mt-4"
             >
               Sign Out
-            </button>
+            </Button>
           </div>
         </div>
       </div>
     </div>
   );
 }
-
-

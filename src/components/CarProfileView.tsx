@@ -1,4 +1,4 @@
-import { Button } from './Button';
+import { Button } from '../components';
 import { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline';
@@ -122,48 +122,36 @@ export default function CarProfileView({ car, onClose, onCarUpdated }: CarProfil
           <h3 className="text-lg leading-6 font-medium text-gray-900">
             Car Profile
           </h3>
-          <button
+          <Button
             type="button"
             onClick={onClose}
-            className="rounded-md text-gray-400 hover:text-gray-500"
+            
           >
             <XMarkIcon className="h-6 w-6" />
-          </button>
+          </Button>
         </div>
 
         {/* Tabs */}
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex" aria-label="Tabs">
-            <button
+            <Button
               onClick={() => setActiveTab('details')}
-              className={`w-1/3 py-4 px-1 text-center border-b-2 font-medium text-sm
-                ${activeTab === 'details'
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+              variant={activeTab === 'details' ? 'primary' : 'default'}
             >
               Details
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setActiveTab('maintenance')}
-              className={`w-1/3 py-4 px-1 text-center border-b-2 font-medium text-sm
-                ${activeTab === 'maintenance'
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+              variant={activeTab === 'maintenance' ? 'primary' : 'default'}
             >
               Maintenance
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setActiveTab('documents')}
-              className={`w-1/3 py-4 px-1 text-center border-b-2 font-medium text-sm
-                ${activeTab === 'documents'
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+              variant={activeTab === 'documents' ? 'primary' : 'default'}
             >
               Documents
-            </button>
+            </Button>
           </nav>
         </div>
 
@@ -328,7 +316,7 @@ export default function CarProfileView({ car, onClose, onCarUpdated }: CarProfil
               <div className="flex justify-end space-x-3">
                 {editMode ? (
                   <>
-                    <button
+                    <Button
                       type="button"
                       onClick={() => {
                         setEditMode(false);
@@ -337,23 +325,23 @@ export default function CarProfileView({ car, onClose, onCarUpdated }: CarProfil
                       variant="default"
                     >
                       Cancel
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
                       onClick={handleUpdateCar}
-                      variant="primary"
+                      
                     >
                       Save Changes
-                    </button>
+                    </Button>
                   </>
                 ) : (
-                  <button
+                  <Button
                     type="button"
                     onClick={() => setEditMode(true)}
                     variant="primary"
                   >
                     Edit Details
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
@@ -371,5 +359,3 @@ export default function CarProfileView({ car, onClose, onCarUpdated }: CarProfil
     </div>
   );
 }
-
-

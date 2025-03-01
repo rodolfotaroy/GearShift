@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
 import { useSupabase } from '../contexts/SupabaseContext';
-import { Button } from './Button';
+import { Button } from '../components';
 import {
   CalendarIcon,
   ClipboardDocumentListIcon,
@@ -386,7 +386,7 @@ export default function Maintenance() {
                   </Button>
                   <Button 
                     type="submit"
-                    variant="primary"
+                    
                   >
                     Add Schedule
                   </Button>
@@ -493,7 +493,7 @@ export default function Maintenance() {
                   </Button>
                   <Button 
                     type="submit"
-                    variant="primary"
+                    
                   >
                     Add Service
                   </Button>
