@@ -13,7 +13,7 @@ const SERVICE_TYPES = ['Oil Change', 'Tire Rotation', 'Brake Service', 'Engine T
 
 interface MaintenanceSchedule {
   id?: number;
-  car_id: number;
+  car_id: string;
   service_type: typeof SERVICE_TYPES[number];
   due_date: string;
   mileage_due: number;
@@ -23,7 +23,7 @@ interface MaintenanceSchedule {
 
 interface ServiceHistory {
   id?: number;
-  car_id: number;
+  car_id: string;
   service_type: typeof SERVICE_TYPES[number];
   service_date: string;
   mileage: number;
@@ -32,11 +32,11 @@ interface ServiceHistory {
 }
 
 interface Car {
-  id: number;
+  id: string;
   year: number;
   make: string;
   model: string;
-  user_id: string;
+  user_id?: string;
 }
 
 export default function Maintenance() {
@@ -50,7 +50,7 @@ export default function Maintenance() {
   const [showAddServiceModal, setShowAddServiceModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [newSchedule, setNewSchedule] = useState<MaintenanceSchedule>({
-    car_id: 0,
+    car_id: '',
     service_type: SERVICE_TYPES[0],
     due_date: DateTime.now().plus({ months: 1 }).toISODate() || '',
     mileage_due: 0,
@@ -58,7 +58,7 @@ export default function Maintenance() {
     status: 'Pending'
   });
   const [newService, setNewService] = useState<ServiceHistory>({
-    car_id: 0,
+    car_id: '',
     service_type: SERVICE_TYPES[0],
     service_date: DateTime.now().toISODate() || '',
     mileage: 0,
@@ -119,7 +119,7 @@ export default function Maintenance() {
             .from('maintenance_events')
             .select('*')
             .eq('car_id', selectedCar.id)
-            .order('due_date', { ascending: true }),
+            .order('date', { ascending: true }),
           supabaseClient
             .from('service_history')
             .select('*')
@@ -142,7 +142,8 @@ export default function Maintenance() {
 
     const scheduleToAdd = {
       ...newSchedule,
-      car_id: selectedCar.id
+      car_id: selectedCar.id,
+      user_id: user?.id
     };
 
     const { data, error } = await supabaseClient
@@ -174,7 +175,8 @@ export default function Maintenance() {
 
     const serviceToAdd = {
       ...newService,
-      car_id: selectedCar.id
+      car_id: selectedCar.id,
+      user_id: user?.id
     };
 
     const { data, error } = await supabaseClient
@@ -259,7 +261,7 @@ export default function Maintenance() {
             id="car-select"
             value={selectedCar.id}
             onChange={(e) => {
-              const car = cars.find(c => c.id === parseInt(e.target.value));
+              const car = cars.find(c => c.id === e.target.value);
               setSelectedCar(car || null);
             }}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
