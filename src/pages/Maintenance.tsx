@@ -14,11 +14,13 @@ const SERVICE_TYPES = ['Oil Change', 'Tire Rotation', 'Brake Service', 'Engine T
 
 interface MaintenanceSchedule {
   car_id: string;
-  service_type: typeof SERVICE_TYPES[number];
-  due_date: string;
-  mileage_due: number;
+  title: string;
   description: string;
-  status: 'Pending' | 'Completed' | 'Cancelled';
+  event_type: 'maintenance';
+  start_date: string;
+  status: 'scheduled' | 'pending' | 'completed';
+  recurrence_type: 'none';
+  mileage_due: number;
 }
 
 interface ServiceHistory {
@@ -50,12 +52,13 @@ export default function Maintenance() {
   const [showAddServiceModal, setShowAddServiceModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [newSchedule, setNewSchedule] = useState<MaintenanceSchedule>({
-    car_id: '',
-    service_type: SERVICE_TYPES[0],
-    due_date: DateTime.now().plus({ months: 1 }).toISODate() || '',
-    mileage_due: 0,
+    title: '',
     description: '',
-    status: 'Pending'
+    event_type: 'maintenance',
+    start_date: DateTime.now().plus({ months: 1 }).toISODate() || '',
+    status: 'scheduled',
+    recurrence_type: 'none',
+    mileage_due: 0
   });
   const [newService, setNewService] = useState<ServiceHistory>({
     car_id: '',
@@ -209,6 +212,13 @@ export default function Maintenance() {
     fetchMaintenanceData();
   }, [selectedCar, supabaseClient]);
 
+  const handleNewScheduleChange = (field: keyof typeof newSchedule, value: string | number) => {
+    setNewSchedule(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   async function addMaintenanceSchedule() {
     if (!selectedCar) return;
 
@@ -232,12 +242,12 @@ export default function Maintenance() {
     const scheduleToAdd = {
       user_id: user.id,
       car_id: selectedCar.id,
-      title: newSchedule.service_type, // Use service type as title
-      description: newSchedule.description || '',
-      event_type: 'maintenance', // Default event type
-      start_date: newSchedule.due_date,
-      status: 'scheduled', // Use the enum from the schema
-      recurrence_type: 'none',
+      title: newSchedule.title || 'Maintenance Event',
+      description: newSchedule.description,
+      event_type: newSchedule.event_type,
+      start_date: newSchedule.start_date,
+      status: newSchedule.status,
+      recurrence_type: newSchedule.recurrence_type,
     };
 
     console.log('Formatted Schedule to add:', scheduleToAdd);
@@ -270,13 +280,16 @@ export default function Maintenance() {
         console.log('Maintenance schedule added:', data);
         setSchedules([...schedules, data[0]]);
         setShowAddScheduleModal(false);
+        
+        // Reset to default state
         setNewSchedule({
-          car_id: selectedCar.id,
-          service_type: SERVICE_TYPES[0],
-          due_date: DateTime.now().plus({ months: 1 }).toISODate() || '',
-          mileage_due: 0,
+          title: '',
           description: '',
-          status: 'Pending'
+          event_type: 'maintenance',
+          start_date: DateTime.now().plus({ months: 1 }).toISODate() || '',
+          status: 'scheduled',
+          recurrence_type: 'none',
+          mileage_due: 0
         });
       }
     } catch (catchError) {
@@ -318,7 +331,7 @@ export default function Maintenance() {
       // Update related maintenance schedule if exists
       const relatedSchedule = schedules.find(
         schedule => 
-          schedule.service_type === serviceToAdd.service_type && 
+          schedule.title === serviceToAdd.service_type && 
           schedule.status !== 'Completed'
       );
 
@@ -504,9 +517,9 @@ export default function Maintenance() {
                   >
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="font-medium">{schedule.service_type}</p>
+                        <p className="font-medium">{schedule.title}</p>
                         <p className="text-sm text-gray-600">
-                          Due: {DateTime.fromISO(schedule.due_date).toLocaleString(DateTime.DATE_MED)}
+                          Due: {DateTime.fromISO(schedule.start_date).toLocaleString(DateTime.DATE_MED)}
                         </p>
                         <p className="text-sm text-gray-600">
                           Mileage: {schedule.mileage_due} miles
@@ -584,35 +597,37 @@ export default function Maintenance() {
                 addMaintenanceSchedule();
               }}>
                 <div className="mb-4">
-                  <label htmlFor="service-type" className="block text-sm font-medium text-gray-700">
-                    Service Type
+                  <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+                    Title
                   </label>
-                  <select
-                    id="service-type"
-                    value={newSchedule.service_type}
-                    onChange={(e) => setNewSchedule({
-                      ...newSchedule, 
-                      service_type: e.target.value as typeof SERVICE_TYPES[number]
-                    })}
+                  <input
+                    type="text"
+                    id="title"
+                    value={newSchedule.title}
+                    onChange={(e) => handleNewScheduleChange('title', e.target.value)}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                  >
-                    {SERVICE_TYPES.map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
+                  />
                 </div>
                 <div className="mb-4">
-                  <label htmlFor="due-date" className="block text-sm font-medium text-gray-700">
-                    Due Date
+                  <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                    Description
+                  </label>
+                  <textarea
+                    id="description"
+                    value={newSchedule.description}
+                    onChange={(e) => handleNewScheduleChange('description', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label htmlFor="start-date" className="block text-sm font-medium text-gray-700">
+                    Start Date
                   </label>
                   <input
                     type="date"
-                    id="due-date"
-                    value={newSchedule.due_date}
-                    onChange={(e) => setNewSchedule({
-                      ...newSchedule, 
-                      due_date: e.target.value
-                    })}
+                    id="start-date"
+                    value={newSchedule.start_date}
+                    onChange={(e) => handleNewScheduleChange('start_date', e.target.value)}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                   />
                 </div>
@@ -624,24 +639,7 @@ export default function Maintenance() {
                     type="number"
                     id="mileage-due"
                     value={newSchedule.mileage_due}
-                    onChange={(e) => setNewSchedule({
-                      ...newSchedule, 
-                      mileage_due: parseInt(e.target.value)
-                    })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                    Description
-                  </label>
-                  <textarea
-                    id="description"
-                    value={newSchedule.description}
-                    onChange={(e) => setNewSchedule({
-                      ...newSchedule, 
-                      description: e.target.value
-                    })}
+                    onChange={(e) => handleNewScheduleChange('mileage_due', parseInt(e.target.value))}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                   />
                 </div>
