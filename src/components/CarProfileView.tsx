@@ -371,3 +371,4 @@ export default function CarProfileView({ car, onClose, onCarUpdated }: CarProfil
     </div>
   );
 }
+

@@ -25,3 +25,4 @@ export const SupabaseProvider = ({ children }: { children: React.ReactNode }) =>
     </SupabaseContext.Provider>
   );
 };
+

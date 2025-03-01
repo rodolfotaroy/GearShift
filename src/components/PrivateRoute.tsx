@@ -19,3 +19,4 @@ export default function PrivateRoute({ children }: { children: JSX.Element }) {
 
     return children;
 }
+

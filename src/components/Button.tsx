@@ -8,7 +8,7 @@ export type ButtonVariant =
   | 'default' 
   | 'gradient';
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement> {
   variant?: ButtonVariant;
   fullWidth?: boolean;
   className?: string;
@@ -53,3 +53,4 @@ export const Button: React.FC<ButtonProps> = ({
     </button>
   );
 };
+
