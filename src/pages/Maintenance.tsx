@@ -222,13 +222,14 @@ export default function Maintenance() {
     });
 
     const scheduleToAdd = {
+      user_id: user?.id || '',
       car_id: selectedCar.id,
-      event_type: newSchedule.service_type, // Matches database schema
-      date: newSchedule.due_date,
-      mileage_due: newSchedule.mileage_due,
-      notes: newSchedule.description,
-      status: 'Pending',
-      user_id: user?.id || ''
+      title: newSchedule.service_type, // Use as title
+      description: newSchedule.description,
+      event_type: 'maintenance', // Default event type
+      start_date: newSchedule.due_date,
+      status: 'scheduled', // Use the enum from the schema
+      recurrence_type: 'none',
     };
 
     console.log('Schedule to add:', scheduleToAdd);
