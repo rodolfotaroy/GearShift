@@ -51,6 +51,12 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
     const [selectedStatus, setSelectedStatus] = useState<string>('');
 
     useEffect(() => {
+        if (selectedStatus) {
+            console.log('Selected status:', selectedStatus);
+        }
+    }, [selectedStatus]);
+
+    useEffect(() => {
         if (!car) {
             setLoading(false);
             return;
@@ -142,14 +148,13 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
         }
     }
 
-    async function addServiceHistory() {
+    const handleServiceAdd = async () => {
         if (!car) return;
 
         const serviceToAdd = {
           ...newService,
-          car_id: car.id ? String(car.id) : '',
-          // Fallback to 'maintenance' if event_type is not set
-          event_type: newService.service_type || 'maintenance',
+          car_id: car.id,
+          event_type: 'maintenance' as const,
           user_id: car.user_id || ''
         };
 
@@ -171,11 +176,11 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
             user_id: car.user_id || ''
           });
 
-          // Update related maintenance schedule if exists
           const relatedSchedule = schedules.find(
-            schedule => 
-              // Use optional chaining and provide fallback
-              (schedule.event_type || 'maintenance') === serviceToAdd.service_type
+            schedule => {
+              const scheduleEventType = (schedule as any).event_type || 'maintenance';
+              return scheduleEventType === serviceToAdd.event_type;
+            }
           );
 
           if (relatedSchedule) {
@@ -191,12 +196,10 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
         const scheduleDate = DateTime.fromISO(schedule.date);
         const today = DateTime.now();
 
-        // Determine status based on date and completed flag
         const isOverdue = scheduleDate < today && !schedule.completed;
         const isCompleted = schedule.completed;
         const isUpcoming = scheduleDate >= today && !schedule.completed;
 
-        // Apply filter based on selected status
         switch (selectedStatus) {
           case 'Overdue':
             return isOverdue;
@@ -226,7 +229,6 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                 </Button>
             </div>
 
-            {/* Add Schedule Modal */}
             {showAddSchedule && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
@@ -298,7 +300,6 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                 </div>
             )}
 
-            {/* Display Schedules */}
             <div className="space-y-4">
                 {filteredSchedules.map((schedule) => (
                     <div
@@ -333,7 +334,6 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                 ))}
             </div>
 
-            {/* Service History Section */}
             <div>
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-medium text-gray-900">Service History</h3>
@@ -379,7 +379,6 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                 </div>
             </div>
 
-            {/* Add Service Modal */}
             {showAddService && (
                 <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
                     <div className="bg-white rounded-lg max-w-lg w-full p-6">
@@ -452,7 +451,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                             </Button>
                             <Button
                                 type="button"
-                                onClick={addServiceHistory}
+                                onClick={handleServiceAdd}
                                 variant="default"
                             >
                                 Add Service
