@@ -82,13 +82,22 @@ export default function Maintenance() {
 
         setUser({ id: user.id });
 
-        // Fetch user's cars
+        // Fetch user's cars with explicit column selection and filtering
         const { data: fetchedCars, error: carError } = await supabaseClient
           .from('cars')
-          .select('*')
+          .select(`
+            id, 
+            year, 
+            make, 
+            model, 
+            user_id
+          `)
           .eq('user_id', user.id);
 
-        if (carError) throw carError;
+        if (carError) {
+          console.error('Car fetch error:', carError);
+          throw carError;
+        }
 
         if (fetchedCars && fetchedCars.length > 0) {
           setCars(fetchedCars);
@@ -217,6 +226,34 @@ export default function Maintenance() {
     }
   }
 
+  const handleAddCar = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabaseClient
+        .from('cars')
+        .insert({
+          user_id: user.id,
+          make: 'Default Car',
+          model: 'First Car',
+          year: new Date().getFullYear()
+        })
+        .select();
+
+      if (error) {
+        console.error('Error adding car:', error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setCars([...cars, data[0]]);
+        setSelectedCar(data[0]);
+      }
+    } catch (error) {
+      console.error('Unexpected error adding car:', error);
+    }
+  };
+
   // Render loading state
   if (loading) {
     return (
@@ -240,6 +277,7 @@ export default function Maintenance() {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-gray-500">Please add a car to track maintenance.</p>
+        <Button onClick={handleAddCar}>Add Car</Button>
       </div>
     );
   }
