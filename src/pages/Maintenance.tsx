@@ -16,7 +16,7 @@ interface MaintenanceSchedule {
   id: number;
   car_id: number;
   title: string;
-  description?: string;
+  description: string;
   date: string;
   completed: boolean;
   created_at: string;
@@ -241,6 +241,7 @@ const Maintenance: React.FC = () => {
       id: 0,
       car_id: Number(selectedCar.id), // Convert to number
       title: newSchedule.title || 'Maintenance Event', 
+      description: newSchedule.description,
       date: newSchedule.date || DateTime.now().plus({ months: 1 }).toISODate(),
       completed: false,
       created_at: DateTime.now().toISODate(),
@@ -283,6 +284,7 @@ const Maintenance: React.FC = () => {
         id: 0,
         car_id: Number(selectedCar.id),
         title: '',
+        description: '',
         date: DateTime.now().plus({ months: 1 }).toISODate(),
         completed: false,
         created_at: DateTime.now().toISODate(),
@@ -603,6 +605,21 @@ const Maintenance: React.FC = () => {
                   onChange={handleNewScheduleChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                   placeholder="Enter maintenance event title"
+                />
+              </div>
+
+              {/* Description Input */}
+              <div className="mb-4">
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                  Description
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  value={newSchedule.description}
+                  onChange={handleNewScheduleChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                  placeholder="Enter maintenance event description"
                 />
               </div>
 
