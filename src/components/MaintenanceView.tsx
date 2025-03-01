@@ -10,7 +10,7 @@ interface MaintenanceViewProps {
 }
 
 export default function MaintenanceView({ car }: MaintenanceViewProps) {
-    const { supabaseClient, supabaseAuth } = useSupabase();
+    const { supabaseClient } = useSupabase();
     const [schedules, setSchedules] = useState<MaintenanceSchedule[]>([]);
     const [history, setHistory] = useState<ServiceHistory[]>([]);
     const [loading, setLoading] = useState(true);
@@ -37,7 +37,6 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
         cost: 0,
         description: ''
     });
-    const [user, setUser] = useState<any>(null);
     const [cars, setCars] = useState<{
         id: number;
         make: string;
@@ -163,14 +162,6 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                     .eq('id', relatedSchedule.id);
             }
         }
-    }
-
-    if (!user) {
-        return (
-            <div className="flex items-center justify-center h-64">
-                <p className="text-gray-500">Please sign in to view maintenance information.</p>
-            </div>
-        );
     }
 
     if (loading || !car) {
