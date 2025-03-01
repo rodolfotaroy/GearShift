@@ -1,94 +1,161 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { MaintenanceCost } from '../types';
-import { formatCurrency } from '../utils/formatting';
-import { createClient } from '@supabase/supabase-js';
 import { Button } from '../components';
+import { useSupabase } from '../contexts/SupabaseContext';
+import { useAuth } from '../contexts/AuthContext';
+import { DateTime } from 'luxon';
+import { Database } from '../types/database.types';
+import { formatCurrency } from '../utils/formatting';
 
-interface Car {
-  id: string;
-  make: string;
-  model: string;
-}
+// Use database types for stronger typing
+type MaintenanceCost = Database['public']['Tables']['maintenance_costs']['Row'];
+type Car = Database['public']['Tables']['cars']['Row'];
 
-interface MaintenanceCostTrackerProps {
-  costs: MaintenanceCost[];
-  onAddCost: (cost: MaintenanceCost) => void;
-}
+const MAINTENANCE_CATEGORIES = [
+  'Routine', 
+  'Repair', 
+  'Upgrade', 
+  'Emergency'
+] as const;
 
-const MaintenanceCostTracker: React.FC<MaintenanceCostTrackerProps> = ({ costs, onAddCost }) => {
-  const [cars, setCars] = useState<Car[]>([]);
-  const [newCost, setNewCost] = useState<Partial<MaintenanceCost>>({
-    date: new Date(),
-    category: 'Routine'
+const MaintenanceCostTracker: React.FC = () => {
+  const { supabaseClient } = useSupabase();
+  const { user } = useAuth();
+
+  // Consolidated state management
+  const [state, setState] = useState<{
+    cars: Car[];
+    costs: MaintenanceCost[];
+    loading: boolean;
+    error: string | null;
+    newCost: Partial<MaintenanceCost>;
+  }>({
+    cars: [],
+    costs: [],
+    loading: true,
+    error: null,
+    newCost: {
+      date: DateTime.now().toISODate(),
+      category: 'Routine'
+    }
   });
-  const [error, setError] = useState<string | null>(null);
 
+  // Fetch cars and maintenance costs
+  const fetchData = async () => {
+    if (!user) {
+      setState(prev => ({ ...prev, loading: false, error: 'No authenticated user' }));
+      return;
+    }
+
+    try {
+      // Fetch cars
+      const { data: carsData, error: carsError } = await supabaseClient
+        .from('cars')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (carsError) throw carsError;
+
+      // Fetch maintenance costs
+      const { data: costsData, error: costsError } = await supabaseClient
+        .from('maintenance_costs')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false });
+
+      if (costsError) throw costsError;
+
+      setState(prev => ({
+        ...prev,
+        cars: carsData || [],
+        costs: costsData || [],
+        loading: false,
+        error: null
+      }));
+    } catch (error) {
+      console.error('Maintenance Cost Fetch Error:', error);
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      }));
+    }
+  };
+
+  // Trigger data fetch on component mount
   useEffect(() => {
-    const fetchCars = async () => {
-      try {
-        // Explicitly create Supabase client with environment variables
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    fetchData();
+  }, [user]);
 
-        if (!supabaseUrl || !supabaseAnonKey) {
-          throw new Error('Supabase URL or Anon Key is missing');
-        }
-
-        const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-        console.log('Supabase Client Created:', {
-          url: supabaseUrl,
-          anonKeyPresent: !!supabaseAnonKey
-        });
-
-        const { data, error } = await supabase
-          .from('cars')
-          .select('id, make, model');
-
-        console.log('Supabase Query Result:', {
-          data,
-          error
-        });
-
-        if (error) {
-          setError(`Failed to fetch cars: ${error.message}`);
-          console.error('Supabase Error:', error);
-          return;
-        }
-
-        if (data) {
-          setCars(data);
-          console.log('Cars fetched successfully:', data);
-        } else {
-          setError('No cars data returned');
-        }
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        setError(`Unexpected error: ${errorMessage}`);
-        console.error('Comprehensive Fetch Error:', err);
-      }
-    };
-
-    fetchCars();
-  }, []);
-
+  // Memoized cost summary
   const costSummary = useMemo(() => {
     return {
-      total: costs.reduce((sum, cost) => sum + cost.amount, 0),
-      byCategory: costs.reduce((acc, cost) => {
+      total: state.costs.reduce((sum, cost) => sum + cost.amount, 0),
+      byCategory: state.costs.reduce((acc, cost) => {
         acc[cost.category] = (acc[cost.category] || 0) + cost.amount;
         return acc;
       }, {} as Record<string, number>)
     };
-  }, [costs]);
+  }, [state.costs]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newCost.amount && newCost.vehicleId) {
-      onAddCost(newCost as MaintenanceCost);
-      setNewCost({ date: new Date(), category: 'Routine' });
+  // Add maintenance cost
+  const addMaintenanceCost = async () => {
+    const { newCost } = state;
+
+    if (!newCost.amount || !newCost.vehicleId) {
+      setState(prev => ({ 
+        ...prev, 
+        error: 'Please fill in all required fields' 
+      }));
+      return;
+    }
+
+    try {
+      const { data, error } = await supabaseClient
+        .from('maintenance_costs')
+        .insert({
+          ...newCost,
+          user_id: user?.id
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setState(prev => ({
+        ...prev,
+        costs: [data, ...prev.costs],
+        newCost: {
+          date: DateTime.now().toISODate(),
+          category: 'Routine'
+        },
+        error: null
+      }));
+    } catch (error) {
+      console.error('Error adding maintenance cost:', error);
+      setState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'Failed to add maintenance cost'
+      }));
     }
   };
+
+  // Render loading or error states
+  if (state.loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p>Loading maintenance costs...</p>
+      </div>
+    );
+  }
+
+  if (state.error) {
+    return (
+      <div className="bg-red-100 p-4 rounded-lg">
+        <p className="text-red-600">Error: {state.error}</p>
+        <Button onClick={fetchData}>Retry</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white dark:bg-dark-background-secondary rounded-xl shadow-md dark:shadow-dark-md p-6 space-y-4 animate-fade-in-down">
@@ -101,88 +168,166 @@ const MaintenanceCostTracker: React.FC<MaintenanceCostTrackerProps> = ({ costs, 
         </div>
       </div>
 
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-          <strong className="font-bold">Error: </strong>
-          <span className="block sm:inline">{error}</span>
-        </div>
-      )}
+      {/* Cost Summary by Category */}
+      <div className="grid grid-cols-2 gap-4">
+        {Object.entries(costSummary.byCategory).map(([category, amount]) => (
+          <div 
+            key={category} 
+            className="bg-gray-100 dark:bg-dark-background-tertiary p-3 rounded-lg"
+          >
+            <h3 className="text-sm font-medium text-gray-600 dark:text-dark-text-secondary">
+              {category}
+            </h3>
+            <p className="text-lg font-semibold text-gray-800 dark:text-dark-text-primary">
+              {formatCurrency(amount)}
+            </p>
+          </div>
+        ))}
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-gray-50 dark:bg-dark-background-tertiary rounded-lg p-4">
-          <h3 className="text-md font-medium text-gray-600 dark:text-dark-text-secondary mb-2">
-            Costs by Category
-          </h3>
-          {Object.entries(costSummary.byCategory).map(([category, amount]) => (
-            <div key={category} className="flex justify-between py-1">
-              <span className="text-gray-700 dark:text-dark-text-primary">{category}</span>
-              <span className="font-semibold text-gray-800 dark:text-dark-text-primary">
-                {formatCurrency(amount)}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Add Maintenance Cost Form */}
+      <form 
+        onSubmit={(e) => {
+          e.preventDefault();
+          addMaintenanceCost();
+        }}
+        className="space-y-4"
+      >
+        <div className="grid grid-cols-2 gap-4">
+          {/* Vehicle Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">
+            <label htmlFor="vehicleId" className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">
               Vehicle
             </label>
             <select
-              value={newCost.vehicleId || ''}
-              onChange={(e) => setNewCost({...newCost, vehicleId: e.target.value})}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 
-                         shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 
-                         dark:bg-dark-background-tertiary dark:text-dark-text-primary"
+              id="vehicleId"
+              value={state.newCost.vehicleId || ''}
+              onChange={(e) => setState(prev => ({
+                ...prev,
+                newCost: {
+                  ...prev.newCost,
+                  vehicleId: Number(e.target.value)
+                }
+              }))}
+              className="mt-1 block w-full rounded-md border-gray-300 dark:border-dark-border shadow-sm dark:bg-dark-background-tertiary dark:text-dark-text-primary"
               required
             >
               <option value="">Select Vehicle</option>
-              {cars.map(car => (
+              {state.cars.map(car => (
                 <option key={car.id} value={car.id}>
-                  {car.make} {car.model}
+                  {car.year} {car.make} {car.model}
                 </option>
               ))}
             </select>
           </div>
+
+          {/* Maintenance Category */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">
+            <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">
+              Category
+            </label>
+            <select
+              id="category"
+              value={state.newCost.category || 'Routine'}
+              onChange={(e) => setState(prev => ({
+                ...prev,
+                newCost: {
+                  ...prev.newCost,
+                  category: e.target.value as typeof MAINTENANCE_CATEGORIES[number]
+                }
+              }))}
+              className="mt-1 block w-full rounded-md border-gray-300 dark:border-dark-border shadow-sm dark:bg-dark-background-tertiary dark:text-dark-text-primary"
+            >
+              {MAINTENANCE_CATEGORIES.map(category => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Amount and Date */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="amount" className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">
               Amount
             </label>
             <input
               type="number"
-              value={newCost.amount || ''}
-              onChange={(e) => setNewCost({...newCost, amount: parseFloat(e.target.value)})}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 
-                         shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 
-                         dark:bg-dark-background-tertiary dark:text-dark-text-primary"
+              id="amount"
+              step="0.01"
+              value={state.newCost.amount || ''}
+              onChange={(e) => setState(prev => ({
+                ...prev,
+                newCost: {
+                  ...prev.newCost,
+                  amount: Number(e.target.value)
+                }
+              }))}
+              className="mt-1 block w-full rounded-md border-gray-300 dark:border-dark-border shadow-sm dark:bg-dark-background-tertiary dark:text-dark-text-primary"
+              placeholder="Enter cost"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">
-              Category
+            <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">
+              Date
             </label>
-            <select
-              value={newCost.category}
-              onChange={(e) => setNewCost({...newCost, category: e.target.value as MaintenanceCost['category']})}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 
-                         shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 
-                         dark:bg-dark-background-tertiary dark:text-dark-text-primary"
-            >
-              {['Repair', 'Routine', 'Parts', 'Labor', 'Other'].map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
+            <input
+              type="date"
+              id="date"
+              value={state.newCost.date || ''}
+              onChange={(e) => setState(prev => ({
+                ...prev,
+                newCost: {
+                  ...prev.newCost,
+                  date: e.target.value
+                }
+              }))}
+              className="mt-1 block w-full rounded-md border-gray-300 dark:border-dark-border shadow-sm dark:bg-dark-background-tertiary dark:text-dark-text-primary"
+              required
+            />
           </div>
-          <Button type="submit">
+        </div>
+
+        {/* Submit Button */}
+        <div className="flex justify-end">
+          <Button 
+            type="submit" 
+            variant="primary"
+          >
             Add Maintenance Cost
           </Button>
-        </form>
+        </div>
+      </form>
+
+      {/* Maintenance Costs List */}
+      <div className="space-y-2">
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-dark-text-primary">
+          Recent Maintenance Costs
+        </h3>
+        {state.costs.map(cost => (
+          <div 
+            key={cost.id} 
+            className="bg-gray-100 dark:bg-dark-background-tertiary p-3 rounded-lg flex justify-between items-center"
+          >
+            <div>
+              <p className="font-medium text-gray-800 dark:text-dark-text-primary">
+                {state.cars.find(car => car.id === cost.vehicleId)?.make} {cost.category}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-dark-text-secondary">
+                {DateTime.fromISO(cost.date).toLocaleString(DateTime.DATE_FULL)}
+              </p>
+            </div>
+            <div className="text-lg font-bold text-green-600 dark:text-green-400">
+              {formatCurrency(cost.amount)}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
 };
 
 export default MaintenanceCostTracker;
-
-

@@ -1,35 +1,52 @@
 /// <reference types="vite/client" />
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { createContext, useContext, useMemo } from 'react';
+import { Database } from '../types/database.types';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
-// Create a single client instance
+// Validate environment variables
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase configuration. Check your environment variables.');
+}
+
+// Create a single, memoized Supabase client
 const createSupabaseClient = () => {
-  console.log('Creating Supabase Client');
-  return createClient(supabaseUrl, supabaseAnonKey);
+  console.log('Initializing Supabase Client');
+  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true
+    }
+  });
 };
 
-const SupabaseContext = createContext<SupabaseClient | null>(null);
+// Create context with explicit typing
+const SupabaseContext = createContext<{
+  supabaseClient: SupabaseClient<Database>;
+} | null>(null);
 
+// Custom hook for Supabase access with enhanced type safety
 export const useSupabase = () => {
-  const supabaseClient = useContext(SupabaseContext);
+  const context = useContext(SupabaseContext);
   
-  if (!supabaseClient) {
-    throw new Error('Supabase client not initialized');
+  if (!context) {
+    throw new Error('useSupabase must be used within a SupabaseProvider');
   }
 
   return {
-    supabaseClient,
-    supabaseAuth: supabaseClient.auth,
-    supabaseStorage: supabaseClient.storage
+    supabaseClient: context.supabaseClient,
+    supabaseAuth: context.supabaseClient.auth,
+    supabaseStorage: context.supabaseClient.storage
   };
 };
 
+// Provider component to wrap the app
 export const SupabaseProvider = ({ children }: { children: React.ReactNode }) => {
   // Use useMemo to ensure only one client is created
-  const supabase = useMemo(() => createSupabaseClient(), []);
+  const supabase = useMemo(() => ({
+    supabaseClient: createSupabaseClient()
+  }), []);
 
   return (
     <SupabaseContext.Provider value={supabase}>
