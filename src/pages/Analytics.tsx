@@ -364,3 +364,4 @@ function generateCalendarDays(month: string, expenses: DailyExpense[]) {
   return [...paddingCells, ...dayCells];
 }
 
+

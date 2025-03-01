@@ -26,3 +26,4 @@ export const SupabaseProvider = ({ children }: { children: React.ReactNode }) =>
   );
 };
 
+
