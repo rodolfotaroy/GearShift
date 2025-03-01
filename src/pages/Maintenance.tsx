@@ -73,7 +73,6 @@ export default function Maintenance() {
     async function fetchUserAndCars() {
       setLoading(true);
       try {
-        // No need to fetch user again, we're using useAuth hook
         if (!user) {
           console.error('No authenticated user found');
           setCars([]);
@@ -87,10 +86,6 @@ export default function Maintenance() {
           .select('*')
           .eq('user_id', user.id);
 
-        // Log raw query results for debugging
-        console.log('Raw Query Data:', data);
-        console.log('Raw Query Error:', error);
-
         if (error) {
           console.error('Detailed car fetch error:', {
             code: error.code,
@@ -102,7 +97,10 @@ export default function Maintenance() {
         // Process successful query
         if (data && data.length > 0) {
           setCars(data);
-          setSelectedCar(data[0]);
+          // Only set selected car if not already set
+          if (!selectedCar) {
+            setSelectedCar(data[0]);
+          }
         } else {
           // No cars found, attempt to create a default car
           try {
@@ -173,9 +171,13 @@ export default function Maintenance() {
     if (!selectedCar) return;
 
     const scheduleToAdd = {
-      ...newSchedule,
       car_id: selectedCar.id,
-      user_id: user?.id
+      event_type: newSchedule.service_type,
+      date: newSchedule.due_date,
+      mileage_due: newSchedule.mileage_due,
+      notes: newSchedule.description,
+      status: 'Pending',
+      user_id: user?.id || ''
     };
 
     const { data, error } = await supabaseClient
@@ -319,10 +321,10 @@ export default function Maintenance() {
   }
 
   // Render no cars state
-  if (!selectedCar) {
+  if (cars.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-gray-500">Please add a car to track maintenance.</p>
+        <p className="text-gray-500 mr-4">Please add a car to track maintenance.</p>
         <Button onClick={handleAddCar}>Add Car</Button>
       </div>
     );
