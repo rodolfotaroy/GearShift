@@ -16,11 +16,9 @@ interface MaintenanceSchedule {
   car_id: string;
   title: string;
   description: string;
-  event_type: 'maintenance';
-  start_date: string;
-  status: 'scheduled' | 'pending' | 'completed';
-  recurrence_type: 'none';
-  mileage_due: number;
+  date: string;
+  completed: boolean;
+  notes: string;
 }
 
 interface ServiceHistory {
@@ -52,13 +50,12 @@ export default function Maintenance() {
   const [showAddServiceModal, setShowAddServiceModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [newSchedule, setNewSchedule] = useState<MaintenanceSchedule>({
+    car_id: selectedCar?.id || 0,
     title: '',
     description: '',
-    event_type: 'maintenance',
-    start_date: DateTime.now().plus({ months: 1 }).toISODate() || '',
-    status: 'scheduled',
-    recurrence_type: 'none',
-    mileage_due: 0
+    date: DateTime.now().plus({ months: 1 }).toISODate() || '',
+    completed: false,
+    notes: ''
   });
   const [newService, setNewService] = useState<ServiceHistory>({
     car_id: '',
@@ -212,10 +209,13 @@ export default function Maintenance() {
     fetchMaintenanceData();
   }, [selectedCar, supabaseClient]);
 
-  const handleNewScheduleChange = (field: keyof typeof newSchedule, value: string | number) => {
+  const handleNewScheduleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
     setNewSchedule(prev => ({
       ...prev,
-      [field]: value
+      [name]: value
     }));
   };
 
@@ -229,11 +229,6 @@ export default function Maintenance() {
     });
 
     // Validate required fields
-    if (!user?.id) {
-      console.error('No authenticated user found');
-      return;
-    }
-
     if (!selectedCar.id) {
       console.error('No car selected');
       return;
@@ -243,8 +238,9 @@ export default function Maintenance() {
       car_id: selectedCar.id,
       title: newSchedule.title || 'Maintenance Event', 
       description: newSchedule.description || '',
-      date: newSchedule.start_date || DateTime.now().plus({ months: 1 }).toISODate(),
-      completed: false, // Default to not completed
+      date: newSchedule.date || DateTime.now().plus({ months: 1 }).toISODate(),
+      completed: false,
+      notes: newSchedule.notes
     };
 
     console.log('Formatted Schedule to add:', scheduleToAdd);
@@ -266,11 +262,6 @@ export default function Maintenance() {
           scheduleData: scheduleToAdd
         });
 
-        // Additional debugging for potential type mismatches
-        Object.entries(scheduleToAdd).forEach(([key, value]) => {
-          console.log(`Type of ${key}:`, typeof value, 'Value:', value);
-        });
-
         return;
       }
 
@@ -281,9 +272,12 @@ export default function Maintenance() {
         
         // Reset to default state
         setNewSchedule({
+          car_id: selectedCar.id,
           title: '',
           description: '',
-          start_date: DateTime.now().plus({ months: 1 }).toISODate() || '',
+          date: DateTime.now().plus({ months: 1 }).toISODate() || '',
+          completed: false,
+          notes: ''
         });
       }
     } catch (catchError) {
@@ -326,13 +320,13 @@ export default function Maintenance() {
       const relatedSchedule = schedules.find(
         schedule => 
           schedule.title === serviceToAdd.service_type && 
-          schedule.status !== 'Completed'
+          schedule.completed === false
       );
 
       if (relatedSchedule) {
         await supabaseClient
           .from('maintenance_events')
-          .update({ status: 'Completed' })
+          .update({ completed: true })
           .eq('id', relatedSchedule.id);
       }
     }
@@ -504,8 +498,8 @@ export default function Maintenance() {
                   <li 
                     key={schedule.id} 
                     className={`p-3 rounded-md ${
-                      schedule.status === 'Overdue' 
-                        ? 'bg-red-50 border-l-4 border-red-500' 
+                      schedule.completed === false 
+                        ? 'bg-yellow-50 border-l-4 border-yellow-500' 
                         : 'bg-gray-50'
                     }`}
                   >
@@ -513,22 +507,17 @@ export default function Maintenance() {
                       <div>
                         <p className="font-medium">{schedule.title}</p>
                         <p className="text-sm text-gray-600">
-                          Due: {DateTime.fromISO(schedule.start_date).toLocaleString(DateTime.DATE_MED)}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Mileage: {schedule.mileage_due} miles
+                          Due: {DateTime.fromISO(schedule.date).toLocaleString(DateTime.DATE_MED)}
                         </p>
                       </div>
                       <span 
                         className={`px-2 py-1 rounded-full text-xs ${
-                          schedule.status === 'Overdue' 
-                            ? 'bg-red-200 text-red-800' 
-                            : schedule.status === 'Completed'
-                            ? 'bg-green-200 text-green-800'
-                            : 'bg-yellow-200 text-yellow-800'
+                          schedule.completed === false 
+                            ? 'bg-yellow-200 text-yellow-800' 
+                            : 'bg-green-200 text-green-800'
                         }`}
                       >
-                        {schedule.status}
+                        {schedule.completed ? 'Completed' : 'Scheduled'}
                       </span>
                     </div>
                   </li>
@@ -595,30 +584,12 @@ export default function Maintenance() {
                 <input
                   type="text"
                   id="title"
+                  name="title"
                   value={newSchedule.title}
-                  onChange={(e) => handleNewScheduleChange('title', e.target.value)}
+                  onChange={handleNewScheduleChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                   placeholder="Enter maintenance event title"
                 />
-              </div>
-
-              {/* Service Type Dropdown */}
-              <div className="mb-4">
-                <label htmlFor="event_type" className="block text-sm font-medium text-gray-700">
-                  Event Type
-                </label>
-                <select
-                  id="event_type"
-                  value={newSchedule.event_type}
-                  onChange={(e) => handleNewScheduleChange('event_type', e.target.value as typeof newSchedule.event_type)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                >
-                  <option value="maintenance">Maintenance</option>
-                  <option value="inspection">Inspection</option>
-                  <option value="insurance">Insurance</option>
-                  <option value="tax">Tax</option>
-                  <option value="other">Other</option>
-                </select>
               </div>
 
               {/* Description Input */}
@@ -628,62 +599,44 @@ export default function Maintenance() {
                 </label>
                 <textarea
                   id="description"
+                  name="description"
                   value={newSchedule.description}
-                  onChange={(e) => handleNewScheduleChange('description', e.target.value)}
+                  onChange={handleNewScheduleChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                   placeholder="Enter maintenance event details"
                   rows={3}
                 />
               </div>
 
-              {/* Start Date Input */}
+              {/* Date Input */}
               <div className="mb-4">
-                <label htmlFor="start_date" className="block text-sm font-medium text-gray-700">
-                  Start Date
+                <label htmlFor="date" className="block text-sm font-medium text-gray-700">
+                  Date
                 </label>
                 <input
                   type="date"
-                  id="start_date"
-                  value={newSchedule.start_date}
-                  onChange={(e) => handleNewScheduleChange('start_date', e.target.value)}
+                  id="date"
+                  name="date"
+                  value={newSchedule.date}
+                  onChange={handleNewScheduleChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                 />
               </div>
 
-              {/* Status Dropdown */}
+              {/* Notes Input */}
               <div className="mb-4">
-                <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-                  Status
+                <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
+                  Notes
                 </label>
-                <select
-                  id="status"
-                  value={newSchedule.status}
-                  onChange={(e) => handleNewScheduleChange('status', e.target.value as typeof newSchedule.status)}
+                <textarea
+                  id="notes"
+                  name="notes"
+                  value={newSchedule.notes}
+                  onChange={handleNewScheduleChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                >
-                  <option value="scheduled">Scheduled</option>
-                  <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-              </div>
-
-              {/* Recurrence Type */}
-              <div className="mb-4">
-                <label htmlFor="recurrence_type" className="block text-sm font-medium text-gray-700">
-                  Recurrence
-                </label>
-                <select
-                  id="recurrence_type"
-                  value={newSchedule.recurrence_type}
-                  onChange={(e) => handleNewScheduleChange('recurrence_type', e.target.value as typeof newSchedule.recurrence_type)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                >
-                  <option value="none">None</option>
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="yearly">Yearly</option>
-                </select>
+                  placeholder="Enter any additional notes"
+                  rows={3}
+                />
               </div>
 
               {/* Action Buttons */}

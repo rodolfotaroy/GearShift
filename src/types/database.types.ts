@@ -45,6 +45,7 @@ export interface Database {
           completed: boolean
           created_at: string
           updated_at: string
+          notes?: string
         }
         Insert: {
           id?: number
@@ -55,6 +56,7 @@ export interface Database {
           completed: boolean
           created_at?: string
           updated_at?: string
+          notes?: string
         }
         Update: {
           id?: number
@@ -65,6 +67,7 @@ export interface Database {
           completed?: boolean
           created_at?: string
           updated_at?: string
+          notes?: string
         }
       }
     }

@@ -48,6 +48,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
         description: '',
         user_id: car?.user_id || ''
     });
+    const [selectedStatus, setSelectedStatus] = useState('');
 
     useEffect(() => {
         if (!car) {
@@ -113,7 +114,6 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
             event_type: newSchedule.event_type,
             notes: newSchedule.notes,
             date: newSchedule.date,
-            status: 'Pending',
             user_id: car.user_id || ''
         };
 
@@ -172,18 +172,39 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
             // Update related maintenance schedule if exists
             const relatedSchedule = schedules.find(
                 schedule => 
-                    schedule.event_type === serviceToAdd.service_type && 
-                    schedule.status !== 'Completed'
+                    schedule.event_type === serviceToAdd.service_type 
             );
 
             if (relatedSchedule) {
                 await supabaseClient
                     .from('maintenance_events')
-                    .update({ status: 'Completed' })
+                    .update({ completed: true })
                     .eq('id', relatedSchedule.id);
             }
         }
     }
+
+    const filteredSchedules = schedules.filter(schedule => {
+        const scheduleDate = DateTime.fromISO(schedule.date);
+        const today = DateTime.now();
+
+        // Determine status based on date and completed flag
+        const isOverdue = scheduleDate < today && !schedule.completed;
+        const isCompleted = schedule.completed;
+        const isUpcoming = scheduleDate >= today && !schedule.completed;
+
+        // Apply filter based on selected status
+        switch (selectedStatus) {
+          case 'Overdue':
+            return isOverdue;
+          case 'Completed':
+            return isCompleted;
+          case 'Upcoming':
+            return isUpcoming;
+          default:
+            return true;
+        }
+    });
 
     if (loading || !car) {
         return (
@@ -276,7 +297,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
 
             {/* Display Schedules */}
             <div className="space-y-4">
-                {schedules.map((schedule) => (
+                {filteredSchedules.map((schedule) => (
                     <div
                         key={schedule.id}
                         className="bg-white dark:bg-gray-800 shadow rounded-lg"
@@ -284,7 +305,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                         <div className="px-4 py-4 flex items-center justify-between sm:px-6">
                             <div className="flex items-center">
                                 <div className="flex-shrink-0">
-                                    {DateTime.fromISO(schedule.date) < DateTime.now() ? (
+                                    {DateTime.fromISO(schedule.date) < DateTime.now() && !schedule.completed ? (
                                         <XCircleIcon className="h-6 w-6 text-red-500" />
                                     ) : (
                                         <CheckCircleIcon className="h-6 w-6 text-green-500" />
