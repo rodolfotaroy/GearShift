@@ -42,7 +42,7 @@ interface Car {
   user_id?: string;
 }
 
-export default function Maintenance() {
+const Maintenance: React.FC = () => {
   const { supabaseClient } = useSupabase();
   const { user, loading: authLoading } = useAuth();
   const [cars, setCars] = useState<Car[]>([]);
@@ -71,6 +71,76 @@ export default function Maintenance() {
     cost: 0,
     description: ''
   });
+
+  const fetchMaintenanceSchedule = async (carId: string) => {
+    if (!carId) {
+      console.log('No car ID provided, skipping maintenance schedule fetch');
+      return;
+    }
+
+    console.log('Fetching maintenance schedule for car:', {
+      carId: carId
+    });
+
+    try {
+      const { data, error } = await supabaseClient
+        .from('maintenance_events')
+        .select('*')
+        .eq('car_id', carId)
+        .order('date', { ascending: false });
+
+      console.log('Maintenance Schedule Data:', {
+        data: data,
+        error: error
+      });
+
+      if (error) {
+        console.error('Error fetching maintenance schedule:', error);
+      }
+
+      // Update state only if no errors
+      if (!error) {
+        setSchedules(data || []);
+      }
+    } catch (error) {
+      console.error('Error in fetchMaintenanceSchedule:', error);
+    }
+  };
+
+  const fetchServiceHistory = async (carId: string) => {
+    if (!carId) {
+      console.log('No car ID provided, skipping service history fetch');
+      return;
+    }
+
+    console.log('Fetching service history for car:', {
+      carId: carId
+    });
+
+    try {
+      const { data, error } = await supabaseClient
+        .from('service_history')
+        .select('*')
+        .eq('car_id', carId)
+        .order('service_date', { ascending: false });
+
+      console.log('Service History Data:', {
+        data: data,
+        error: error
+      });
+
+      if (error) {
+        console.error('Error fetching service history:', error);
+      }
+
+      // Update state only if no errors
+      if (!error) {
+        setHistory(data || []);
+      }
+    } catch (error) {
+      console.error('Error in fetchServiceHistory:', error);
+    }
+  };
 
   useEffect(() => {
     console.log('Cars state updated:', {
@@ -152,81 +222,6 @@ export default function Maintenance() {
   }, [user, authLoading, supabaseClient]);
 
   useEffect(() => {
-    async function fetchMaintenanceSchedule(carId: string) {
-      if (!carId) {
-        console.log('No car ID provided, skipping maintenance schedule fetch');
-        return;
-      }
-
-      console.log('Fetching maintenance schedule for car:', {
-        carId: carId
-      });
-
-      try {
-        const { data, error } = await supabaseClient
-          .from('maintenance_events')
-          .select('*')
-          .eq('car_id', carId)
-          .order('date', { ascending: false });
-
-        console.log('Maintenance Schedule Data:', {
-          data: data,
-          error: error
-        });
-
-        if (error) {
-          console.error('Error fetching maintenance schedule:', error);
-        }
-
-        // Update state only if no errors
-        if (!error) {
-          setSchedules(
-            data || []
-          );
-        }
-      } catch (error) {
-        console.error('Error in fetchMaintenanceSchedule:', error);
-      }
-    }
-
-    async function fetchServiceHistory(carId: string) {
-      if (!carId) {
-        console.log('No car ID provided, skipping service history fetch');
-        return;
-      }
-
-      console.log('Fetching service history for car:', {
-        carId: carId
-      });
-
-      try {
-        const { data, error } = await supabaseClient
-          .from('service_history')
-          .select('*')
-          .eq('car_id', carId)
-          .order('service_date', { ascending: false });
-
-        console.log('Service History Data:', {
-          data: data,
-          error: error
-        });
-
-        if (error) {
-          console.error('Error fetching service history:', error);
-        }
-
-        // Update state only if no errors
-        if (!error) {
-          setHistory(
-            data || []
-          );
-        }
-      } catch (error) {
-        console.error('Error in fetchServiceHistory:', error);
-      }
-    }
-
-    // Trigger maintenance data fetch whenever selectedCar changes
     if (selectedCar) {
       fetchMaintenanceSchedule(selectedCar.id);
       fetchServiceHistory(selectedCar.id);
@@ -791,3 +786,5 @@ export default function Maintenance() {
     </div>
   );
 }
+
+export default Maintenance;
