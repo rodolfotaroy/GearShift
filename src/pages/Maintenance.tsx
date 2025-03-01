@@ -31,11 +31,18 @@ interface ServiceHistory {
   description?: string;
 }
 
+interface Car {
+  id: number;
+  year: number;
+  make: string;
+  model: string;
+}
+
 export default function Maintenance() {
   const { supabaseClient, supabaseAuth } = useSupabase();
   const [user, setUser] = useState<any>(null);
-  const [cars, setCars] = useState<any[]>([]);
-  const [selectedCar, setSelectedCar] = useState<any>(null);
+  const [cars, setCars] = useState<Car[]>([]);
+  const [selectedCar, setSelectedCar] = useState<Car | null>(null);
   const [schedules, setSchedules] = useState<MaintenanceSchedule[]>([]);
   const [history, setHistory] = useState<ServiceHistory[]>([]);
   const [showAddScheduleModal, setShowAddScheduleModal] = useState(false);
@@ -58,13 +65,29 @@ export default function Maintenance() {
   });
 
   useEffect(() => {
-    supabaseAuth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        setUser(user);
-        fetchUserCars();
+    async function fetchInitialData() {
+      try {
+        const { data: fetchedCars } = await supabaseClient
+          .from('cars')
+          .select('*')
+          .eq('user_id', user?.id);
+
+        if (fetchedCars && fetchedCars.length > 0) {
+          setCars(fetchedCars);
+          // Set first car as default if no car is selected
+          if (!selectedCar) {
+            setSelectedCar(fetchedCars[0]);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching cars:', error);
       }
-    });
-  }, []);
+    }
+
+    if (user) {
+      fetchInitialData();
+    }
+  }, [user]);
 
   useEffect(() => {
     if (selectedCar) {
@@ -72,32 +95,18 @@ export default function Maintenance() {
     }
   }, [selectedCar]);
 
-  async function fetchUserCars() {
-    const { data } = await supabaseClient
-      .from('cars')
-      .select('*')
-      .eq('user_id', user.id);
-
-    if (data) {
-      setCars(data);
-      if (data.length > 0) {
-        setSelectedCar(data[0]);
-      }
-    }
-  }
-
   async function fetchMaintenanceData() {
     try {
       const [scheduleData, historyData] = await Promise.all([
         supabaseClient
           .from('maintenance_schedule')
           .select('*')
-          .eq('car_id', selectedCar.id)
+          .eq('car_id', selectedCar?.id)
           .order('due_date', { ascending: true }),
         supabaseClient
           .from('service_history')
           .select('*')
-          .eq('car_id', selectedCar.id)
+          .eq('car_id', selectedCar?.id)
           .order('service_date', { ascending: false })
       ]);
 
@@ -111,7 +120,7 @@ export default function Maintenance() {
   async function addMaintenanceSchedule() {
     const scheduleToAdd = {
       ...newSchedule,
-      car_id: selectedCar.id
+      car_id: selectedCar?.id
     };
 
     const { data } = await supabaseClient
@@ -123,7 +132,7 @@ export default function Maintenance() {
       setSchedules([...schedules, data[0]]);
       setShowAddScheduleModal(false);
       setNewSchedule({
-        car_id: selectedCar.id,
+        car_id: selectedCar?.id,
         service_type: SERVICE_TYPES[0],
         due_date: DateTime.now().plus({ months: 1 }).toISODate() || '',
         mileage_due: 0,
@@ -136,7 +145,7 @@ export default function Maintenance() {
   async function addServiceHistory() {
     const serviceToAdd = {
       ...newService,
-      car_id: selectedCar.id
+      car_id: selectedCar?.id
     };
 
     const { data } = await supabaseClient
@@ -148,7 +157,7 @@ export default function Maintenance() {
       setHistory([...history, data[0]]);
       setShowAddServiceModal(false);
       setNewService({
-        car_id: selectedCar.id,
+        car_id: selectedCar?.id,
         service_type: SERVICE_TYPES[0],
         service_date: DateTime.now().toISODate() || '',
         mileage: 0,
@@ -172,6 +181,24 @@ export default function Maintenance() {
     }
   }
 
+  // Render loading state if cars are being fetched
+  if (!cars.length) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  // Render no cars state
+  if (!selectedCar) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-gray-500">Please add a car to track maintenance.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <div className="container mx-auto max-w-6xl">
@@ -190,7 +217,7 @@ export default function Maintenance() {
             value={selectedCar?.id || ''}
             onChange={(e) => {
               const car = cars.find(c => c.id === parseInt(e.target.value));
-              setSelectedCar(car);
+              setSelectedCar(car || null);
             }}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           >
@@ -506,5 +533,3 @@ export default function Maintenance() {
     </div>
   );
 }
-
-
