@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
 import { useSupabase } from '../contexts/SupabaseContext';
+import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components';
 import {
   CalendarIcon,
@@ -43,7 +44,7 @@ interface Car {
 
 export default function Maintenance() {
   const { supabaseClient } = useSupabase();
-  const [user, setUser] = useState<{ id: string } | null>(null);
+  const { user, loading: authLoading } = useAuth();
   const [cars, setCars] = useState<Car[]>([]);
   const [selectedCar, setSelectedCar] = useState<Car | null>(null);
   const [schedules, setSchedules] = useState<MaintenanceSchedule[]>([]);
@@ -72,19 +73,13 @@ export default function Maintenance() {
     async function fetchUserAndCars() {
       setLoading(true);
       try {
-        // Fetch current user
-        const { data: { user } } = await supabaseClient.auth.getUser();
-        
+        // No need to fetch user again, we're using useAuth hook
         if (!user) {
           console.error('No authenticated user found');
-          setUser(null);
           setCars([]);
           setSelectedCar(null);
           return;
         }
-
-        // Log user ID for debugging
-        console.log('Authenticated User ID:', user.id);
 
         // Fetch cars for the current user
         const { data, error } = await supabaseClient
@@ -141,8 +136,10 @@ export default function Maintenance() {
       }
     }
 
-    fetchUserAndCars();
-  }, []);
+    if (!authLoading) {
+      fetchUserAndCars();
+    }
+  }, [user, authLoading]);
 
   useEffect(() => {
     async function fetchMaintenanceData() {
@@ -304,7 +301,7 @@ export default function Maintenance() {
   };
 
   // Render loading state
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
