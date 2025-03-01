@@ -33,6 +33,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
         description: ''
     });
     const [user, setUser] = useState<any>(null);
+    const [cars, setCars] = useState<Car[]>([]);
 
     useEffect(() => {
         // Check authentication status
@@ -40,6 +41,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
             setUser(user);
             if (user) {
                 fetchMaintenanceData();
+                fetchCars();
             }
         });
     }, [car.id]);
@@ -69,10 +71,22 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
         }
     }
 
+    async function fetchCars() {
+        try {
+            const { data } = await supabaseClient
+                .from('cars')
+                .select('*');
+
+            if (data) setCars(data);
+        } catch {
+            console.error('Error fetching cars');
+        }
+    }
+
     async function addMaintenanceSchedule() {
         const scheduleToAdd = {
             ...newSchedule,
-            car_id: car.id || 0
+            car_id: newSchedule.car_id || 0
         };
 
         const { data } = await supabaseClient
@@ -248,6 +262,24 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                     <div className="bg-white rounded-lg max-w-lg w-full p-6">
                         <h3 className="text-lg font-medium text-gray-900 mb-4">Add Maintenance Schedule</h3>
                         <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Car</label>
+                                <select
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                    value={newSchedule.car_id || ''}
+                                    onChange={(e) => setNewSchedule({ 
+                                        ...newSchedule, 
+                                        car_id: e.target.value ? parseInt(e.target.value) : undefined 
+                                    })}
+                                >
+                                    <option value="">Select a car</option>
+                                    {cars.map((car) => (
+                                        <option key={car.id} value={car.id}>
+                                            {car.make} {car.model} ({car.plate_number})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Service Type</label>
                                 <select

@@ -205,7 +205,7 @@ const Dashboard: React.FC = () => {
             </dt>
             <dd className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-dark-text-primary 
                            break-words overflow-hidden text-ellipsis">
-              ¥{(totalExpenses / 6).toLocaleString()}
+              ¥{(totalExpenses / 6).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </dd>
           </div>
         </div>
@@ -295,5 +295,3 @@ const Dashboard: React.FC = () => {
 }
 
 export default Dashboard;
-
-
