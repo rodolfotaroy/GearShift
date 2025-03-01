@@ -70,6 +70,15 @@ export default function Maintenance() {
   });
 
   useEffect(() => {
+    console.log('Cars state updated:', {
+      cars: cars,
+      carsLength: cars.length,
+      carIds: cars.map(car => car.id),
+      selectedCar: selectedCar
+    });
+  }, [cars, selectedCar]);
+
+  useEffect(() => {
     async function fetchUserAndCars() {
       setLoading(true);
       try {
@@ -146,7 +155,10 @@ export default function Maintenance() {
         return;
       }
 
-      console.log('Fetching maintenance data for car:', selectedCar.id);
+      console.log('Fetching maintenance data for car:', {
+        carId: selectedCar.id,
+        carDetails: selectedCar
+      });
 
       try {
         const [scheduleData, historyData] = await Promise.all([
@@ -163,8 +175,14 @@ export default function Maintenance() {
             .order('service_date', { ascending: false })
         ]);
 
-        console.log('Maintenance Schedule Data:', scheduleData);
-        console.log('Service History Data:', historyData);
+        console.log('Maintenance Schedule Data:', {
+          data: scheduleData.data,
+          error: scheduleData.error
+        });
+        console.log('Service History Data:', {
+          data: historyData.data,
+          error: historyData.error
+        });
 
         if (scheduleData.error) {
           console.error('Error fetching maintenance schedule:', scheduleData.error);
@@ -384,18 +402,28 @@ export default function Maintenance() {
             id="car-select"
             value={selectedCar?.id || ''}
             onChange={(e) => {
-              console.log('Car selection changed. Available cars:', cars);
-              console.log('Selected car ID:', e.target.value);
-              console.log('Selected car index:', cars.findIndex(car => car.id === e.target.value));
-              const carIndex = cars.findIndex(car => car.id === e.target.value);
-              console.log('Car index found:', carIndex);
-              if (carIndex !== -1) {
-                console.log('Found car at index:', carIndex);
-                const car = cars[carIndex];
-                console.log('Found car:', car);
+              console.log('Car selection changed:', {
+                selectedValue: e.target.value,
+                valueType: typeof e.target.value,
+                availableCars: cars,
+                availableCarIds: cars.map(c => c.id),
+                availableCarIdTypes: cars.map(c => typeof c.id)
+              });
+
+              // Convert the selected value to the same type as car.id
+              const selectedCarId = e.target.value;
+              const car = cars.find(c => String(c.id) === String(selectedCarId));
+              
+              console.log('Car selection result:', {
+                selectedCarId,
+                foundCar: car
+              });
+              
+              if (car) {
+                console.log('Setting selected car:', car);
                 setSelectedCar(car);
               } else {
-                console.error('No car found for ID:', e.target.value);
+                console.error('No car found for ID:', selectedCarId);
               }
             }}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
