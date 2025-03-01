@@ -1,4 +1,4 @@
-import { Button } from '../components';
+import { Button } from './Button';
 import { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline';
@@ -40,14 +40,17 @@ export default function CarProfileView({ car, onClose, onCarUpdated }: CarProfil
   const { supabaseClient, supabaseStorage } = useSupabase();
   const [activeTab, setActiveTab] = useState<'details' | 'maintenance' | 'documents'>('details');
   const [editMode, setEditMode] = useState(false);
-  const [editedCar, setEditedCar] = useState(car);
+  const [editedCar, setEditedCar] = useState<Car>(car);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [expensesByCategory, setExpensesByCategory] = useState<Record<string, number>>({});
+  const [maintenanceHistory, setMaintenanceHistory] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     fetchCarExpenses();
+    fetchMaintenanceHistory();
   }, [car.id]);
 
   async function fetchCarExpenses() {
@@ -63,6 +66,22 @@ export default function CarProfileView({ car, onClose, onCarUpdated }: CarProfil
       setExpenses(data || []);
       calculateExpenseStats(data || []);
     }
+  }
+
+  async function fetchMaintenanceHistory() {
+    setIsLoading(true);
+    const { data, error } = await supabaseClient
+      .from('maintenance_events')
+      .select('*')
+      .eq('car_id', car.id)
+      .order('date', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching maintenance history:', error);
+    } else {
+      setMaintenanceHistory(data || []);
+    }
+    setIsLoading(false);
   }
 
   function calculateExpenseStats(expenseData: Expense[]) {
@@ -125,7 +144,6 @@ export default function CarProfileView({ car, onClose, onCarUpdated }: CarProfil
           <Button
             type="button"
             onClick={onClose}
-            
           >
             <XMarkIcon className="h-6 w-6" />
           </Button>
@@ -329,7 +347,6 @@ export default function CarProfileView({ car, onClose, onCarUpdated }: CarProfil
                     <Button
                       type="button"
                       onClick={handleUpdateCar}
-                      
                     >
                       Save Changes
                     </Button>
@@ -348,7 +365,11 @@ export default function CarProfileView({ car, onClose, onCarUpdated }: CarProfil
           )}
 
           {activeTab === 'maintenance' && (
-            <MaintenanceView car={car} />
+            <MaintenanceView 
+              car={car} 
+              schedules={maintenanceHistory} 
+              loading={isLoading}
+            />
           )}
 
           {activeTab === 'documents' && (

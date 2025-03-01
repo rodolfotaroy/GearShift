@@ -227,13 +227,14 @@ export default function Maintenance() {
     if (!selectedCar) return;
 
     const scheduleToAdd = {
-      car_id: String(selectedCar.id), // Ensure string conversion
+      car_id: Number(selectedCar.id), // Convert to number
       title: newSchedule.title || 'Maintenance Event', 
       description: newSchedule.description || '',
       date: newSchedule.date || DateTime.now().plus({ months: 1 }).toISODate(),
       completed: false,
       notes: newSchedule.notes,
-      event_type: 'maintenance' as const
+      created_at: DateTime.now().toISODate(),
+      updated_at: DateTime.now().toISODate()
     };
 
     console.log('Adding maintenance schedule:', {
@@ -254,41 +255,28 @@ export default function Maintenance() {
       const { data, error } = await supabaseClient
         .from('maintenance_events')
         .insert(scheduleToAdd)
-        .select();
+        .select('*');
 
-      // Log full error details
       if (error) {
-        console.error('Detailed Supabase Error:', {
-          code: error.code,
-          details: error.details,
-          hint: error.hint,
-          message: error.message,
-          fullError: error,
-          scheduleData: scheduleToAdd
-        });
-
+        console.error('Error adding maintenance schedule:', { error, scheduleToAdd });
         return;
       }
 
-      if (data) {
-        console.log('Maintenance schedule added:', data);
-        setSchedules([...schedules, data[0]]);
-        setShowAddScheduleModal(false);
-        
-        // Reset to default state
-        setNewSchedule({
-          id: 0,
-          car_id: String(selectedCar.id), // Explicitly convert to string
-          title: '',
-          description: '',
-          date: DateTime.now().plus({ months: 1 }).toISODate() || '',
-          completed: false,
-          notes: '',
-          event_type: 'maintenance'
-        });
-      }
-    } catch (catchError) {
-      console.error('Unexpected error adding maintenance schedule:', catchError);
+      console.log('Maintenance schedule added successfully:', data);
+
+      // Reset form and update local state
+      setNewSchedule({
+        title: '',
+        description: '',
+        date: DateTime.now().plus({ months: 1 }).toISODate(),
+        notes: ''
+      });
+      setShowAddScheduleModal(false);
+
+      // Optionally refresh maintenance schedules
+      await fetchMaintenanceSchedules();
+    } catch (err) {
+      console.error('Unexpected error adding maintenance schedule:', err);
     }
   }
 
