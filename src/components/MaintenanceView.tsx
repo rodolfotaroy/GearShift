@@ -17,17 +17,13 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
     const [showAddSchedule, setShowAddSchedule] = useState(false);
     const [showAddService, setShowAddService] = useState(false);
     const [newSchedule, setNewSchedule] = useState<{
-        car_id?: number;
-        service_type: string;
-        due_date: string;
-        mileage_due?: number | null;
+        title: string;
         description: string;
+        date: string;
     }>({
-        car_id: 0,
-        service_type: '',
-        due_date: '',
-        mileage_due: null,
-        description: ''
+        title: '',
+        description: '',
+        date: DateTime.now().toISO() || ''
     });
     const [newService, setNewService] = useState<ServiceHistory>({
         car_id: car?.id || 0,
@@ -98,6 +94,10 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
         }
     }
 
+    useEffect(() => {
+        fetchSchedules();
+    }, [car]);
+
     async function fetchServiceHistory() {
         if (!car) return;
 
@@ -110,21 +110,20 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
     }
 
     async function addMaintenanceSchedule() {
+        if (!car) return;
+
         const scheduleToAdd = {
-            ...newSchedule,
-            car_id: newSchedule.car_id || 0
+            car_id: car.id,
+            title: newSchedule.title,
+            description: newSchedule.description,
+            date: newSchedule.date,
+            completed: false
         };
 
         try {
             const { data, error } = await supabaseClient
                 .from('maintenance_events')
-                .insert({
-                    car_id: scheduleToAdd.car_id,
-                    title: scheduleToAdd.service_type,
-                    description: scheduleToAdd.description || '',
-                    date: DateTime.fromISO(scheduleToAdd.due_date).toISO(),
-                    completed: false
-                })
+                .insert(scheduleToAdd)
                 .select();
 
             if (error) {
@@ -136,11 +135,9 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                 setSchedules([...schedules, ...data]);
                 setShowAddSchedule(false);
                 setNewSchedule({
-                    car_id: 0,
-                    service_type: '',
-                    due_date: '',
-                    mileage_due: null,
-                    description: ''
+                    title: '',
+                    description: '',
+                    date: DateTime.now().toISO() || ''
                 });
             }
         } catch (error) {
@@ -199,49 +196,114 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
 
     return (
         <div className="space-y-6">
-            {/* Maintenance Schedule Section */}
-            <div>
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-medium text-gray-900">Maintenance Schedule</h3>
-                    <Button
-                        type="button"
-                        onClick={() => setShowAddSchedule(true)}
-                        variant="default"
-                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-                    >
-                        <PlusIcon className="h-4 w-4 mr-2" />
-                        Add Schedule
-                    </Button>
-                </div>
+            <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold">Maintenance Schedule</h2>
+                <Button onClick={() => setShowAddSchedule(true)}>
+                    Add Schedule
+                </Button>
+            </div>
 
-                <div className="bg-white shadow overflow-hidden sm:rounded-md">
-                    <ul className="divide-y divide-gray-200">
-                        {schedules.filter(s => s.status !== 'Completed').map((schedule) => (
-                            <li key={schedule.id}>
-                                <div className="px-4 py-4 flex items-center justify-between sm:px-6">
-                                    <div className="flex items-center">
-                                        <div className="flex-shrink-0">
-                                            {DateTime.fromISO(schedule.date) < DateTime.now() ? (
-                                                <XCircleIcon className="h-6 w-6 text-red-500" />
-                                            ) : (
-                                                <CheckCircleIcon className="h-6 w-6 text-green-500" />
-                                            )}
-                                        </div>
-                                        <div className="ml-4">
-                                            <div className="text-sm font-medium text-gray-900">
-                                                {schedule.title}
-                                            </div>
-                                            <div className="text-sm text-gray-500">
-                                                Due: {DateTime.fromISO(schedule.date).toFormat('yyyy/MM/dd')}
-                                                {schedule.mileage_due && ` or at ${schedule.mileage_due.toLocaleString()} km`}
-                                            </div>
-                                        </div>
-                                    </div>
+            {/* Add Schedule Modal */}
+            {showAddSchedule && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+                        <h3 className="text-lg font-medium mb-4">Add Maintenance Schedule</h3>
+                        <form onSubmit={(e) => {
+                            e.preventDefault();
+                            addMaintenanceSchedule();
+                        }}>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">
+                                        Title
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={newSchedule.title}
+                                        onChange={(e) => setNewSchedule({
+                                            ...newSchedule,
+                                            title: e.target.value
+                                        })}
+                                        className="w-full p-2 border rounded dark:bg-gray-700"
+                                        required
+                                    />
                                 </div>
-                            </li>
-                        ))}
-                    </ul>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">
+                                        Date
+                                    </label>
+                                    <input
+                                        type="datetime-local"
+                                        value={DateTime.fromISO(newSchedule.date).toFormat("yyyy-MM-dd'T'HH:mm")}
+                                        onChange={(e) => setNewSchedule({
+                                            ...newSchedule,
+                                            date: DateTime.fromISO(e.target.value).toISO() || ''
+                                        })}
+                                        className="w-full p-2 border rounded dark:bg-gray-700"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">
+                                        Description
+                                    </label>
+                                    <textarea
+                                        value={newSchedule.description}
+                                        onChange={(e) => setNewSchedule({
+                                            ...newSchedule,
+                                            description: e.target.value
+                                        })}
+                                        className="w-full p-2 border rounded dark:bg-gray-700"
+                                        rows={3}
+                                    />
+                                </div>
+                            </div>
+                            <div className="mt-4 flex justify-end space-x-2">
+                                <Button onClick={() => setShowAddSchedule(false)}>
+                                    Cancel
+                                </Button>
+                                <Button type="submit">
+                                    Add Schedule
+                                </Button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
+            )}
+
+            {/* Display Schedules */}
+            <div className="space-y-4">
+                {schedules.map((schedule) => (
+                    <div
+                        key={schedule.id}
+                        className="bg-white dark:bg-gray-800 shadow rounded-lg"
+                    >
+                        <div className="px-4 py-4 flex items-center justify-between sm:px-6">
+                            <div className="flex items-center">
+                                <div className="flex-shrink-0">
+                                    {DateTime.fromISO(schedule.date) < DateTime.now() ? (
+                                        <XCircleIcon className="h-6 w-6 text-red-500" />
+                                    ) : (
+                                        <CheckCircleIcon className="h-6 w-6 text-green-500" />
+                                    )}
+                                </div>
+                                <div className="ml-4">
+                                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                        {schedule.title}
+                                    </div>
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                                        Due: {DateTime.fromISO(schedule.date).toFormat('yyyy/MM/dd')}
+                                    </div>
+                                    {schedule.description && (
+                                        <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                            {schedule.description}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
             </div>
 
             {/* Service History Section */}
@@ -289,94 +351,6 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                     </ul>
                 </div>
             </div>
-
-            {/* Add Schedule Modal */}
-            {showAddSchedule && (
-                <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-lg max-w-lg w-full p-6">
-                        <h3 className="text-lg font-medium text-gray-900 mb-4">Add Maintenance Schedule</h3>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Car</label>
-                                <select
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                    value={newSchedule.car_id || 0}
-                                    onChange={(e) => setNewSchedule({ 
-                                        ...newSchedule, 
-                                        car_id: e.target.value ? parseInt(e.target.value) : 0 
-                                    })}
-                                >
-                                    <option value="0">Select a car</option>
-                                    {cars.map((car) => (
-                                        <option key={car.id} value={car.id}>
-                                            {car.make} {car.model} ({car.plate_number})
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Service Type</label>
-                                <select
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                    value={newSchedule.service_type}
-                                    onChange={(e) => setNewSchedule({ ...newSchedule, service_type: e.target.value as typeof SERVICE_TYPES[number] })}
-                                >
-                                    <option value="">Select a service type</option>
-                                    {SERVICE_TYPES.map((type) => (
-                                        <option key={type} value={type}>{type}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Due Date</label>
-                                <input
-                                    type="date"
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                    value={newSchedule.due_date}
-                                    onChange={(e) => setNewSchedule({ ...newSchedule, due_date: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Mileage Due</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                    value={newSchedule.mileage_due || ''}
-                                    onChange={(e) => setNewSchedule({ 
-                                        ...newSchedule, 
-                                        mileage_due: e.target.value ? parseInt(e.target.value) : 0 
-                                    })}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Description</label>
-                                <textarea
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                    value={newSchedule.description}
-                                    onChange={(e) => setNewSchedule({ ...newSchedule, description: e.target.value })}
-                                />
-                            </div>
-                        </div>
-                        <div className="mt-6 flex justify-end space-x-3">
-                            <Button
-                                type="button"
-                                onClick={() => setShowAddSchedule(false)}
-                                variant="default"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="button"
-                                onClick={addMaintenanceSchedule}
-                                variant="default"
-                            >
-                                Add Schedule
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* Add Service Modal */}
             {showAddService && (

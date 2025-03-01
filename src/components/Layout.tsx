@@ -43,39 +43,28 @@ const navigation: NavigationItem[] = [
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const { signOut } = useAuth();
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('theme') || 'light';
+  });
 
-  // Check for system preference and local storage
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
-    if (savedTheme === 'dark' || (savedTheme === null && prefersDarkMode)) {
-      setIsDarkMode(true);
-      document.documentElement.classList.add('dark');
-    } else {
-      setIsDarkMode(false);
-      document.documentElement.classList.remove('dark');
-    }
+  useEffect(() => {
+    (window as any).toggleTheme = () => {
+      setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
+    };
+    return () => {
+      delete (window as any).toggleTheme;
+    };
   }, []);
 
-  // Toggle dark mode
-  const toggleDarkMode = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    
-    if (newMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-dark-background transition-colors duration-300">
-      <Disclosure as="nav" className="bg-white dark:bg-dark-surface shadow-md dark:shadow-dark-lg">
+    <div className={`min-h-screen bg-${theme === 'dark' ? 'dark-background' : 'neutral-50'} transition-colors duration-300`}>
+      <Disclosure as="nav" className={`bg-${theme === 'dark' ? 'dark-surface' : 'white'} shadow-md ${theme === 'dark' ? 'dark:shadow-dark-lg' : ''}`}>
         {({ open }: { open: boolean }) => (
           <>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -101,7 +90,7 @@ export default function Layout({ children }: LayoutProps) {
                         className={`${
                           location.pathname === item.href
                             ? 'border-primary-500 text-neutral-900 dark:text-neutral-100'
-                            : 'border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:border-neutral-300 dark:hover:border-neutral-700'
+                            : 'border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:border-neutral-300 dark:hover:border-dark-border hover:text-neutral-800 dark:hover:text-neutral-200'
                         } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium whitespace-nowrap`}
                       >
                         <item.icon className={`h-5 w-5 mr-2 flex-shrink-0 ${
@@ -116,7 +105,7 @@ export default function Layout({ children }: LayoutProps) {
                 </div>
                 <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-4">
                   <Button 
-                    onClick={toggleDarkMode} 
+                    onClick={() => setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark')} 
                     className="p-2 rounded-md transition-colors duration-300 
                       bg-button-secondary dark:bg-button-secondary-dark 
                       text-button-secondary-text dark:text-button-secondary-dark-text
@@ -124,7 +113,7 @@ export default function Layout({ children }: LayoutProps) {
                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                     variant="default"
                   >
-                    {isDarkMode ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
+                    {theme === 'dark' ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
                   </Button>
                   <Button
                     onClick={() => signOut()}
@@ -177,7 +166,7 @@ export default function Layout({ children }: LayoutProps) {
       </Disclosure>
 
       <main className="py-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 dark:text-dark-text-primary transition-colors duration-300">
+        <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 dark:text-dark-text-primary transition-colors duration-300`}>
           {children}
         </div>
       </main>

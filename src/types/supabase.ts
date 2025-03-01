@@ -39,7 +39,9 @@ export interface Profile {
 export interface MaintenanceFormData {
   title: string;
   description?: string;
-  date: Date;
+  date: string;
+  car_id: number;
+  completed?: boolean;
 }
 
 export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row']

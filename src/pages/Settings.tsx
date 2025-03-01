@@ -1,5 +1,5 @@
 import { Button } from '../components';
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { 
@@ -21,27 +21,23 @@ export default function Settings() {
     email_updates: false,
     push_notifications: false
   });
-  const [theme, setTheme] = React.useState(() => {
-    // Initialize theme from local storage or default to 'light'
-    return localStorage.getItem('app-theme') || 'light';
+  const [darkMode, setDarkMode] = React.useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    return savedTheme === 'dark';
   });
 
   React.useEffect(() => {
     fetchUserProfile();
     
-    // Apply theme on component mount
-    document.documentElement.classList.remove('light', 'dark');
-    document.documentElement.classList.add(theme);
-  }, [user]);
-
-  React.useEffect(() => {
-    // Persist theme to local storage whenever it changes
-    localStorage.setItem('app-theme', theme);
-    
-    // Apply theme
-    document.documentElement.classList.remove('light', 'dark');
-    document.documentElement.classList.add(theme);
-  }, [theme]);
+    // Apply theme when component mounts or theme changes
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [user, darkMode]);
 
   async function fetchUserProfile() {
     if (!user) return;
@@ -82,13 +78,22 @@ export default function Settings() {
     }
   }
 
-  function handleThemeChange(selectedTheme: string) {
-    setTheme(selectedTheme);
-  }
+  const toggleDarkMode = () => {
+    const newMode = !darkMode;
+    setDarkMode(newMode);
+    
+    if (newMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <div className="container mx-auto max-w-4xl">
+    <div className="p-6 bg-gray-100 dark:bg-gray-900 min-h-screen">
+      <div className="container mx-auto max-w-4xl space-y-8">
         <h1 className="text-3xl font-bold mb-6 flex items-center">
           <CogIcon className="h-8 w-8 mr-3 text-gray-600" /> 
           Account Settings
@@ -96,14 +101,14 @@ export default function Settings() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Profile Section */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
+          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-4 flex items-center dark:text-white">
               <UserIcon className="h-6 w-6 mr-2 text-gray-600" />
               Profile
             </h2>
             <div className="space-y-4">
               <div>
-                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 dark:text-white">
                   Full Name
                 </label>
                 <input
@@ -111,11 +116,11 @@ export default function Settings() {
                   id="fullName"
                   value={profile.full_name}
                   onChange={(e) => setProfile({...profile, full_name: e.target.value})}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:text-white"
                 />
               </div>
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-white">
                   Email
                 </label>
                 <input
@@ -123,12 +128,12 @@ export default function Settings() {
                   id="email"
                   value={profile.email}
                   disabled
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 dark:bg-gray-700 dark:text-white"
                 />
               </div>
               <Button
                 onClick={updateProfile}
-                className="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition"
+                className="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition dark:bg-indigo-500"
               >
                 Update Profile
               </Button>
@@ -136,8 +141,8 @@ export default function Settings() {
           </div>
 
           {/* Notifications Section */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
+          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-4 flex items-center dark:text-white">
               <BellIcon className="h-6 w-6 mr-2 text-gray-600" />
               Notifications
             </h2>
@@ -151,7 +156,7 @@ export default function Settings() {
                     ...notifications, 
                     email_updates: !notifications.email_updates
                   })}
-                  className="form-checkbox h-5 w-5 text-indigo-600"
+                  className="form-checkbox h-5 w-5 text-indigo-600 dark:bg-gray-700"
                 />
               </div>
               <div className="flex items-center justify-between">
@@ -163,48 +168,48 @@ export default function Settings() {
                     ...notifications, 
                     push_notifications: !notifications.push_notifications
                   })}
-                  className="form-checkbox h-5 w-5 text-indigo-600"
+                  className="form-checkbox h-5 w-5 text-indigo-600 dark:bg-gray-700"
                 />
               </div>
             </div>
           </div>
 
           {/* Theme Section */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">
+          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-4 dark:text-white">
               Theme
             </h2>
             <div className="flex space-x-4">
               <Button
-                onClick={() => handleThemeChange('light')}
-                className={`px-4 py-2 rounded-md ${theme === 'light' ? 'bg-indigo-600 text-white' : 'bg-gray-200'}`}
+                onClick={toggleDarkMode}
+                className={`px-4 py-2 rounded-md ${darkMode ? 'bg-gray-200 dark:bg-gray-700' : 'bg-indigo-600 text-white'}`}
               >
-                Light
+                Light Mode
               </Button>
               <Button
-                onClick={() => handleThemeChange('dark')}
-                className={`px-4 py-2 rounded-md ${theme === 'dark' ? 'bg-indigo-600 text-white' : 'bg-gray-200'}`}
+                onClick={toggleDarkMode}
+                className={`px-4 py-2 rounded-md ${darkMode ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}
               >
-                Dark
+                Dark Mode
               </Button>
             </div>
           </div>
 
           {/* Security Section */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
+          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-4 flex items-center dark:text-white">
               <LockClosedIcon className="h-6 w-6 mr-2 text-gray-600" />
               Security
             </h2>
             <Button
               onClick={() => {/* Implement password reset logic */}}
-              className="w-full bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition"
+              className="w-full bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition dark:bg-red-500"
             >
               Reset Password
             </Button>
             <Button
               onClick={signOut}
-              className="w-full bg-gray-600 text-white py-2 rounded-md hover:bg-gray-700 transition mt-4"
+              className="w-full bg-gray-600 text-white py-2 rounded-md hover:bg-gray-700 transition mt-4 dark:bg-gray-500"
             >
               Sign Out
             </Button>
