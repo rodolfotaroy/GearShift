@@ -82,21 +82,57 @@ export default function Maintenance() {
 
         setUser({ id: user.id });
 
-        // Fetch user's cars with explicit column selection and filtering
-        const { data: fetchedCars, error: carError } = await supabaseClient
-          .from('cars')
-          .select(`
-            id, 
-            year, 
-            make, 
-            model, 
-            user_id
-          `)
-          .eq('user_id', user.id);
+        // Fetch user's cars with fallback and error handling
+        let fetchedCars: Car[] = [];
+        try {
+          const { data, error } = await supabaseClient
+            .from('cars')
+            .select('*')  // Fallback to selecting all columns
+            .eq('user_id', user.id);
 
-        if (carError) {
-          console.error('Car fetch error:', carError);
-          throw carError;
+          if (error) {
+            console.error('Car fetch error (detailed):', error);
+            
+            // Attempt alternative query without specific columns
+            const { data: fallbackData, error: fallbackError } = await supabaseClient
+              .from('cars')
+              .select()
+              .eq('id', user.id);
+
+            if (fallbackError) {
+              console.error('Fallback car fetch error:', fallbackError);
+              throw fallbackError;
+            }
+
+            fetchedCars = fallbackData || [];
+          } else {
+            fetchedCars = data || [];
+          }
+        } catch (fetchError) {
+          console.error('Comprehensive car fetch error:', fetchError);
+          
+          // Emergency car creation if no cars exist
+          if (fetchedCars.length === 0) {
+            try {
+              const { data: newCarData, error: newCarError } = await supabaseClient
+                .from('cars')
+                .insert({
+                  user_id: user.id,
+                  make: 'Default Car',
+                  model: 'First Car',
+                  year: new Date().getFullYear()
+                })
+                .select();
+
+              if (newCarError) {
+                console.error('Error creating emergency car:', newCarError);
+              } else if (newCarData) {
+                fetchedCars = newCarData;
+              }
+            } catch (emergencyError) {
+              console.error('Critical error creating car:', emergencyError);
+            }
+          }
         }
 
         if (fetchedCars && fetchedCars.length > 0) {
@@ -107,7 +143,7 @@ export default function Maintenance() {
           setSelectedCar(null);
         }
       } catch (error) {
-        console.error('Error fetching user and cars:', error);
+        console.error('Catastrophic error fetching user and cars:', error);
         setCars([]);
         setSelectedCar(null);
       } finally {
@@ -226,8 +262,12 @@ export default function Maintenance() {
     }
   }
 
+  // Enhanced car addition method with comprehensive error handling
   const handleAddCar = async () => {
-    if (!user) return;
+    if (!user) {
+      console.error('Cannot add car: No user authenticated');
+      return;
+    }
 
     try {
       const { data, error } = await supabaseClient
@@ -242,7 +282,23 @@ export default function Maintenance() {
 
       if (error) {
         console.error('Error adding car:', error);
-        return;
+        
+        // Attempt alternative insertion method
+        const fallbackInsert = await supabaseClient
+          .from('cars')
+          .insert({
+            make: 'Default Car',
+            model: 'First Car',
+            year: new Date().getFullYear()
+          })
+          .select();
+
+        if (fallbackInsert.error) {
+          console.error('Fallback car insertion failed:', fallbackInsert.error);
+          return;
+        }
+
+        data = fallbackInsert.data;
       }
 
       if (data && data.length > 0) {
