@@ -16,13 +16,18 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
     const [loading, setLoading] = useState(true);
     const [showAddSchedule, setShowAddSchedule] = useState(false);
     const [showAddService, setShowAddService] = useState(false);
-    const [newSchedule, setNewSchedule] = useState<MaintenanceSchedule>({
-        car_id: car.id || 0,
-        service_type: SERVICE_TYPES[0],
-        due_date: DateTime.now().plus({ months: 1 }).toISODate() || '',
-        mileage_due: car.mileage ? car.mileage + 5000 : 0,
-        description: '',
-        status: 'Pending'
+    const [newSchedule, setNewSchedule] = useState<{
+        car_id?: number;
+        service_type: string;
+        due_date: string;
+        mileage_due?: number | null;
+        description: string;
+    }>({
+        car_id: 0,
+        service_type: '',
+        due_date: '',
+        mileage_due: null,
+        description: ''
     });
     const [newService, setNewService] = useState<ServiceHistory>({
         car_id: car.id || 0,
@@ -103,6 +108,7 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
             setSchedules([...schedules, data[0]]);
             setShowAddSchedule(false);
             setNewSchedule({
+                car_id: 0,
                 service_type: '',
                 due_date: '',
                 mileage_due: null,
@@ -269,13 +275,13 @@ export default function MaintenanceView({ car }: MaintenanceViewProps) {
                                 <label className="block text-sm font-medium text-gray-700">Car</label>
                                 <select
                                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                    value={newSchedule.car_id || ''}
+                                    value={newSchedule.car_id || 0}
                                     onChange={(e) => setNewSchedule({ 
                                         ...newSchedule, 
-                                        car_id: e.target.value ? parseInt(e.target.value) : null 
+                                        car_id: e.target.value ? parseInt(e.target.value) : 0 
                                     })}
                                 >
-                                    <option value="">Select a car</option>
+                                    <option value="0">Select a car</option>
                                     {cars.map((car) => (
                                         <option key={car.id} value={car.id}>
                                             {car.make} {car.model} ({car.plate_number})
