@@ -330,6 +330,16 @@ export default function Maintenance() {
     );
   }
 
+  // Render no selected car state
+  if (!selectedCar) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-gray-500 mr-4">Please select a car to track maintenance.</p>
+        <Button onClick={handleAddCar}>Add Car</Button>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <div className="container mx-auto max-w-6xl">
