@@ -84,11 +84,11 @@ export default function Maintenance() {
         // Log user ID for debugging
         console.log('Authenticated User ID:', user.id);
 
-        // Extremely basic query with minimal assumptions
+        // Fetch cars for the current user
         const { data, error } = await supabaseClient
           .from('cars')
-          .select()
-          .filter('user_id', 'eq', user.id);
+          .select('*')
+          .eq('user_id', user.id);
 
         // Log raw query results for debugging
         console.log('Raw Query Data:', data);
@@ -100,25 +100,6 @@ export default function Maintenance() {
             message: error.message,
             details: error.details
           });
-
-          // Emergency fallback: try without filtering
-          const { data: fallbackData, error: fallbackError } = await supabaseClient
-            .from('cars')
-            .select();
-
-          console.log('Fallback Query Data:', fallbackData);
-          console.log('Fallback Query Error:', fallbackError);
-
-          if (fallbackError) {
-            throw fallbackError;
-          }
-
-          // If fallback succeeds, use that data
-          if (fallbackData && fallbackData.length > 0) {
-            setCars(fallbackData);
-            setSelectedCar(fallbackData[0]);
-            return;
-          }
         }
 
         // Process successful query
@@ -134,7 +115,8 @@ export default function Maintenance() {
                 user_id: user.id,
                 make: 'Default Car',
                 model: 'First Vehicle',
-                year: new Date().getFullYear()
+                year: new Date().getFullYear(),
+                plate_number: 'DEFAULT'
               })
               .select();
 
