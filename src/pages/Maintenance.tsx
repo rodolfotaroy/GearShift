@@ -19,7 +19,6 @@ interface MaintenanceSchedule {
   description?: string;
   date: string;
   completed: boolean;
-  notes?: string;
   created_at: string;
   updated_at: string;
 }
@@ -59,7 +58,6 @@ const Maintenance: React.FC = () => {
     description: '',
     date: DateTime.now().plus({ months: 1 }).toISODate(),
     completed: false,
-    notes: '',
     created_at: DateTime.now().toISODate(),
     updated_at: DateTime.now().toISODate()
   });
@@ -228,9 +226,7 @@ const Maintenance: React.FC = () => {
     }
   }, [selectedCar, supabaseClient]);
 
-  const handleNewScheduleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleNewScheduleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setNewSchedule(prev => ({
       ...prev,
@@ -245,10 +241,8 @@ const Maintenance: React.FC = () => {
       id: 0,
       car_id: Number(selectedCar.id), // Convert to number
       title: newSchedule.title || 'Maintenance Event', 
-      description: newSchedule.description || '',
       date: newSchedule.date || DateTime.now().plus({ months: 1 }).toISODate(),
       completed: false,
-      notes: newSchedule.notes || '',
       created_at: DateTime.now().toISODate(),
       updated_at: DateTime.now().toISODate()
     };
@@ -289,10 +283,8 @@ const Maintenance: React.FC = () => {
         id: 0,
         car_id: Number(selectedCar.id),
         title: '',
-        description: '',
         date: DateTime.now().plus({ months: 1 }).toISODate(),
         completed: false,
-        notes: '',
         created_at: DateTime.now().toISODate(),
         updated_at: DateTime.now().toISODate()
       });
@@ -614,22 +606,6 @@ const Maintenance: React.FC = () => {
                 />
               </div>
 
-              {/* Description Input */}
-              <div className="mb-4">
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                  Description
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={newSchedule.description}
-                  onChange={handleNewScheduleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                  placeholder="Enter maintenance event details"
-                  rows={3}
-                />
-              </div>
-
               {/* Date Input */}
               <div className="mb-4">
                 <label htmlFor="date" className="block text-sm font-medium text-gray-700">
@@ -642,22 +618,6 @@ const Maintenance: React.FC = () => {
                   value={newSchedule.date}
                   onChange={handleNewScheduleChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                />
-              </div>
-
-              {/* Notes Input */}
-              <div className="mb-4">
-                <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
-                  Notes
-                </label>
-                <textarea
-                  id="notes"
-                  name="notes"
-                  value={newSchedule.notes}
-                  onChange={handleNewScheduleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                  placeholder="Enter any additional notes"
-                  rows={3}
                 />
               </div>
 
