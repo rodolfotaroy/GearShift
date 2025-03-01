@@ -221,11 +221,22 @@ export default function Maintenance() {
       user
     });
 
+    // Validate required fields
+    if (!user?.id) {
+      console.error('No authenticated user found');
+      return;
+    }
+
+    if (!selectedCar.id) {
+      console.error('No car selected');
+      return;
+    }
+
     const scheduleToAdd = {
-      user_id: user?.id || '',
+      user_id: user.id,
       car_id: selectedCar.id,
       title: newSchedule.service_type, // Use as title
-      description: newSchedule.description,
+      description: newSchedule.description || '',
       event_type: 'maintenance', // Default event type
       start_date: newSchedule.due_date,
       status: 'scheduled', // Use the enum from the schema
@@ -234,31 +245,45 @@ export default function Maintenance() {
 
     console.log('Schedule to add:', scheduleToAdd);
 
-    const { data, error } = await supabaseClient
-      .from('maintenance_events')
-      .insert(scheduleToAdd)
-      .select();
+    try {
+      const { data, error } = await supabaseClient
+        .from('maintenance_events')
+        .insert(scheduleToAdd)
+        .select();
 
-    if (error) {
-      console.error('Error adding maintenance schedule:', {
-        error,
-        scheduleToAdd
-      });
-      return;
-    }
+      // Log full error details
+      if (error) {
+        console.error('Detailed Supabase Error:', {
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+          message: error.message,
+          fullError: error
+        });
 
-    if (data) {
-      console.log('Maintenance schedule added:', data);
-      setSchedules([...schedules, data[0]]);
-      setShowAddScheduleModal(false);
-      setNewSchedule({
-        car_id: selectedCar.id,
-        service_type: SERVICE_TYPES[0],
-        due_date: DateTime.now().plus({ months: 1 }).toISODate() || '',
-        mileage_due: 0,
-        description: '',
-        status: 'Pending'
-      });
+        // Additional debugging for potential type mismatches
+        Object.keys(scheduleToAdd).forEach(key => {
+          console.log(`Type of ${key}:`, typeof scheduleToAdd[key as keyof typeof scheduleToAdd]);
+        });
+
+        return;
+      }
+
+      if (data) {
+        console.log('Maintenance schedule added:', data);
+        setSchedules([...schedules, data[0]]);
+        setShowAddScheduleModal(false);
+        setNewSchedule({
+          car_id: selectedCar.id,
+          service_type: SERVICE_TYPES[0],
+          due_date: DateTime.now().plus({ months: 1 }).toISODate() || '',
+          mileage_due: 0,
+          description: '',
+          status: 'Pending'
+        });
+      }
+    } catch (catchError) {
+      console.error('Unexpected error adding maintenance schedule:', catchError);
     }
   }
 
