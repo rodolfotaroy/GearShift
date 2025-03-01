@@ -13,15 +13,12 @@ import { DateTime } from 'luxon';
 const SERVICE_TYPES = ['Oil Change', 'Tire Rotation', 'Brake Service', 'Engine Tune-up', 'Other'] as const;
 
 interface MaintenanceSchedule {
-  id?: number;
   car_id: string;
   service_type: typeof SERVICE_TYPES[number];
   due_date: string;
   mileage_due: number;
-  description?: string;
-  status: string;
-  date?: string;
-  title?: string;
+  description: string;
+  status: 'Pending' | 'Completed' | 'Cancelled';
 }
 
 interface ServiceHistory {
@@ -235,7 +232,7 @@ export default function Maintenance() {
     const scheduleToAdd = {
       user_id: user.id,
       car_id: selectedCar.id,
-      title: newSchedule.service_type, // Use as title
+      title: newSchedule.service_type, // Use service type as title
       description: newSchedule.description || '',
       event_type: 'maintenance', // Default event type
       start_date: newSchedule.due_date,
@@ -243,7 +240,7 @@ export default function Maintenance() {
       recurrence_type: 'none',
     };
 
-    console.log('Schedule to add:', scheduleToAdd);
+    console.log('Formatted Schedule to add:', scheduleToAdd);
 
     try {
       const { data, error } = await supabaseClient
