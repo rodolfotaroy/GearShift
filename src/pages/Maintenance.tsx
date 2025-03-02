@@ -36,7 +36,7 @@ export function Maintenance() {
         }
       } catch (err) {
         console.error('Error fetching cars:', err);
-        setError('Failed to fetch cars. Please try again.');
+        setError('Failed to fetch cars. Please check your connection and try again.');
       } finally {
         setLoading(false);
       }
@@ -70,7 +70,7 @@ export function Maintenance() {
         setSchedules(data || []);
       } catch (err) {
         console.error('Error fetching maintenance events:', err);
-        setError('Failed to fetch maintenance events. Please try again.');
+        setError('Failed to fetch maintenance events. Please check your connection and try again.');
       } finally {
         setLoading(false);
       }
@@ -100,7 +100,7 @@ export function Maintenance() {
       setSchedules(prev => [data, ...prev]);
     } catch (err) {
       console.error('Error adding maintenance event:', err);
-      setError('Failed to add maintenance event. Please try again.');
+      setError('Failed to add maintenance event. Please check your connection and try again.');
     }
   };
 
@@ -123,7 +123,7 @@ export function Maintenance() {
       ));
     } catch (err) {
       console.error('Error updating maintenance event:', err);
-      setError('Failed to update maintenance event. Please try again.');
+      setError('Failed to update maintenance event. Please check your connection and try again.');
     }
   };
 
