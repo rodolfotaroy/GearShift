@@ -117,6 +117,70 @@ export interface Database {
           user_id?: string;
         }
       }
+      expenses: {
+        Row: {
+          id: number;
+          amount: number;
+          category: string;
+          date: string;
+          car_id: number;
+          created_at: string;
+          updated_at: string;
+          user_id: string;
+        }
+        Insert: {
+          id?: number;
+          amount: number;
+          category: string;
+          date: string;
+          car_id: number;
+          created_at?: string;
+          updated_at?: string;
+          user_id: string;
+        }
+        Update: {
+          id?: number;
+          amount?: number;
+          category?: string;
+          date?: string;
+          car_id?: number;
+          created_at?: string;
+          updated_at?: string;
+          user_id?: string;
+        }
+      }
+      expenses_table: {
+        Row: {
+          id: number;
+          amount: number;
+          category: string;
+          date: string;
+          car_id: number;
+          created_at: string;
+          updated_at: string;
+          user_id: string;
+        }
+        Insert: {
+          id?: number;
+          amount: number;
+          category: string;
+          date: string;
+          car_id: number;
+          created_at?: string;
+          updated_at?: string;
+          user_id: string;
+        }
+        Update: {
+          id?: number;
+          amount?: number;
+          category?: string;
+          date?: string;
+          car_id?: number;
+          created_at?: string;
+          updated_at?: string;
+          user_id?: string;
+        }
+      }
     }
     Views: {
       [_ in never]: never
