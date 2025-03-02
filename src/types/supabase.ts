@@ -31,9 +31,6 @@ export interface Profile {
   updated_at: string;
 }
 
-export type ExpenseQueryResult = Database['public']['Tables']['expenses']['Row'] & {
-  cars?: {
-    make: string;
-    model: string;
-  };
+export type ExpenseQueryResult = Tables<'expenses'> & {
+  cars?: Pick<Tables<'cars'>, 'make' | 'model'>;
 }
