@@ -34,16 +34,6 @@ interface CarExpense {
   total: number;
 }
 
-interface DatabaseExpense {
-  amount: number;
-  category: string;
-  date: string;
-  car: {
-    make: string;
-    model: string;
-  } | null;
-}
-
 interface ExpenseQueryResult {
   amount: number | null;
   category: string | null;
