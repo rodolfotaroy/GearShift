@@ -1,5 +1,4 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import { Disclosure } from '@headlessui/react';
 import {
   HomeIcon,
@@ -8,9 +7,12 @@ import {
   CogIcon,
   DocumentIcon,
   UserIcon,
+  WrenchScrewdriverIcon,
+  CreditCardIcon,
   MoonIcon,
   SunIcon
 } from '@heroicons/react/24/outline';
+import type { ComponentType } from 'react';
 import { useState, useEffect, useCallback } from 'react';
 
 interface LayoutProps {
@@ -20,15 +22,15 @@ interface LayoutProps {
 interface NavigationItem {
   name: string;
   href: string;
-  icon: any;
+  icon: ComponentType<{ className?: string }>;
 }
 
 const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/', icon: HomeIcon },
   { name: 'Cars', href: '/cars', icon: UserIcon },
-  { name: 'Maintenance', href: '/maintenance', icon: null },
+  { name: 'Maintenance', href: '/maintenance', icon: WrenchScrewdriverIcon },
   { name: 'Calendar', href: '/calendar', icon: CalendarIcon },
-  { name: 'Expenses', href: '/expenses', icon: null },
+  { name: 'Expenses', href: '/expenses', icon: CreditCardIcon },
   { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
   { name: 'Documents', href: '/documents', icon: DocumentIcon },
   { name: 'Settings', href: '/settings', icon: CogIcon },
@@ -82,11 +84,11 @@ export default function Layout({ children }: LayoutProps) {
                             : 'border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:border-neutral-300 dark:hover:border-dark-border hover:text-neutral-800 dark:hover:text-neutral-200'
                         } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium whitespace-nowrap`}
                       >
-                        {item.icon && <item.icon className={`h-5 w-5 mr-2 flex-shrink-0 ${
+                        <item.icon className={`h-5 w-5 mr-2 flex-shrink-0 ${
                           location.pathname === item.href 
                             ? 'text-primary-500' 
                             : 'text-neutral-500 dark:text-neutral-400'
-                        }`} />}
+                        }`} />
                         {item.name}
                       </Link>
                     ))}
