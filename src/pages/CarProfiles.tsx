@@ -103,7 +103,7 @@ export function CarProfiles() {
         imageUrl = urlData?.publicUrl || '';
       }
 
-      const carToInsert = {
+      const carToInsert: Car = {
         ...newCar,
         image_url: imageUrl,
         user_id: user?.id || '',
