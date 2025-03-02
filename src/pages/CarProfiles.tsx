@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { CarProfileView } from '../components/CarProfileView';
-import { Car } from '../types/supabase';
+import { Car, Tables } from '../types/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -18,16 +18,16 @@ export function CarProfiles() {
   const [isEditingCar, setIsEditingCar] = useState(false);
   const [selectedCar, setSelectedCar] = useState<Car | null>(null);
   const [validationErrors, setValidationErrors] = useState<{ field: string; message: string }[]>([]);
-  const [newCar, setNewCar] = useState<Car>({
-    id: 0,
+  const [newCar, setNewCar] = useState<Tables<'cars'>['Insert']>({
+    id: undefined,
     make: '',
     model: '',
     year: CURRENT_YEAR,
     plate_number: '',
     vin: '',
-    mileage: 0,
+    mileage: undefined,
     user_id: user?.id || '',
-    image_url: '',
+    image_url: undefined,
     created_at: new Date().toISOString()
   });
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -83,7 +83,7 @@ export function CarProfiles() {
     }
 
     try {
-      let imageUrl = '';
+      let imageUrl: string | undefined;
       if (selectedImage) {
         const fileExt = selectedImage.name.split('.').pop();
         const fileName = `${user?.id}/${Date.now()}.${fileExt}`;
@@ -100,10 +100,10 @@ export function CarProfiles() {
           .from('car_images')
           .getPublicUrl(fileName);
 
-        imageUrl = urlData?.publicUrl || '';
+        imageUrl = urlData?.publicUrl;
       }
 
-      const carToInsert: Car = {
+      const carToInsert: Tables<'cars'>['Insert'] = {
         ...newCar,
         image_url: imageUrl,
         user_id: user?.id || '',
@@ -125,15 +125,15 @@ export function CarProfiles() {
       setIsAddingCar(false);
       setSelectedImage(null);
       setNewCar({
-        id: 0,
+        id: undefined,
         make: '',
         model: '',
         year: CURRENT_YEAR,
         plate_number: '',
         vin: '',
-        mileage: 0,
+        mileage: undefined,
         user_id: user?.id || '',
-        image_url: '',
+        image_url: undefined,
         created_at: new Date().toISOString()
       });
     } catch (error) {
@@ -168,10 +168,10 @@ export function CarProfiles() {
           .from('car_images')
           .getPublicUrl(fileName);
 
-        imageUrl = urlData?.publicUrl || '';
+        imageUrl = urlData?.publicUrl;
       }
 
-      const carToUpdate = {
+      const carToUpdate: Tables<'cars'>['Update'] = {
         ...selectedCar,
         ...newCar,
         image_url: imageUrl,

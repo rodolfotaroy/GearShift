@@ -1,59 +1,123 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useState, useEffect } from 'react';
+import { MaintenanceView } from '../components/MaintenanceView';
 import { useSupabase } from '../contexts/SupabaseContext';
+import { useAuth } from '../contexts/AuthContext';
+import { Car, MaintenanceEvent, Tables } from '../types/supabase';
 
-const Maintenance: React.FC = () => {
-  const { user } = useAuth();
+export function Maintenance() {
   const { supabaseClient } = useSupabase();
-  const [maintenanceEvents, setMaintenanceEvents] = useState([]);
+  const { user } = useAuth();
+  const [cars, setCars] = useState<Car[]>([]);
+  const [selectedCar, setSelectedCar] = useState<Car | null>(null);
+  const [schedules, setSchedules] = useState<MaintenanceEvent[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!user) {
-        return;
+    async function fetchCars() {
+      const { data, error } = await supabaseClient
+        .from('cars')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching cars:', error);
+      } else {
+        setCars(data || []);
+        if (data && data.length > 0) {
+          setSelectedCar(data[0]);
+        }
       }
+    }
 
-      try {
-        const { data, error } = await supabaseClient
-          .from('maintenance_events')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('date', { ascending: false });
+    fetchCars();
+  }, []);
 
-        if (error) throw error;
+  useEffect(() => {
+    async function fetchSchedules() {
+      if (!selectedCar) return;
 
-        setMaintenanceEvents(data || []);
-      } catch (error) {
-        console.error('Maintenance Data Fetch Error:', error);
+      setLoading(true);
+      const { data, error } = await supabaseClient
+        .from('maintenance_events')
+        .select('*')
+        .eq('car_id', selectedCar.id)
+        .order('date', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching maintenance events:', error);
+      } else {
+        setSchedules(data || []);
       }
-    };
+      setLoading(false);
+    }
 
-    fetchData();
-  }, [user, supabaseClient]);
+    fetchSchedules();
+  }, [selectedCar]);
+
+  const handleAddSchedule = async (schedule: Tables<'maintenance_events'>['Insert']) => {
+    if (!selectedCar) return;
+
+    const { data, error } = await supabaseClient
+      .from('maintenance_events')
+      .insert(schedule)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding maintenance event:', error);
+      return;
+    }
+
+    setSchedules(prev => [data, ...prev]);
+  };
+
+  const handleUpdateSchedule = async (id: number, updates: Tables<'maintenance_events'>['Update']) => {
+    const { data, error } = await supabaseClient
+      .from('maintenance_events')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating maintenance event:', error);
+      return;
+    }
+
+    setSchedules(prev => prev.map(schedule => 
+      schedule.id === id ? data : schedule
+    ));
+  };
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold mb-6">Maintenance</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Maintenance Schedule */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Maintenance Schedule</h2>
-          {maintenanceEvents.map(event => (
-            <div 
-              key={event.id} 
-              className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 mb-4"
-            >
-              <h3 className="font-medium">{event.title}</h3>
-              <p className="text-gray-600 dark:text-gray-300">{event.description}</p>
-              <p className="text-sm text-gray-500">
-                Date: {event.date}
-              </p>
-            </div>
-          ))}
+    <div className="container mx-auto p-4">
+      <div className="flex space-x-4">
+        <div className="w-1/4">
+          <h2 className="text-xl font-bold mb-4">My Cars</h2>
+          <ul className="space-y-2">
+            {cars.map(car => (
+              <li 
+                key={car.id} 
+                className={`p-2 cursor-pointer rounded ${selectedCar?.id === car.id ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+                onClick={() => setSelectedCar(car)}
+              >
+                {car.make} {car.model} ({car.year})
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="w-3/4">
+          {selectedCar && (
+            <MaintenanceView 
+              car={selectedCar} 
+              schedules={schedules}
+              loading={loading}
+              onAddSchedule={handleAddSchedule}
+              onUpdateSchedule={handleUpdateSchedule}
+            />
+          )}
         </div>
       </div>
     </div>
   );
-};
-
-export default Maintenance;
+}

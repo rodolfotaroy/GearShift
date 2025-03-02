@@ -4,14 +4,14 @@ import {
   CheckCircleIcon 
 } from '@heroicons/react/24/solid';
 import { DateTime } from 'luxon';
-import { Car, MaintenanceEvent } from '../types/supabase';
+import { Car, MaintenanceEvent, Tables } from '../types/supabase';
 
 interface MaintenanceViewProps {
   car: Car;
   schedules: MaintenanceEvent[];
   loading: boolean;
-  onAddSchedule: (schedule: Partial<MaintenanceEvent>) => void;
-  onUpdateSchedule: (id: number, updates: Partial<MaintenanceEvent>) => void;
+  onAddSchedule: (schedule: Tables<'maintenance_events'>['Insert']) => void;
+  onUpdateSchedule: (id: number, updates: Tables<'maintenance_events'>['Update']) => void;
 }
 
 export function MaintenanceView({ 
@@ -24,14 +24,14 @@ export function MaintenanceView({
   const [scheduleState, setScheduleState] = useState<{
     showAddSchedule: boolean;
     selectedStatus: string;
-    newSchedule: Partial<MaintenanceEvent>;
+    newSchedule: Tables<'maintenance_events'>['Insert'];
   }>({
     showAddSchedule: false,
     selectedStatus: '',
     newSchedule: {
       car_id: car.id,
       title: '',
-      description: '',
+      description: undefined,
       date: DateTime.now().toISODate() || '',
       completed: false,
       user_id: car.user_id
@@ -43,21 +43,16 @@ export function MaintenanceView({
     update: Partial<{
       showAddSchedule: boolean;
       selectedStatus: string;
-      newSchedule: Partial<MaintenanceEvent>;
+      newSchedule: Tables<'maintenance_events'>['Insert'];
     }>
   ) => {
     setScheduleState(state => ({
       ...state,
       ...update,
-      // Ensure newSchedule is preserved if not in update
-      newSchedule: {
-        ...state.newSchedule,
-        ...(update.newSchedule || {})
-      }
     }));
   };
 
-  const updateNewSchedule = (updates: Partial<MaintenanceEvent>) => {
+  const updateNewSchedule = (updates: Tables<'maintenance_events'>['Insert']) => {
     updateScheduleState({
       newSchedule: {
         ...scheduleState.newSchedule,
@@ -94,7 +89,7 @@ export function MaintenanceView({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    updateNewSchedule({ [name as keyof MaintenanceEvent]: value });
+    updateNewSchedule({ [name as keyof Tables<'maintenance_events'>['Insert']]: value });
   };
 
   // Submit new maintenance schedule
@@ -112,7 +107,7 @@ export function MaintenanceView({
         newSchedule: {
           car_id: car.id,
           title: '',
-          description: '',
+          description: undefined,
           date: DateTime.now().toISODate() || '',
           completed: false,
           user_id: car.user_id

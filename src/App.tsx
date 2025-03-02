@@ -6,13 +6,13 @@ import Layout from './components/Layout';
 import PrivateRoute from './components/PrivateRoute';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import CarProfiles from './pages/CarProfiles';
+import { CarProfiles } from './pages/CarProfiles';
 import ExpenseTracker from './pages/ExpenseTracker';
 import Analytics from './pages/Analytics';
 import Calendar from './pages/Calendar';
 import Documents from './pages/Documents';
 import Settings from './pages/Settings';
-import Maintenance from './pages/Maintenance';
+import { Maintenance } from './pages/Maintenance';
 
 const queryClient = new QueryClient();
 
@@ -59,6 +59,13 @@ function App() {
                   </Layout>
                 </PrivateRoute>
               } />
+              <Route path="/maintenance" element={
+                <PrivateRoute>
+                  <Layout>
+                    <Maintenance />
+                  </Layout>
+                </PrivateRoute>
+              } />
               <Route path="/documents" element={
                 <PrivateRoute>
                   <Layout>
@@ -73,13 +80,6 @@ function App() {
                   </Layout>
                 </PrivateRoute>
               } />
-              <Route path="/maintenance" element={
-                <PrivateRoute>
-                  <Layout>
-                    <Maintenance />
-                  </Layout>
-                </PrivateRoute>
-              } />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </AuthProvider>
@@ -90,5 +90,3 @@ function App() {
 }
 
 export default App;
-
-
