@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MaintenanceView } from '../components/MaintenanceView';
+import { MaintenanceCalendar } from '../components/MaintenanceCalendar';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Database } from '../types/supabase';
@@ -13,6 +14,7 @@ export function Maintenance() {
   const [schedules, setSchedules] = useState<Database['public']['Tables']['maintenance_events']['Row'][]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
 
   useEffect(() => {
     async function fetchCars() {
@@ -150,6 +152,33 @@ export function Maintenance() {
           <span className="block sm:inline">{error}</span>
         </div>
       )}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Maintenance Schedules</h1>
+        <div className="flex items-center space-x-4">
+          <div className="flex bg-neutral-200 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                viewMode === 'list' 
+                  ? 'bg-blue-500 text-white' 
+                  : 'text-neutral-700 hover:bg-neutral-300'
+              }`}
+            >
+              List View
+            </button>
+            <button
+              onClick={() => setViewMode('calendar')}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                viewMode === 'calendar' 
+                  ? 'bg-blue-500 text-white' 
+                  : 'text-neutral-700 hover:bg-neutral-300'
+              }`}
+            >
+              Calendar View
+            </button>
+          </div>
+        </div>
+      </div>
       <div className="flex space-x-4">
         <div className="w-1/4">
           <h2 className="text-xl font-bold mb-4">My Cars</h2>
@@ -167,14 +196,24 @@ export function Maintenance() {
         </div>
         <div className="w-3/4">
           {selectedCar && (
-            <MaintenanceView 
-              car={selectedCar} 
-              schedules={schedules}
-              loading={loading}
-              onAddSchedule={handleAddSchedule}
-              onUpdateSchedule={handleUpdateSchedule}
-              onDeleteSchedule={handleDeleteSchedule}
-            />
+            <>
+              {viewMode === 'list' ? (
+                <MaintenanceView 
+                  car={selectedCar} 
+                  schedules={schedules}
+                  loading={loading}
+                  onAddSchedule={handleAddSchedule}
+                  onUpdateSchedule={handleUpdateSchedule}
+                  onDeleteSchedule={handleDeleteSchedule}
+                />
+              ) : (
+                <MaintenanceCalendar 
+                  schedules={schedules}
+                  onUpdateSchedule={handleUpdateSchedule}
+                  onDeleteSchedule={handleDeleteSchedule}
+                />
+              )}
+            </>
           )}
         </div>
       </div>
