@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Calendar, momentLocalizer } from 'react-big-calendar';
+import { Calendar, momentLocalizer, Event } from 'react-big-calendar';
 import moment from 'moment';
 import { Database } from '../types/supabase';
 import { TrashIcon, PencilIcon } from '@heroicons/react/24/solid';
