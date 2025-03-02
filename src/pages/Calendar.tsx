@@ -54,13 +54,18 @@ export default function Calendar() {
       const startOfMonth = DateTime.fromJSDate(state.selectedDate).startOf('month').toISO();
       const endOfMonth = DateTime.fromJSDate(state.selectedDate).endOf('month').toISO();
 
-      const eventsResponse = await supabaseClient
+      let eventsQuery = supabaseClient
         .from('maintenance_events')
         .select('*')
         .eq('user_id', user.id)
         .gte('date', startOfMonth || '')
-        .lte('date', endOfMonth || '')
-        ...(state.filters.car ? [{ eq: 'car_id', value: state.filters.car }] : []);
+        .lte('date', endOfMonth || '');
+
+      if (state.filters.car) {
+        eventsQuery = eventsQuery.eq('car_id', state.filters.car);
+      }
+
+      const eventsResponse = await eventsQuery;
 
       if (eventsResponse.error) throw eventsResponse.error;
 
