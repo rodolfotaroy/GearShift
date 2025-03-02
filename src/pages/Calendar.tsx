@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { useAuth } from '../contexts/AuthContext';
 import { DateTime } from 'luxon';
@@ -8,15 +8,18 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { Database } from '../types/supabase';
 import EventModal from '../components/calendar/EventModal';
 
-const localizer = momentLocalizer(moment);
-
-// Use database types for stronger typing
+// Correct type definitions
 type CalendarEvent = Database['public']['Tables']['maintenance_events']['Row'] & {
   start?: Date;
   end?: Date;
   title?: string;
 };
+
 type Car = Database['public']['Tables']['cars']['Row'];
+
+type EventModalMode = 'create' | 'edit';
+
+const localizer = momentLocalizer(moment);
 
 export default function Calendar() {
   const { supabaseClient } = useSupabase();
@@ -35,6 +38,7 @@ export default function Calendar() {
       type?: string;
     };
     isEventModalOpen: boolean;
+    modalMode: EventModalMode;
   }>({
     events: [],
     cars: [],
@@ -43,7 +47,8 @@ export default function Calendar() {
     loading: true,
     error: null,
     filters: {},
-    isEventModalOpen: false
+    isEventModalOpen: false,
+    modalMode: 'create'
   });
 
   // Centralized data fetching with improved error handling
@@ -116,7 +121,8 @@ export default function Calendar() {
     setState(prev => ({
       ...prev,
       selectedEvent: event,
-      isEventModalOpen: true
+      isEventModalOpen: true,
+      modalMode: 'edit'
     }));
   };
 
@@ -130,7 +136,8 @@ export default function Calendar() {
         car_id: state.filters.car || undefined,
         user_id: user?.id
       },
-      isEventModalOpen: true
+      isEventModalOpen: true,
+      modalMode: 'create'
     }));
   };
 
@@ -212,6 +219,14 @@ export default function Calendar() {
     );
   }
 
+  const transformedEvents = state.events.map(event => ({
+    id: event.id.toString(),
+    title: event.title,
+    start: event.start || new Date(event.date),
+    end: event.end || new Date(event.date),
+    allDay: true
+  }));
+
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
@@ -235,7 +250,7 @@ export default function Calendar() {
         <div style={{ height: '600px' }}>
           <BigCalendar
             localizer={localizer}
-            events={state.events}
+            events={transformedEvents}
             startAccessor="start"
             endAccessor="end"
             onSelectEvent={handleSelectEvent}
@@ -256,7 +271,7 @@ export default function Calendar() {
             event={state.selectedEvent}
             setEvent={(updatedEvent) => setState(prev => ({ ...prev, selectedEvent: updatedEvent }))}
             cars={state.cars}
-            mode={state.selectedEvent?.id ? 'edit' : 'create'}
+            mode={state.modalMode}
           />
         )}
       </div>

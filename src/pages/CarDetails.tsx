@@ -1,77 +1,106 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSupabase } from '../contexts/SupabaseContext';
+import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
-import { Database } from '../types/supabase';
-import MaintenanceView from '../components/MaintenanceView';
-import MaintenanceCostTracker from '../components/MaintenanceCostTracker';
-import DocumentView from '../components/DocumentView';
+import { MaintenanceView } from '../components/MaintenanceView';
+import { MaintenanceCostTracker } from '../components/MaintenanceCostTracker';
+import { DocumentView } from '../components/DocumentView';
+
+type Car = {
+  id: number;
+  make: string;
+  model: string;
+  year: number;
+  plate_number: string;
+  mileage?: number;
+  vin?: string;
+  image_url?: string;
+  user_id: string;
+};
+
+type Schedule = {
+  id: number;
+  car_id: number;
+  date: string;
+  description: string;
+  cost?: number;
+};
 
 export default function CarDetails() {
   const { carId } = useParams<{ carId: string }>();
   const navigate = useNavigate();
-  const { supabaseClient } = useSupabase();
   const { user } = useAuth();
-
-  const [car, setCar] = useState<Database['public']['Tables']['cars']['Row'] | null>(null);
-  const [schedules, setSchedules] = useState<Database['public']['Tables']['maintenance_events']['Row'][]>([]);
+  const [car, setCar] = useState<Car | null>(null);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'maintenance' | 'documents' | 'costs'>('maintenance');
 
   useEffect(() => {
-    if (!user || !carId) {
-      navigate('/cars');
-      return;
-    }
+    const fetchCarDetails = async () => {
+      if (!user || !carId) {
+        navigate('/cars');
+        return;
+      }
 
-    async function fetchCarDetails() {
       setLoading(true);
       try {
-        // Fetch car details
-        const { data: carData, error: carError } = await supabaseClient
+        const { data, error } = await supabase
           .from('cars')
           .select('*')
-          .eq('id', carId)
+          .eq('id', parseInt(carId, 10))
           .eq('user_id', user.id)
           .single();
 
-        // Fetch maintenance schedules
-        const { data: schedulesData, error: schedulesError } = await supabaseClient
+        if (error) {
+          console.error('Error fetching car details', error);
+          setError('Failed to load car details');
+          navigate('/cars');
+          return;
+        }
+
+        setCar(data);
+
+        const { data: schedulesData, error: schedulesError } = await supabase
           .from('maintenance_events')
           .select('*')
-          .eq('car_id', carId)
+          .eq('car_id', parseInt(carId, 10))
           .order('date', { ascending: false });
 
-        if (carError) throw carError;
-        if (schedulesError) throw schedulesError;
+        if (schedulesError) {
+          console.error('Error fetching maintenance schedules', schedulesError);
+          setError('Failed to load maintenance schedules');
+          navigate('/cars');
+          return;
+        }
 
-        setCar(carData);
         setSchedules(schedulesData || []);
       } catch (err) {
-        console.error('Error fetching car details:', err);
+        console.error('Error fetching car details', err);
         setError('Failed to load car details');
         navigate('/cars');
       } finally {
         setLoading(false);
       }
-    }
+    };
 
     fetchCarDetails();
-  }, [carId, user, supabaseClient, navigate]);
+  }, [carId, user, navigate]);
 
-  const handleAddSchedule = async (schedule: Database['public']['Tables']['maintenance_events']['Insert']) => {
+  const handleAddSchedule = async (schedule: Schedule) => {
     if (!car) return;
 
     try {
-      const { data, error } = await supabaseClient
+      const { data, error } = await supabase
         .from('maintenance_events')
         .insert({ ...schedule, car_id: car.id });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error adding maintenance schedule', error);
+        return;
+      }
 
-      // Refresh schedules
-      const { data: updatedSchedules } = await supabaseClient
+      const { data: updatedSchedules } = await supabase
         .from('maintenance_events')
         .select('*')
         .eq('car_id', car.id)
@@ -79,21 +108,23 @@ export default function CarDetails() {
 
       setSchedules(updatedSchedules || []);
     } catch (err) {
-      console.error('Error adding maintenance schedule:', err);
+      console.error('Error adding maintenance schedule', err);
     }
   };
 
-  const handleUpdateSchedule = async (id: number, updates: Database['public']['Tables']['maintenance_events']['Update']) => {
+  const handleUpdateSchedule = async (id: number, updates: Partial<Schedule>) => {
     try {
-      const { error } = await supabaseClient
+      const { error } = await supabase
         .from('maintenance_events')
         .update(updates)
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating maintenance schedule', error);
+        return;
+      }
 
-      // Refresh schedules
-      const { data: updatedSchedules } = await supabaseClient
+      const { data: updatedSchedules } = await supabase
         .from('maintenance_events')
         .select('*')
         .eq('car_id', car?.id)
@@ -101,21 +132,23 @@ export default function CarDetails() {
 
       setSchedules(updatedSchedules || []);
     } catch (err) {
-      console.error('Error updating maintenance schedule:', err);
+      console.error('Error updating maintenance schedule', err);
     }
   };
 
   const handleDeleteSchedule = async (id: number) => {
     try {
-      const { error } = await supabaseClient
+      const { error } = await supabase
         .from('maintenance_events')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting maintenance schedule', error);
+        return;
+      }
 
-      // Refresh schedules
-      const { data: updatedSchedules } = await supabaseClient
+      const { data: updatedSchedules } = await supabase
         .from('maintenance_events')
         .select('*')
         .eq('car_id', car?.id)
@@ -123,7 +156,7 @@ export default function CarDetails() {
 
       setSchedules(updatedSchedules || []);
     } catch (err) {
-      console.error('Error deleting maintenance schedule:', err);
+      console.error('Error deleting maintenance schedule', err);
     }
   };
 
@@ -159,7 +192,7 @@ export default function CarDetails() {
               {car.year} {car.make} {car.model}
             </h1>
             <p className="text-gray-600 dark:text-gray-300">
-              Plate: {car.plate_number || 'N/A'} | VIN: {car.vin || 'N/A'}
+              Plate: {car.plate_number} | VIN: {car.vin}
             </p>
           </div>
         </div>
