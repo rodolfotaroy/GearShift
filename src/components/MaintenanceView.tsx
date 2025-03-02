@@ -30,11 +30,13 @@ export function MaintenanceView({
     selectedStatus: '',
     newSchedule: {
       car_id: car.id,
+      user_id: car.user_id,
       title: '',
       description: undefined,
       date: DateTime.now().toISODate() || '',
       completed: false,
-      user_id: car.user_id
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     }
   });
 
@@ -85,11 +87,13 @@ export function MaintenanceView({
         showAddSchedule: false,
         newSchedule: {
           car_id: car.id,
+          user_id: car.user_id,
           title: '',
           description: undefined,
           date: DateTime.now().toISODate() || '',
           completed: false,
-          user_id: car.user_id
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         }
       });
     } catch (error) {
@@ -205,7 +209,6 @@ export function MaintenanceView({
               type="button"
               onClick={handleSubmitSchedule}
               className="btn btn-primary"
-              disabled={!scheduleState.newSchedule.title || !scheduleState.newSchedule.date}
             >
               Add Schedule
             </button>

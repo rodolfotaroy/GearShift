@@ -49,6 +49,7 @@ export function Maintenance() {
         .from('maintenance_events')
         .select('*')
         .eq('car_id', selectedCar.id)
+        .eq('user_id', user.id)
         .gte('date', startOfMonth)
         .lte('date', endOfMonth)
         .order('date', { ascending: false });
@@ -72,7 +73,9 @@ export function Maintenance() {
       .insert({
         ...schedule,
         car_id: selectedCar.id,
-        user_id: user.id
+        user_id: user.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
       .select()
       .single();
@@ -88,7 +91,10 @@ export function Maintenance() {
   const handleUpdateSchedule = async (id: number, updates: Database['public']['Tables']['maintenance_events']['Update']) => {
     const { data, error } = await supabaseClient
       .from('maintenance_events')
-      .update(updates)
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', id)
       .select()
       .single();
