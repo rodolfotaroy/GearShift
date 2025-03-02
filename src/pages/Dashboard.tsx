@@ -38,7 +38,7 @@ interface ExpenseQueryResult {
   amount: number | null;
   category: string | null;
   date: string | null;
-  car: {
+  cars: {
     make: string | null;
     model: string | null;
   } | null;
@@ -66,7 +66,7 @@ export default function Dashboard() {
           amount,
           category,
           date,
-          car (
+          cars (
             make,
             model
           )
@@ -99,8 +99,8 @@ export default function Dashboard() {
 
         // Expenses by car
         const carTotals = expenses.reduce((acc: Record<string, number>, expense: ExpenseQueryResult) => {
-          const carName = expense.car 
-            ? `${expense.car.make || 'Unknown'} ${expense.car.model || 'Car'}` 
+          const carName = expense.cars 
+            ? `${expense.cars.make || 'Unknown'} ${expense.cars.model || 'Car'}` 
             : 'Unassigned';
           acc[carName] = (acc[carName] || 0) + (expense.amount || 0);
           return acc;
