@@ -12,24 +12,33 @@ export function Maintenance() {
   const [selectedCar, setSelectedCar] = useState<Database['public']['Tables']['cars']['Row'] | null>(null);
   const [schedules, setSchedules] = useState<Database['public']['Tables']['maintenance_events']['Row'][]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchCars() {
       if (!user) return;
 
-      const { data, error } = await supabaseClient
-        .from('cars')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      setLoading(true);
+      setError(null);
 
-      if (error) {
-        console.error('Error fetching cars:', error);
-      } else {
+      try {
+        const { data, error } = await supabaseClient
+          .from('cars')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
         setCars(data || []);
         if (data && data.length > 0) {
           setSelectedCar(data[0]);
         }
+      } catch (err) {
+        console.error('Error fetching cars:', err);
+        setError('Failed to fetch cars. Please try again.');
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -41,25 +50,30 @@ export function Maintenance() {
       if (!selectedCar || !user) return;
 
       setLoading(true);
+      setError(null);
       
-      const startOfMonth = DateTime.now().startOf('month').toISODate();
-      const endOfMonth = DateTime.now().endOf('month').toISODate();
+      try {
+        const startOfMonth = DateTime.now().startOf('month').toISODate();
+        const endOfMonth = DateTime.now().endOf('month').toISODate();
 
-      const { data, error } = await supabaseClient
-        .from('maintenance_events')
-        .select('*')
-        .eq('car_id', selectedCar.id)
-        .eq('user_id', user.id)
-        .gte('date', startOfMonth)
-        .lte('date', endOfMonth)
-        .order('date', { ascending: false });
+        const { data, error } = await supabaseClient
+          .from('maintenance_events')
+          .select('*')
+          .eq('car_id', selectedCar.id)
+          .eq('user_id', user.id)
+          .gte('date', startOfMonth)
+          .lte('date', endOfMonth)
+          .order('date', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching maintenance events:', error);
-      } else {
+        if (error) throw error;
+
         setSchedules(data || []);
+      } catch (err) {
+        console.error('Error fetching maintenance events:', err);
+        setError('Failed to fetch maintenance events. Please try again.');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
 
     fetchSchedules();
@@ -68,49 +82,58 @@ export function Maintenance() {
   const handleAddSchedule = async (schedule: Database['public']['Tables']['maintenance_events']['Insert']) => {
     if (!selectedCar || !user) return;
 
-    const { data, error } = await supabaseClient
-      .from('maintenance_events')
-      .insert({
-        ...schedule,
-        car_id: selectedCar.id,
-        user_id: user.id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabaseClient
+        .from('maintenance_events')
+        .insert({
+          ...schedule,
+          car_id: selectedCar.id,
+          user_id: user.id,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
 
-    if (error) {
-      console.error('Error adding maintenance event:', error);
-      return;
+      if (error) throw error;
+
+      setSchedules(prev => [data, ...prev]);
+    } catch (err) {
+      console.error('Error adding maintenance event:', err);
+      setError('Failed to add maintenance event. Please try again.');
     }
-
-    setSchedules(prev => [data, ...prev]);
   };
 
   const handleUpdateSchedule = async (id: number, updates: Database['public']['Tables']['maintenance_events']['Update']) => {
-    const { data, error } = await supabaseClient
-      .from('maintenance_events')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabaseClient
+        .from('maintenance_events')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
 
-    if (error) {
-      console.error('Error updating maintenance event:', error);
-      return;
+      if (error) throw error;
+
+      setSchedules(prev => prev.map(schedule => 
+        schedule.id === id ? data : schedule
+      ));
+    } catch (err) {
+      console.error('Error updating maintenance event:', err);
+      setError('Failed to update maintenance event. Please try again.');
     }
-
-    setSchedules(prev => prev.map(schedule => 
-      schedule.id === id ? data : schedule
-    ));
   };
 
   return (
     <div className="container mx-auto p-4">
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+          <span className="block sm:inline">{error}</span>
+        </div>
+      )}
       <div className="flex space-x-4">
         <div className="w-1/4">
           <h2 className="text-xl font-bold mb-4">My Cars</h2>

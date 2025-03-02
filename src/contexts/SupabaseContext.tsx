@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { createContext, useContext, useMemo } from 'react';
+import { createContext, useContext, useMemo, useState } from 'react';
 import { Database } from '../types/database.types';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
@@ -11,14 +11,20 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase configuration. Check your environment variables.');
 }
 
+// Singleton Supabase client
+let singletonSupabaseClient: SupabaseClient<Database> | null = null;
+
 // Create a single, memoized Supabase client
 const createSupabaseClient = () => {
-  console.log('Initializing Supabase Client');
-  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: true
-    }
-  });
+  if (!singletonSupabaseClient) {
+    console.log('Initializing Supabase Client');
+    singletonSupabaseClient = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true
+      }
+    });
+  }
+  return singletonSupabaseClient;
 };
 
 // Create context with explicit typing
