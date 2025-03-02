@@ -2,10 +2,20 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { useAuth } from '../contexts/AuthContext';
 import { DateTime } from 'luxon';
+import { Calendar as BigCalendar, momentLocalizer } from 'react-big-calendar';
+import moment from 'moment';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { Database } from '../types/supabase';
+import EventModal from '../components/calendar/EventModal';
+
+const localizer = momentLocalizer(moment);
 
 // Use database types for stronger typing
-type CalendarEvent = Database['public']['Tables']['maintenance_events']['Row'];
+type CalendarEvent = Database['public']['Tables']['maintenance_events']['Row'] & {
+  start?: Date;
+  end?: Date;
+  title?: string;
+};
 type Car = Database['public']['Tables']['cars']['Row'];
 
 export default function Calendar() {
@@ -24,6 +34,7 @@ export default function Calendar() {
       car?: number;
       type?: string;
     };
+    isEventModalOpen: boolean;
   }>({
     events: [],
     cars: [],
@@ -31,7 +42,8 @@ export default function Calendar() {
     selectedDate: new Date(),
     loading: true,
     error: null,
-    filters: {}
+    filters: {},
+    isEventModalOpen: false
   });
 
   // Centralized data fetching with improved error handling
@@ -69,10 +81,18 @@ export default function Calendar() {
 
       if (eventsResponse.error) throw eventsResponse.error;
 
+      // Transform events for BigCalendar
+      const transformedEvents = (eventsResponse.data || []).map(event => ({
+        ...event,
+        start: new Date(event.date),
+        end: new Date(event.date),
+        title: event.title
+      }));
+
       setState(prev => ({
         ...prev,
         cars: carsResponse.data || [],
-        events: eventsResponse.data || [],
+        events: transformedEvents,
         loading: false,
         error: null
       }));
@@ -91,8 +111,69 @@ export default function Calendar() {
     fetchData();
   }, [fetchData]);
 
-  // Delete event with robust error handling
-  const deleteEvent = async (eventId: number) => {
+  // Event handling
+  const handleSelectEvent = (event: CalendarEvent) => {
+    setState(prev => ({
+      ...prev,
+      selectedEvent: event,
+      isEventModalOpen: true
+    }));
+  };
+
+  const handleSelectSlot = ({ start }: { start: Date }) => {
+    setState(prev => ({
+      ...prev,
+      selectedEvent: {
+        date: start.toISOString(),
+        title: '',
+        description: '',
+        car_id: state.filters.car || undefined,
+        user_id: user?.id
+      },
+      isEventModalOpen: true
+    }));
+  };
+
+  const handleCloseModal = () => {
+    setState(prev => ({
+      ...prev,
+      selectedEvent: null,
+      isEventModalOpen: false
+    }));
+  };
+
+  const handleSubmitEvent = async (eventData: CalendarEvent) => {
+    try {
+      if (eventData.id) {
+        // Update existing event
+        const { error } = await supabaseClient
+          .from('maintenance_events')
+          .update(eventData)
+          .eq('id', eventData.id);
+
+        if (error) throw error;
+      } else {
+        // Create new event
+        const { error } = await supabaseClient
+          .from('maintenance_events')
+          .insert(eventData);
+
+        if (error) throw error;
+      }
+
+      // Refresh data
+      await fetchData();
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error saving event:', error);
+      setState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'Failed to save event'
+      }));
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: number) => {
     try {
       const { error } = await supabaseClient
         .from('maintenance_events')
@@ -101,11 +182,9 @@ export default function Calendar() {
 
       if (error) throw error;
 
-      // Update local state to remove the deleted event
-      setState(prev => ({
-        ...prev,
-        events: prev.events.filter(event => event.id !== eventId)
-      }));
+      // Refresh data
+      await fetchData();
+      handleCloseModal();
     } catch (error) {
       console.error('Error deleting event:', error);
       setState(prev => ({
@@ -135,72 +214,51 @@ export default function Calendar() {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Calendar Navigation */}
-        <div className="flex items-center space-x-4">
-          <div 
-            onClick={() => setState(prev => ({ 
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <div className="mb-6">
+          <select 
+            onChange={(e) => setState(prev => ({ 
               ...prev, 
-              selectedDate: DateTime.fromJSDate(prev.selectedDate).minus({ months: 1 }).toJSDate() 
+              filters: { ...prev.filters, car: Number(e.target.value) } 
             }))}
+            className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
           >
-          </div>
-          <h2 className="text-xl font-semibold">
-            {DateTime.fromJSDate(state.selectedDate).toFormat('MMMM yyyy')}
-          </h2>
-          <div 
-            onClick={() => setState(prev => ({ 
-              ...prev, 
-              selectedDate: DateTime.fromJSDate(prev.selectedDate).plus({ months: 1 }).toJSDate() 
-            }))}
-          >
-          </div>
+            <option value="">All Cars</option>
+            {state.cars.map(car => (
+              <option key={car.id} value={car.id}>
+                {car.year} {car.make} {car.model}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {/* Event List */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Events</h3>
-          {state.events.map(event => (
-            <div 
-              key={event.id} 
-              className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 mb-4"
-            >
-              <h4 className="font-medium">{event.title}</h4>
-              <p className="text-gray-600 dark:text-gray-300">{event.description}</p>
-              <p className="text-sm text-gray-500">
-                Date: {DateTime.fromISO(event.date).toLocaleString(DateTime.DATE_FULL)}
-              </p>
-              <div className="flex justify-end space-x-2 mt-2">
-                <div 
-                  onClick={() => deleteEvent(event.id)}
-                >
-                  Delete
-                </div>
-              </div>
-            </div>
-          ))}
+        <div style={{ height: '600px' }}>
+          <BigCalendar
+            localizer={localizer}
+            events={state.events}
+            startAccessor="start"
+            endAccessor="end"
+            onSelectEvent={handleSelectEvent}
+            onSelectSlot={handleSelectSlot}
+            selectable
+            views={['month', 'week', 'day']}
+            defaultView="month"
+            className="dark:text-white"
+          />
         </div>
 
-        {/* Filters */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Filters</h3>
-          <div className="space-y-2">
-            <select 
-              onChange={(e) => setState(prev => ({ 
-                ...prev, 
-                filters: { ...prev.filters, car: Number(e.target.value) } 
-              }))}
-              className="w-full p-2 border rounded"
-            >
-              <option value="">All Cars</option>
-              {state.cars.map(car => (
-                <option key={car.id} value={car.id}>
-                  {car.year} {car.make} {car.model}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+        {state.isEventModalOpen && (
+          <EventModal
+            isOpen={state.isEventModalOpen}
+            onClose={handleCloseModal}
+            onSubmit={handleSubmitEvent}
+            onDelete={handleDeleteEvent}
+            event={state.selectedEvent}
+            setEvent={(updatedEvent) => setState(prev => ({ ...prev, selectedEvent: updatedEvent }))}
+            cars={state.cars}
+            mode={state.selectedEvent?.id ? 'edit' : 'create'}
+          />
+        )}
       </div>
     </div>
   );

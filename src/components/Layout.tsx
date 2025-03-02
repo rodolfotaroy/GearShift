@@ -54,8 +54,8 @@ export default function Layout({ children }: LayoutProps) {
   }, [theme]);
 
   return (
-    <div className={`min-h-screen bg-${theme === 'dark' ? 'dark-background' : 'neutral-50'} transition-colors duration-300`}>
-      <Disclosure as="nav" className={`bg-${theme === 'dark' ? 'dark-surface' : 'white'} shadow-md ${theme === 'dark' ? 'dark:shadow-dark-lg' : ''}`}>
+    <div className={`min-h-screen bg-${theme === 'dark' ? 'gray-900' : 'neutral-50'} transition-colors duration-300`}>
+      <Disclosure as="nav" className={`bg-${theme === 'dark' ? 'gray-800' : 'white'} shadow-md ${theme === 'dark' ? 'dark:shadow-dark-lg' : ''}`}>
         {({ open }: { open: boolean }) => (
           <>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -80,14 +80,14 @@ export default function Layout({ children }: LayoutProps) {
                         to={item.href}
                         className={`${
                           location.pathname === item.href
-                            ? 'border-primary-500 text-neutral-900 dark:text-neutral-100'
-                            : 'border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:border-neutral-300 dark:hover:border-dark-border hover:text-neutral-800 dark:hover:text-neutral-200'
-                        } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium whitespace-nowrap`}
+                            ? 'border-primary-500 text-gray-900 dark:text-white font-semibold'
+                            : 'border-transparent text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white hover:border-gray-300 dark:hover:border-gray-600'
+                        } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium whitespace-nowrap transition-colors duration-200`}
                       >
                         <item.icon className={`h-5 w-5 mr-2 flex-shrink-0 ${
                           location.pathname === item.href 
                             ? 'text-primary-500' 
-                            : 'text-neutral-500 dark:text-neutral-400'
+                            : 'text-gray-500 dark:text-gray-400'
                         }`} />
                         {item.name}
                       </Link>
@@ -97,9 +97,14 @@ export default function Layout({ children }: LayoutProps) {
                 <div className="flex items-center">
                   <button 
                     onClick={toggleTheme} 
-                    className="p-2 rounded-full hover:bg-neutral-200 dark:hover:bg-dark-surface transition-colors"
+                    className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                    aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
                   >
-                    {theme === 'dark' ? <SunIcon className="h-6 w-6" /> : <MoonIcon className="h-6 w-6" />}
+                    {theme === 'dark' ? (
+                      <SunIcon className="h-6 w-6 text-yellow-400 hover:text-yellow-300" /> 
+                    ) : (
+                      <MoonIcon className="h-6 w-6 text-gray-600 hover:text-gray-800" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -108,7 +113,7 @@ export default function Layout({ children }: LayoutProps) {
         )}
       </Disclosure>
       <main className="py-10">
-        <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 dark:text-dark-text-primary transition-colors duration-300`}>
+        <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-gray-900 dark:text-gray-100 transition-colors duration-300`}>
           {children}
         </div>
       </main>

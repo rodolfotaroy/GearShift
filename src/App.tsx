@@ -7,6 +7,7 @@ import PrivateRoute from './components/PrivateRoute';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import { CarProfiles } from './pages/CarProfiles';
+import CarDetails from './pages/CarDetails';
 import ExpenseTracker from './pages/ExpenseTracker';
 import Analytics from './pages/Analytics';
 import Calendar from './pages/Calendar';
@@ -35,6 +36,13 @@ function App() {
                 <PrivateRoute>
                   <Layout>
                     <CarProfiles />
+                  </Layout>
+                </PrivateRoute>
+              } />
+              <Route path="/cars/:carId" element={
+                <PrivateRoute>
+                  <Layout>
+                    <CarDetails />
                   </Layout>
                 </PrivateRoute>
               } />
