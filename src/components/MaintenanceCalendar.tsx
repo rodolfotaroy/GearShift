@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Calendar, momentLocalizer, Event as BigCalendarEvent } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import moment from 'moment';
@@ -34,7 +34,7 @@ export function MaintenanceCalendar({
   }, [schedules]);
 
   // Handle event selection
-  const handleSelectEvent = (event: BigCalendarEvent & { resource: Database['public']['Tables']['maintenance_events']['Row'] }) => {
+  const handleSelectEvent = (event: { resource: Database['public']['Tables']['maintenance_events']['Row'] }) => {
     setSelectedEvent(event.resource);
   };
 
@@ -99,25 +99,21 @@ export function MaintenanceCalendar({
             <div className="flex justify-end space-x-4">
               <button
                 onClick={handleEditEvent}
-                className={`flex items-center space-x-2 px-4 py-2 rounded ${
-                  selectedEvent.completed 
-                    ? 'bg-yellow-500 hover:bg-yellow-600 text-white' 
-                    : 'bg-green-500 hover:bg-green-600 text-white'
-                }`}
+                className="flex items-center text-neutral-700 dark:text-dark-text-primary hover:text-primary-500 transition-colors"
               >
-                <PencilIcon className="h-5 w-5" />
-                <span>{selectedEvent.completed ? 'Mark Incomplete' : 'Mark Complete'}</span>
+                <PencilIcon className="h-5 w-5 mr-2" />
+                {selectedEvent.completed ? 'Mark Pending' : 'Mark Completed'}
               </button>
               <button
                 onClick={handleDeleteEvent}
-                className="flex items-center space-x-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+                className="flex items-center text-red-500 hover:text-red-700 transition-colors"
               >
-                <TrashIcon className="h-5 w-5" />
-                <span>Delete</span>
+                <TrashIcon className="h-5 w-5 mr-2" />
+                Delete
               </button>
               <button
                 onClick={handleCloseModal}
-                className="bg-neutral-200 hover:bg-neutral-300 text-neutral-800 px-4 py-2 rounded"
+                className="text-neutral-600 dark:text-dark-text-secondary hover:text-neutral-800 transition-colors"
               >
                 Close
               </button>
