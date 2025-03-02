@@ -115,67 +115,6 @@ export default function Calendar() {
     }
   };
 
-  // Add new event with robust error handling
-  const addEvent = async (newEvent: Omit<CalendarEvent, 'id' | 'created_at' | 'updated_at'>) => {
-    try {
-      const { data, error } = await supabaseClient
-        .from('maintenance_events')
-        .insert({
-          ...newEvent,
-          user_id: user?.id || '',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Update local state to add the new event
-      setState(prev => ({
-        ...prev,
-        events: [...prev.events, data]
-      }));
-    } catch (error) {
-      console.error('Error adding event:', error);
-      setState(prev => ({
-        ...prev,
-        error: error instanceof Error ? error.message : 'Failed to add event'
-      }));
-    }
-  };
-
-  // Update existing event with robust error handling
-  const updateEvent = async (updatedEvent: CalendarEvent) => {
-    try {
-      const { data, error } = await supabaseClient
-        .from('maintenance_events')
-        .update({
-          ...updatedEvent,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', updatedEvent.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Update local state to reflect the changes
-      setState(prev => ({
-        ...prev,
-        events: prev.events.map(event => 
-          event.id === updatedEvent.id ? data : event
-        )
-      }));
-    } catch (error) {
-      console.error('Error updating event:', error);
-      setState(prev => ({
-        ...prev,
-        error: error instanceof Error ? error.message : 'Failed to update event'
-      }));
-    }
-  };
-
   // Render loading or error states
   if (state.loading) {
     return (
