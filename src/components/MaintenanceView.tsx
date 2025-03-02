@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 import { 
   XCircleIcon, 
-  CheckCircleIcon 
+  CheckCircleIcon,
+  TrashIcon 
 } from '@heroicons/react/24/solid';
 import { DateTime } from 'luxon';
 import { Database } from '../types/supabase';
@@ -12,6 +13,7 @@ interface MaintenanceViewProps {
   loading: boolean;
   onAddSchedule: (schedule: Database['public']['Tables']['maintenance_events']['Insert']) => void;
   onUpdateSchedule: (id: number, updates: Database['public']['Tables']['maintenance_events']['Update']) => void;
+  onDeleteSchedule: (id: number) => void;
 }
 
 export function MaintenanceView({ 
@@ -19,7 +21,8 @@ export function MaintenanceView({
   schedules, 
   loading,
   onAddSchedule,
-  onUpdateSchedule
+  onUpdateSchedule,
+  onDeleteSchedule
 }: MaintenanceViewProps) {
   const [scheduleState, setScheduleState] = useState<{
     showAddSchedule: boolean;
@@ -110,6 +113,15 @@ export function MaintenanceView({
       });
     } catch (error) {
       console.error('Error updating schedule:', error);
+    }
+  };
+
+  // Delete a maintenance schedule
+  const handleDeleteSchedule = async (id: number) => {
+    try {
+      onDeleteSchedule(id);
+    } catch (error) {
+      console.error('Error deleting schedule:', error);
     }
   };
 
@@ -259,13 +271,23 @@ export function MaintenanceView({
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => handleToggleComplete(schedule)}
-                    className="text-neutral-500 hover:text-neutral-700 dark:text-dark-text-secondary dark:hover:text-dark-text-primary"
-                    title={schedule.completed ? 'Mark as Incomplete' : 'Mark as Complete'}
-                  >
-                    {schedule.completed ? <XCircleIcon className="h-6 w-6" /> : <CheckCircleIcon className="h-6 w-6" />}
-                  </button>
+                  {/* Schedule Actions */}
+                  <div className="flex items-center space-x-2">
+                    <button 
+                      onClick={() => handleToggleComplete(schedule)}
+                      className="text-green-500 hover:text-green-600"
+                      title={schedule.completed ? 'Mark as Incomplete' : 'Mark as Complete'}
+                    >
+                      {schedule.completed ? <XCircleIcon className="h-5 w-5" /> : <CheckCircleIcon className="h-5 w-5" />}
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteSchedule(schedule.id)}
+                      className="text-red-500 hover:text-red-600"
+                      title="Delete Schedule"
+                    >
+                      <TrashIcon className="h-5 w-5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

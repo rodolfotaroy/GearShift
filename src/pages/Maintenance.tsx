@@ -127,6 +127,22 @@ export function Maintenance() {
     }
   };
 
+  const handleDeleteSchedule = async (id: number) => {
+    try {
+      const { error } = await supabaseClient
+        .from('maintenance_events')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setSchedules(prev => prev.filter(schedule => schedule.id !== id));
+    } catch (err) {
+      console.error('Error deleting maintenance event:', err);
+      setError('Failed to delete maintenance event. Please check your connection and try again.');
+    }
+  };
+
   return (
     <div className="container mx-auto p-4">
       {error && (
@@ -157,6 +173,8 @@ export function Maintenance() {
               loading={loading}
               onAddSchedule={handleAddSchedule}
               onUpdateSchedule={handleUpdateSchedule}
+              onDeleteSchedule={handleDeleteSchedule}
+              deleteSchedule={handleDeleteSchedule}
             />
           )}
         </div>
