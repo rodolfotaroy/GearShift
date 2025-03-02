@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { useAuth } from '../contexts/AuthContext';
 import { DateTime } from 'luxon';
-import { Database } from '../types/database.types';
+import { Database } from '../types/supabase';
 
 // Use database types for stronger typing
 type CalendarEvent = Database['public']['Tables']['maintenance_events']['Row'];
@@ -35,7 +35,7 @@ export default function Calendar() {
   });
 
   // Centralized data fetching with improved error handling
-  const fetchData = useEffect(() => {
+  const fetchData = useCallback(async () => {
     if (!user) {
       setState(prev => ({ ...prev, loading: false, error: 'No authenticated user' }));
       return;
@@ -43,37 +43,31 @@ export default function Calendar() {
 
     try {
       // Fetch cars
-      const { data: carsData, error: carsError } = supabaseClient
+      const carsResponse = await supabaseClient
         .from('cars')
         .select('*')
         .eq('user_id', user.id);
 
-      if (carsError) throw carsError;
+      if (carsResponse.error) throw carsResponse.error;
 
       // Fetch events for the current month
       const startOfMonth = DateTime.fromJSDate(state.selectedDate).startOf('month').toISO();
       const endOfMonth = DateTime.fromJSDate(state.selectedDate).endOf('month').toISO();
 
-      const query = supabaseClient
+      const eventsResponse = await supabaseClient
         .from('maintenance_events')
         .select('*')
         .eq('user_id', user.id)
-        .gte('date', startOfMonth)
-        .lte('date', endOfMonth);
+        .gte('date', startOfMonth || '')
+        .lte('date', endOfMonth || '')
+        ...(state.filters.car ? [{ eq: 'car_id', value: state.filters.car }] : []);
 
-      // Apply optional filters
-      if (state.filters.car) {
-        query.eq('car_id', state.filters.car);
-      }
-
-      const { data: eventsData, error: eventsError } = query;
-
-      if (eventsError) throw eventsError;
+      if (eventsResponse.error) throw eventsResponse.error;
 
       setState(prev => ({
         ...prev,
-        cars: carsData || [],
-        events: eventsData || [],
+        cars: carsResponse.data || [],
+        events: eventsResponse.data || [],
         loading: false,
         error: null
       }));
@@ -102,6 +96,7 @@ export default function Calendar() {
 
       if (error) throw error;
 
+      // Update local state to remove the deleted event
       setState(prev => ({
         ...prev,
         events: prev.events.filter(event => event.id !== eventId)
@@ -111,6 +106,67 @@ export default function Calendar() {
       setState(prev => ({
         ...prev,
         error: error instanceof Error ? error.message : 'Failed to delete event'
+      }));
+    }
+  };
+
+  // Add new event with robust error handling
+  const addEvent = async (newEvent: Omit<CalendarEvent, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const { data, error } = await supabaseClient
+        .from('maintenance_events')
+        .insert({
+          ...newEvent,
+          user_id: user?.id || '',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Update local state to add the new event
+      setState(prev => ({
+        ...prev,
+        events: [...prev.events, data]
+      }));
+    } catch (error) {
+      console.error('Error adding event:', error);
+      setState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'Failed to add event'
+      }));
+    }
+  };
+
+  // Update existing event with robust error handling
+  const updateEvent = async (updatedEvent: CalendarEvent) => {
+    try {
+      const { data, error } = await supabaseClient
+        .from('maintenance_events')
+        .update({
+          ...updatedEvent,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', updatedEvent.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Update local state to reflect the changes
+      setState(prev => ({
+        ...prev,
+        events: prev.events.map(event => 
+          event.id === updatedEvent.id ? data : event
+        )
+      }));
+    } catch (error) {
+      console.error('Error updating event:', error);
+      setState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'Failed to update event'
       }));
     }
   };
