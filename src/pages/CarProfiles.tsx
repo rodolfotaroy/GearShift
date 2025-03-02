@@ -8,6 +8,7 @@ const CURRENT_YEAR = new Date().getFullYear();
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const PLATE_NUMBER_REGEX = /^[A-Z0-9]{1,8}$/;
+const VIN_REGEX = /^[A-HJ-NPR-Z0-9]{17}$/;
 
 export function CarProfiles() {
   const { supabaseClient, supabaseStorage } = useSupabase();
@@ -23,7 +24,7 @@ export function CarProfiles() {
     year: CURRENT_YEAR,
     plate_number: '',
     vin: '',
-    mileage: 0,
+    mileage: undefined,
     user_id: user?.id,
     image_url: ''
   });
@@ -58,8 +59,14 @@ export function CarProfiles() {
     if ((newCar.year || 0) < 1900 || (newCar.year || 0) > CURRENT_YEAR + 1) {
       errors.push({ field: 'year', message: `Year must be between 1900 and ${CURRENT_YEAR + 1}` });
     }
-    if (!PLATE_NUMBER_REGEX.test(newCar.plate_number || '')) {
+    if (newCar.plate_number && !PLATE_NUMBER_REGEX.test(newCar.plate_number || '')) {
       errors.push({ field: 'plate_number', message: 'Invalid plate number format. Use capital letters and numbers only (max 8 characters)' });
+    }
+    if (newCar.vin && !VIN_REGEX.test(newCar.vin || '')) {
+      errors.push({ field: 'vin', message: 'Invalid VIN format' });
+    }
+    if (newCar.mileage && newCar.mileage < 0) {
+      errors.push({ field: 'mileage', message: 'Mileage cannot be negative' });
     }
 
     return errors;
@@ -151,7 +158,7 @@ export function CarProfiles() {
         year: new Date().getFullYear(),
         plate_number: '',
         vin: '',
-        mileage: 0,
+        mileage: undefined,
         user_id: user?.id,
         image_url: ''
       });
@@ -210,7 +217,7 @@ export function CarProfiles() {
         year: new Date().getFullYear(),
         plate_number: '',
         vin: '',
-        mileage: 0,
+        mileage: undefined,
         user_id: user?.id,
         image_url: ''
       });
@@ -338,6 +345,11 @@ export function CarProfiles() {
                   onChange={(e) => setNewCar((prev: Partial<Car>) => ({ ...prev, vin: e.target.value }))}
                   className="w-full p-2 border rounded"
                 />
+                {validationErrors.find(err => err.field === 'vin') && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {validationErrors.find(err => err.field === 'vin')?.message}
+                  </p>
+                )}
               </div>
               
               <div>
@@ -349,6 +361,11 @@ export function CarProfiles() {
                   onChange={(e) => setNewCar((prev: Partial<Car>) => ({ ...prev, mileage: Number(e.target.value) }))}
                   className="w-full p-2 border rounded"
                 />
+                {validationErrors.find(err => err.field === 'mileage') && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {validationErrors.find(err => err.field === 'mileage')?.message}
+                  </p>
+                )}
               </div>
               
               <div>
@@ -395,7 +412,7 @@ export function CarProfiles() {
                       year: CURRENT_YEAR,
                       plate_number: '',
                       vin: '',
-                      mileage: 0,
+                      mileage: undefined,
                       user_id: user?.id,
                       image_url: ''
                     });
@@ -433,6 +450,15 @@ export function CarProfiles() {
           />
         ))}
       </div>
+      {validationErrors.length > 0 && (
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded relative mb-4">
+          <ul className="list-disc list-inside">
+            {validationErrors.map((error, index) => (
+              <li key={index}>{error.message}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
