@@ -1,73 +1,69 @@
 import { useState, useMemo } from 'react';
-import { Button } from './Button';
 import { 
   XCircleIcon, 
   CheckCircleIcon 
 } from '@heroicons/react/24/solid';
 import { DateTime } from 'luxon';
-import { Database } from '../types/database.types';
+import { Car, MaintenanceEvent } from '../types/supabase';
 
-// Use database types for stronger typing
-type MaintenanceEvent = Database['public']['Tables']['maintenance_events']['Row'];
-type Car = Database['public']['Tables']['cars']['Row'];
-
-export const MaintenanceView = ({ 
-  car, 
-  schedules, 
-  loading,
-  onAddSchedule,
-  onUpdateSchedule
-}: {
+interface MaintenanceViewProps {
   car: Car;
   schedules: MaintenanceEvent[];
   loading: boolean;
   onAddSchedule: (schedule: Partial<MaintenanceEvent>) => void;
   onUpdateSchedule: (id: number, updates: Partial<MaintenanceEvent>) => void;
-}) => {
-  // Ensure type safety for state and props
+}
+
+export function MaintenanceView({ 
+  car, 
+  schedules, 
+  loading,
+  onAddSchedule,
+  onUpdateSchedule
+}: MaintenanceViewProps) {
   const [scheduleState, setScheduleState] = useState<{
     showAddSchedule: boolean;
     selectedStatus: string;
-    newSchedule: Partial<{
-      id?: number;
-      car_id: number;
-      title: string;
-      description?: string;
-      date: string;
-      completed: boolean;
-      created_at?: string;
-      updated_at?: string;
-      notes?: string;
-    }>;
+    newSchedule: Partial<MaintenanceEvent>;
   }>({
     showAddSchedule: false,
     selectedStatus: '',
     newSchedule: {
-      car_id: 0,
+      car_id: car.id,
       title: '',
       description: '',
-      date: '',
-      completed: false
+      date: DateTime.now().toISODate() || '',
+      completed: false,
+      user_id: car.user_id
     }
   });
 
   // Update state setter to ensure type compatibility
   const updateScheduleState = (
-    update: (prev: typeof scheduleState) => Partial<typeof scheduleState>
+    update: Partial<{
+      showAddSchedule: boolean;
+      selectedStatus: string;
+      newSchedule: Partial<MaintenanceEvent>;
+    }>
   ) => {
-    setScheduleState(prev => ({
-      ...prev,
-      ...update(prev)
+    setScheduleState(state => ({
+      ...state,
+      ...update,
+      // Ensure newSchedule is preserved if not in update
+      newSchedule: {
+        ...state.newSchedule,
+        ...(update.newSchedule || {})
+      }
     }));
   };
 
-  const updateNewSchedule = (updates: Partial<typeof scheduleState.newSchedule>) => {
-    updateScheduleState(prev => ({
+  const updateNewSchedule = (updates: Partial<MaintenanceEvent>) => {
+    updateScheduleState({
       newSchedule: {
-        ...prev.newSchedule,
+        ...scheduleState.newSchedule,
         ...updates
       }
-    }));
+    });
   };
 
   // Memoized filtered schedules with improved type safety
@@ -98,169 +94,208 @@ export const MaintenanceView = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    updateNewSchedule({ [name]: value });
+    updateNewSchedule({ [name as keyof MaintenanceEvent]: value });
   };
 
   // Submit new maintenance schedule
   const handleAddSchedule = () => {
     if (scheduleState.newSchedule.title && scheduleState.newSchedule.date) {
-      onAddSchedule(scheduleState.newSchedule);
-      updateScheduleState(prev => ({
+      onAddSchedule({
+        ...scheduleState.newSchedule,
+        car_id: car.id,
+        user_id: car.user_id,
+        date: scheduleState.newSchedule.date || DateTime.now().toISODate() || '',
+        completed: false
+      });
+      updateScheduleState({
         showAddSchedule: false,
         newSchedule: {
-          car_id: 0,
+          car_id: car.id,
           title: '',
           description: '',
-          date: '',
-          completed: false
+          date: DateTime.now().toISODate() || '',
+          completed: false,
+          user_id: car.user_id
         }
-      }));
+      });
     }
   };
 
-  // Status filter UI component
-  const StatusFilterButtons = () => (
-    <div className="flex space-x-2 mb-4">
-      {['Overdue', 'Upcoming', 'Completed'].map(status => (
-        <button
-          key={status}
-          onClick={() => updateScheduleState(prev => ({
-            selectedStatus: status === prev.selectedStatus ? '' : status
-          }))}
-          className={`px-3 py-1 rounded ${
-            scheduleState.selectedStatus === status 
-              ? 'bg-indigo-600 text-white' 
-              : 'bg-gray-200 text-gray-800'
-          }`}
-        >
-          {status}
-        </button>
-      ))}
-    </div>
-  );
+  // Mark schedule as completed or uncompleted
+  const toggleScheduleStatus = (schedule: MaintenanceEvent) => {
+    onUpdateSchedule(schedule.id, { 
+      completed: !schedule.completed,
+      updated_at: new Date().toISOString()
+    });
+  };
 
-  if (loading) {
+  // Render methods
+  const renderAddScheduleForm = () => {
+    if (!scheduleState.showAddSchedule) return null;
+
     return (
-      <div className="flex items-center justify-center h-64">
-        <div>Loading maintenance data...</div>
+      <div className="bg-white dark:bg-dark-background-secondary rounded-lg shadow-md p-6 mb-4">
+        <h3 className="text-lg font-semibold mb-4 text-neutral-900 dark:text-dark-text-primary">
+          Add New Maintenance Schedule
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="title" className="block text-sm font-medium text-neutral-700 dark:text-dark-text-primary mb-2">
+              Title
+            </label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              value={scheduleState.newSchedule.title}
+              onChange={handleNewScheduleChange}
+              className="input-field"
+              placeholder="Enter schedule title"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="date" className="block text-sm font-medium text-neutral-700 dark:text-dark-text-primary mb-2">
+              Date
+            </label>
+            <input
+              type="date"
+              id="date"
+              name="date"
+              value={scheduleState.newSchedule.date}
+              onChange={handleNewScheduleChange}
+              className="input-field"
+              required
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label htmlFor="description" className="block text-sm font-medium text-neutral-700 dark:text-dark-text-primary mb-2">
+              Description (Optional)
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              value={scheduleState.newSchedule.description}
+              onChange={handleNewScheduleChange}
+              className="input-field"
+              placeholder="Enter schedule details"
+              rows={3}
+            />
+          </div>
+        </div>
+        <div className="mt-6 flex justify-end space-x-4">
+          <button
+            type="button"
+            onClick={() => updateScheduleState({ showAddSchedule: false })}
+            className="btn btn-secondary"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleAddSchedule}
+            className="btn btn-primary"
+            disabled={!scheduleState.newSchedule.title || !scheduleState.newSchedule.date}
+          >
+            Add Schedule
+          </button>
+        </div>
       </div>
     );
-  }
+  };
 
-  return (
-    <div className="space-y-6">
-      {/* Status Filter Buttons */}
-      <StatusFilterButtons />
+  const renderScheduleList = () => {
+    if (loading) {
+      return <div className="text-center text-neutral-500 dark:text-dark-text-secondary">Loading schedules...</div>;
+    }
 
-      {/* Maintenance Schedule Section */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Maintenance Schedule</h2>
-        <Button onClick={() => updateScheduleState(prev => ({ showAddSchedule: true }))}>
-          Add Schedule
-        </Button>
-      </div>
+    if (filteredSchedules.length === 0) {
+      return (
+        <div className="text-center text-neutral-500 dark:text-dark-text-secondary">
+          No maintenance schedules found
+        </div>
+      );
+    }
 
-      {/* Maintenance Schedules List */}
+    return (
       <div className="space-y-4">
-        {filteredSchedules.map((schedule) => (
-          <div
-            key={schedule.id}
-            className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 flex items-center justify-between"
+        {filteredSchedules.map(schedule => (
+          <div 
+            key={schedule.id} 
+            className={`
+              bg-white dark:bg-dark-background-secondary rounded-lg shadow-md p-4
+              ${schedule.completed ? 'opacity-60' : ''}
+              ${DateTime.fromISO(schedule.date) < DateTime.now() && !schedule.completed 
+                ? 'border-2 border-red-500 dark:border-red-400' 
+                : ''}
+            `}
           >
-            <div>
-              <h3 className="font-medium">{schedule.title}</h3>
-              <p className="text-gray-600 dark:text-gray-300">{schedule.description}</p>
-              <p className="text-sm text-gray-500">
-                Date: {DateTime.fromISO(schedule.date).toLocaleString(DateTime.DATE_FULL)}
-              </p>
-            </div>
-            <div className="flex items-center space-x-2">
-              {!schedule.completed ? (
-                <CheckCircleIcon 
-                  className="h-6 w-6 text-green-500 cursor-pointer hover:text-green-600"
-                  onClick={() => onUpdateSchedule(schedule.id, { completed: true })}
-                />
-              ) : (
-                <XCircleIcon 
-                  className="h-6 w-6 text-red-500 cursor-pointer hover:text-red-600"
-                  onClick={() => onUpdateSchedule(schedule.id, { completed: false })}
-                />
-              )}
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className={`
+                  text-lg font-semibold 
+                  ${schedule.completed ? 'line-through text-neutral-500' : 'text-neutral-900 dark:text-dark-text-primary'}
+                `}>
+                  {schedule.title}
+                </h3>
+                {schedule.description && (
+                  <p className="text-sm text-neutral-600 dark:text-dark-text-secondary mt-1">
+                    {schedule.description}
+                  </p>
+                )}
+                <p className={`
+                  text-sm mt-2
+                  ${DateTime.fromISO(schedule.date) < DateTime.now() && !schedule.completed 
+                    ? 'text-red-600 dark:text-red-400' 
+                    : 'text-neutral-500 dark:text-dark-text-secondary'}
+                `}>
+                  {DateTime.fromISO(schedule.date).toLocaleString(DateTime.DATE_MED)}
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => toggleScheduleStatus(schedule)}
+                  className="text-neutral-500 hover:text-neutral-700 dark:text-dark-text-secondary dark:hover:text-dark-text-primary"
+                  title={schedule.completed ? 'Mark as Incomplete' : 'Mark as Complete'}
+                >
+                  {schedule.completed ? <XCircleIcon className="h-6 w-6" /> : <CheckCircleIcon className="h-6 w-6" />}
+                </button>
+              </div>
             </div>
           </div>
         ))}
       </div>
+    );
+  };
 
-      {/* Add Maintenance Schedule Modal */}
-      {scheduleState.showAddSchedule && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-96">
-            <h2 className="text-2xl font-bold mb-4 dark:text-white">Add Maintenance Schedule</h2>
-            
-            {/* Title Input */}
-            <div className="mb-4">
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Title
-              </label>
-              <input
-                type="text"
-                id="title"
-                name="title"
-                value={scheduleState.newSchedule.title}
-                onChange={handleNewScheduleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:text-white"
-                placeholder="Enter maintenance event title"
-              />
-            </div>
-
-            {/* Description Input */}
-            <div className="mb-4">
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Description
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                value={scheduleState.newSchedule.description}
-                onChange={handleNewScheduleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:text-white"
-                placeholder="Enter maintenance event description"
-              />
-            </div>
-
-            {/* Date Input */}
-            <div className="mb-4">
-              <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Date
-              </label>
-              <input
-                type="date"
-                id="date"
-                name="date"
-                value={scheduleState.newSchedule.date}
-                onChange={handleNewScheduleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex justify-end space-x-3 mt-6">
-              <Button 
-                variant="secondary" 
-                onClick={() => updateScheduleState(prev => ({ showAddSchedule: false }))}
-              >
-                Cancel
-              </Button>
-              <Button 
-                variant="primary" 
-                onClick={handleAddSchedule}
-              >
-                Add Schedule
-              </Button>
-            </div>
-          </div>
+  return (
+    <div className="maintenance-view-container">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-neutral-900 dark:text-dark-text-primary">
+          Maintenance Schedules for {car.make} {car.model}
+        </h2>
+        <div className="flex items-center space-x-4">
+          <select
+            value={scheduleState.selectedStatus}
+            onChange={(e) => updateScheduleState({ selectedStatus: e.target.value })}
+            className="input-field"
+          >
+            <option value="">All Schedules</option>
+            <option value="Overdue">Overdue</option>
+            <option value="Upcoming">Upcoming</option>
+            <option value="Completed">Completed</option>
+          </select>
+          <button
+            onClick={() => updateScheduleState({ showAddSchedule: true })}
+            className="btn btn-primary"
+          >
+            Add Schedule
+          </button>
         </div>
-      )}
+      </div>
+
+      {renderAddScheduleForm()}
+      {renderScheduleList()}
     </div>
   );
 }
