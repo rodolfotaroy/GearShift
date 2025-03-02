@@ -42,14 +42,13 @@ export function Maintenance() {
 
       setLoading(true);
       
-      const startOfMonth = DateTime.now().startOf('month').toISO();
-      const endOfMonth = DateTime.now().endOf('month').toISO();
+      const startOfMonth = DateTime.now().startOf('month').toISODate();
+      const endOfMonth = DateTime.now().endOf('month').toISODate();
 
       const { data, error } = await supabaseClient
         .from('maintenance_events')
         .select('*')
         .eq('car_id', selectedCar.id)
-        .eq('user_id', user.id)
         .gte('date', startOfMonth)
         .lte('date', endOfMonth)
         .order('date', { ascending: false });
@@ -72,6 +71,7 @@ export function Maintenance() {
       .from('maintenance_events')
       .insert({
         ...schedule,
+        car_id: selectedCar.id,
         user_id: user.id
       })
       .select()
