@@ -1,35 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
-import { PencilIcon, TrashIcon, PhotoIcon } from '@heroicons/react/24/outline';
 import { CarProfileView } from '../components/CarProfileView';
-import { Tables } from '../types/supabase';
+import { Car } from '../types/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
-export default function CarProfiles() {
+const CURRENT_YEAR = new Date().getFullYear();
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const PLATE_NUMBER_REGEX = /^[A-Z0-9]{1,8}$/;
+
+export function CarProfiles() {
   const { supabaseClient, supabaseStorage } = useSupabase();
   const { user } = useAuth();
-  const [cars, setCars] = useState<Tables['cars'][]>([]);
+  const [cars, setCars] = useState<Car[]>([]);
   const [isAddingCar, setIsAddingCar] = useState(false);
   const [isEditingCar, setIsEditingCar] = useState(false);
-  const [selectedCar, setSelectedCar] = useState<Tables['cars'] | null>(null);
-  const [isViewingProfile, setIsViewingProfile] = useState(false);
+  const [selectedCar, setSelectedCar] = useState<Car | null>(null);
   const [validationErrors, setValidationErrors] = useState<{ field: string; message: string }[]>([]);
-  const [newCar, setNewCar] = useState<Partial<Tables['cars']>>({
+  const [newCar, setNewCar] = useState<Partial<Car>>({
     make: '',
     model: '',
-    year: new Date().getFullYear(),
+    year: CURRENT_YEAR,
     plate_number: '',
     vin: '',
     mileage: 0,
-    user_id: user?.id || '',
-    image_url: null,
+    user_id: user?.id,
+    image_url: ''
   });
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-
-  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-  const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-  const CURRENT_YEAR = new Date().getFullYear();
-  const PLATE_NUMBER_REGEX = /^[A-Z0-9]{1,8}$/;
 
   useEffect(() => {
     fetchCars();
@@ -97,7 +95,7 @@ export default function CarProfiles() {
           .getPublicUrl(uploadResult.path);
           
         if (publicUrl) {
-          setNewCar((prev: Partial<Tables['cars']>) => ({ ...prev, image_url: publicUrl.publicUrl }));
+          setNewCar((prev: Partial<Car>) => ({ ...prev, image_url: publicUrl.publicUrl }));
         }
       }
     } catch (error) {
@@ -128,7 +126,7 @@ export default function CarProfiles() {
           plate_number: newCar.plate_number?.toUpperCase() || '',
           vin: newCar.vin || '',
           mileage: newCar.mileage || 0,
-          user_id: user?.id || '',
+          user_id: user?.id,
         }])
         .select()
         .single();
@@ -154,8 +152,8 @@ export default function CarProfiles() {
         plate_number: '',
         vin: '',
         mileage: 0,
-        user_id: user?.id || '',
-        image_url: null,
+        user_id: user?.id,
+        image_url: ''
       });
       setSelectedImage(null);
       fetchCars();
@@ -213,8 +211,8 @@ export default function CarProfiles() {
         plate_number: '',
         vin: '',
         mileage: 0,
-        user_id: user?.id || '',
-        image_url: null,
+        user_id: user?.id,
+        image_url: ''
       });
       setSelectedImage(null);
       fetchCars();
@@ -267,7 +265,7 @@ export default function CarProfiles() {
                   type="text"
                   id="make"
                   value={newCar.make}
-                  onChange={(e) => setNewCar((prev: Partial<Tables['cars']>) => ({ ...prev, make: e.target.value }))}
+                  onChange={(e) => setNewCar((prev: Partial<Car>) => ({ ...prev, make: e.target.value }))}
                   className="w-full p-2 border rounded"
                   required
                 />
@@ -284,7 +282,7 @@ export default function CarProfiles() {
                   type="text"
                   id="model"
                   value={newCar.model}
-                  onChange={(e) => setNewCar((prev: Partial<Tables['cars']>) => ({ ...prev, model: e.target.value }))}
+                  onChange={(e) => setNewCar((prev: Partial<Car>) => ({ ...prev, model: e.target.value }))}
                   className="w-full p-2 border rounded"
                   required
                 />
@@ -301,7 +299,7 @@ export default function CarProfiles() {
                   type="number"
                   id="year"
                   value={newCar.year}
-                  onChange={(e) => setNewCar((prev: Partial<Tables['cars']>) => ({ ...prev, year: Number(e.target.value) }))}
+                  onChange={(e) => setNewCar((prev: Partial<Car>) => ({ ...prev, year: Number(e.target.value) }))}
                   className="w-full p-2 border rounded"
                   min={1900}
                   max={CURRENT_YEAR + 1}
@@ -320,7 +318,7 @@ export default function CarProfiles() {
                   type="text"
                   id="plate_number"
                   value={newCar.plate_number}
-                  onChange={(e) => setNewCar((prev: Partial<Tables['cars']>) => ({ ...prev, plate_number: e.target.value }))}
+                  onChange={(e) => setNewCar((prev: Partial<Car>) => ({ ...prev, plate_number: e.target.value }))}
                   className="w-full p-2 border rounded"
                   required
                 />
@@ -337,7 +335,7 @@ export default function CarProfiles() {
                   type="text"
                   id="vin"
                   value={newCar.vin}
-                  onChange={(e) => setNewCar((prev: Partial<Tables['cars']>) => ({ ...prev, vin: e.target.value }))}
+                  onChange={(e) => setNewCar((prev: Partial<Car>) => ({ ...prev, vin: e.target.value }))}
                   className="w-full p-2 border rounded"
                 />
               </div>
@@ -348,7 +346,7 @@ export default function CarProfiles() {
                   type="number"
                   id="mileage"
                   value={newCar.mileage}
-                  onChange={(e) => setNewCar((prev: Partial<Tables['cars']>) => ({ ...prev, mileage: Number(e.target.value) }))}
+                  onChange={(e) => setNewCar((prev: Partial<Car>) => ({ ...prev, mileage: Number(e.target.value) }))}
                   className="w-full p-2 border rounded"
                 />
               </div>
@@ -398,114 +396,43 @@ export default function CarProfiles() {
                       plate_number: '',
                       vin: '',
                       mileage: 0,
-                      user_id: user?.id || '',
-                      image_url: null,
+                      user_id: user?.id,
+                      image_url: ''
                     });
                     setSelectedImage(null);
                     setValidationErrors([]);
                   }}
-                  className="px-4 py-2 bg-neutral-200 text-neutral-800 rounded hover:bg-neutral-300 transition-colors"
+                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
-                  className="px-4 py-2 bg-primary-500 text-white rounded hover:bg-primary-600 transition-colors"
+                  className="bg-primary-500 text-white px-4 py-2 rounded hover:bg-primary-600 transition-colors"
                 >
-                  {isAddingCar ? 'Add Car' : 'Update Car'}
+                  {isAddingCar ? 'Add Car' : 'Save Changes'}
                 </button>
               </div>
             </form>
           </div>
-        )}
-
-        {/* Car List */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {cars.map(car => (
-            <div 
-              key={car.id} 
-              className="bg-white dark:bg-dark-surface rounded-lg shadow-md p-4 flex flex-col"
-            >
-              <div className="flex-grow">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">
-                    {car.year} {car.make} {car.model}
-                  </h2>
-                  <div className="flex space-x-2">
-                    <button 
-                      onClick={() => {
-                        setSelectedCar(car);
-                        setNewCar({
-                          make: car.make,
-                          model: car.model,
-                          year: car.year,
-                          plate_number: car.plate_number,
-                          vin: car.vin,
-                          mileage: car.mileage,
-                          user_id: car.user_id,
-                          image_url: car.image_url,
-                        });
-                        setIsEditingCar(true);
-                      }}
-                      className="text-neutral-600 dark:text-neutral-300 hover:text-primary-500 dark:hover:text-primary-400"
-                    >
-                      <PencilIcon className="w-5 h-5" />
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteCar(car.id)}
-                      className="text-neutral-600 dark:text-neutral-300 hover:text-red-500 dark:hover:text-red-400"
-                    >
-                      <TrashIcon className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-4 mb-4">
-                  {car.image_url ? (
-                    <img 
-                      src={car.image_url} 
-                      alt={`${car.make} ${car.model}`} 
-                      className="w-24 h-24 object-cover rounded-lg"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 bg-neutral-200 dark:bg-dark-border rounded-lg flex items-center justify-center">
-                      <PhotoIcon className="w-12 h-12 text-neutral-500 dark:text-neutral-400" />
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                      Plate: {car.plate_number}
-                    </p>
-                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                      Mileage: {car.mileage.toLocaleString()} km
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <button 
-                onClick={() => {
-                  setSelectedCar(car);
-                  setIsViewingProfile(true);
-                }}
-                className="w-full bg-primary-500 text-white px-4 py-2 rounded hover:bg-primary-600 transition-colors"
-              >
-                View Details
-              </button>
-            </div>
-          ))}
         </div>
+      )}
 
-        {/* Car Profile View Modal */}
-        {isViewingProfile && selectedCar && (
-          <CarProfileView 
-            car={selectedCar} 
-            onClose={() => {
-              setIsViewingProfile(false);
-              setSelectedCar(null);
-            }} 
+      {/* Car List */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {cars.map((car) => (
+          <CarProfileView
+            key={car.id}
+            car={car}
+            onEdit={() => {
+              setIsEditingCar(true);
+              setSelectedCar(car);
+              setNewCar(car);
+            }}
+            onDelete={() => handleDeleteCar(car.id)}
           />
-        )}
+        ))}
       </div>
-    );
+    </div>
+  );
 }

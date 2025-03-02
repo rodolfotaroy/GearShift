@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { 
   Chart as ChartJS, 
@@ -12,7 +12,6 @@ import {
   Title
 } from 'chart.js';
 import { Doughnut, Line } from 'react-chartjs-2';
-import { MaintenanceCostTracker } from '../components/MaintenanceCostTracker';
 
 ChartJS.register(
   ArcElement,
@@ -25,22 +24,42 @@ ChartJS.register(
   Title
 );
 
-type ExpenseSummary = {
+interface ExpenseSummary {
   category: string;
   total: number;
-};
+}
 
-type CarExpense = {
+interface CarExpense {
   carId: string;
   total: number;
-};
+}
 
-const Dashboard: React.FC = () => {
+interface DatabaseExpense {
+  amount: number;
+  category: string;
+  date: string;
+  car: {
+    make: string;
+    model: string;
+  } | null;
+}
+
+interface ExpenseQueryResult {
+  amount: number | null;
+  category: string | null;
+  date: string | null;
+  car: {
+    make: string | null;
+    model: string | null;
+  } | null;
+}
+
+export default function Dashboard() {
   const { supabaseClient } = useSupabase();
-  const [totalExpenses, setTotalExpenses] = useState<number>(0);
+  const [totalExpenses, setTotalExpenses] = useState(0);
   const [expensesByCategory, setExpensesByCategory] = useState<ExpenseSummary[]>([]);
   const [carExpenses, setCarExpenses] = useState<CarExpense[]>([]);
-  const [carCount, setCarCount] = useState<number>(0);
+  const [carCount, setCarCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -51,52 +70,56 @@ const Dashboard: React.FC = () => {
     setLoading(true);
     try {
       // Fetch expenses with car details
-      const { data: expenses } = await supabaseClient
+      const { data: expenses, error } = await supabaseClient
         .from('expenses')
         .select(`
           amount,
           category,
           date,
-          cars (
+          car (
             make,
             model
           )
-        `);
+        `) as { 
+          data: ExpenseQueryResult[] | null, 
+          error: any 
+        };
+
+      if (error) throw error;
 
       if (expenses) {
         // Total expenses
-        const total = expenses.reduce((sum: number, expense: any) => sum + expense.amount, 0);
+        const total = expenses.reduce((sum: number, expense: ExpenseQueryResult) => 
+          sum + (expense.amount || 0), 0);
         setTotalExpenses(total);
 
         // Expenses by category
-        const categoryTotals = expenses.reduce((acc: { [key: string]: number }, expense: any) => {
-          acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
+        const categoryTotals = expenses.reduce((acc: Record<string, number>, expense: ExpenseQueryResult) => {
+          const category = expense.category || 'Uncategorized';
+          acc[category] = (acc[category] || 0) + (expense.amount || 0);
           return acc;
         }, {});
 
         setExpensesByCategory(
           Object.entries(categoryTotals).map(([category, total]) => ({
             category,
-            total: total as number,
+            total
           }))
         );
 
         // Expenses by car
-        const carTotals = expenses.reduce((acc: { [key: string]: number }, expense: any) => {
-          // Safely access make and model with type assertion
-          const carName = expense.cars && 
-            (expense.cars as { make: string; model: string }).make && 
-            (expense.cars as { make: string; model: string }).model
-            ? `${(expense.cars as { make: string; model: string }).make} ${(expense.cars as { make: string; model: string }).model}` 
-            : 'Unknown';
-          acc[carName] = (acc[carName] || 0) + expense.amount;
+        const carTotals = expenses.reduce((acc: Record<string, number>, expense: ExpenseQueryResult) => {
+          const carName = expense.car 
+            ? `${expense.car.make || 'Unknown'} ${expense.car.model || 'Car'}` 
+            : 'Unassigned';
+          acc[carName] = (acc[carName] || 0) + (expense.amount || 0);
           return acc;
         }, {});
 
         setCarExpenses(
           Object.entries(carTotals).map(([carName, total]) => ({
             carId: carName,
-            total: total as number,
+            total
           }))
         );
       }
@@ -151,31 +174,14 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  interface MaintenanceCostTrackerProps {
-    costs: MaintenanceCost[];
-    onAddCost: (cost: MaintenanceCost) => void;
-  }
-
-  const MaintenanceCostTrackerWrapper: React.FC<MaintenanceCostTrackerProps> = ({ 
-    costs, 
-    onAddCost 
-  }) => {
-    return (
-      <MaintenanceCostTracker 
-        costs={costs}
-        onAddCost={onAddCost}
-      />
-    );
-  };
-
   if (loading) {
     return <div>Loading...</div>;
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Summary Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div className="container mx-auto px-4 py-6">
+      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Expenses Card */}
         <div className="bg-white dark:bg-dark-background-secondary rounded-xl shadow-md dark:shadow-dark-md p-6 
                         flex flex-col justify-between hover:shadow-lg dark:hover:shadow-dark-lg 
@@ -199,54 +205,40 @@ const Dashboard: React.FC = () => {
             <dt className="text-sm font-medium text-neutral-500 dark:text-dark-text-secondary truncate mb-2">
               Total Vehicles
             </dt>
-            <dd className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-dark-text-primary 
-                           break-words overflow-hidden text-ellipsis">
+            <dd className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-dark-text-primary">
               {carCount}
             </dd>
           </div>
         </div>
 
-        {/* Upcoming Maintenance Card */}
+        {/* Charts */}
         <div className="bg-white dark:bg-dark-background-secondary rounded-xl shadow-md dark:shadow-dark-md p-6 
                         flex flex-col justify-between hover:shadow-lg dark:hover:shadow-dark-lg 
                         transition-all duration-300 transform hover:-translate-y-1 min-h-[150px]">
-          <MaintenanceCostTrackerWrapper 
-            costs={[]} 
-            onAddCost={() => console.log('Add cost')} 
-          />
-        </div>
-      </div>
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Expenses by Category */}
-        <div className="bg-white dark:bg-dark-background-secondary rounded-xl shadow-md dark:shadow-dark-md p-6">
-          <h2 className="text-xl font-semibold mb-4 text-neutral-900 dark:text-dark-text-primary">
-            Expenses by Category
-          </h2>
-          <div className="h-64">
-            <Doughnut 
-              data={doughnutData} 
-              options={chartOptions} 
-            />
+          <div>
+            <dt className="text-sm font-medium text-neutral-500 dark:text-dark-text-secondary truncate mb-2">
+              Expenses by Category
+            </dt>
+            <div className="h-48">
+              <Doughnut data={doughnutData} options={chartOptions} />
+            </div>
           </div>
         </div>
 
-        {/* Expenses by Car */}
-        <div className="bg-white dark:bg-dark-background-secondary rounded-xl shadow-md dark:shadow-dark-md p-6">
-          <h2 className="text-xl font-semibold mb-4 text-neutral-900 dark:text-dark-text-primary">
-            Expenses by Vehicle
-          </h2>
-          <div className="h-64">
-            <Line 
-              data={lineData} 
-              options={chartOptions} 
-            />
+        {/* Line Chart */}
+        <div className="bg-white dark:bg-dark-background-secondary rounded-xl shadow-md dark:shadow-dark-md p-6 
+                        flex flex-col justify-between hover:shadow-lg dark:hover:shadow-dark-lg 
+                        transition-all duration-300 transform hover:-translate-y-1 min-h-[150px]">
+          <div>
+            <dt className="text-sm font-medium text-neutral-500 dark:text-dark-text-secondary truncate mb-2">
+              Monthly Expenses
+            </dt>
+            <div className="h-48">
+              <Line data={lineData} options={chartOptions} />
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default Dashboard;
+}
