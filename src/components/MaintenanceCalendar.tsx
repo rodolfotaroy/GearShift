@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Calendar, momentLocalizer } from 'react-big-calendar';
+import { Calendar, momentLocalizer, Event } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import moment from 'moment';
 import { Database } from '../types/supabase';
@@ -34,8 +34,11 @@ export function MaintenanceCalendar({
   }, [schedules]);
 
   // Handle event selection
-  const handleSelectEvent = (event: { resource: Database['public']['Tables']['maintenance_events']['Row'] }) => {
-    setSelectedEvent(event.resource);
+  const handleSelectEvent = (event: Event) => {
+    // Type guard to ensure the event has a resource property
+    if ('resource' in event && event.resource) {
+      setSelectedEvent(event.resource);
+    }
   };
 
   // Close event details modal
