@@ -2,6 +2,49 @@
 @tailwind components;
 @tailwind utilities;
 
+/* React Big Calendar Overrides */
+.rbc-calendar {
+  height: 100%;
+  width: 100%;
+}
+
+.rbc-month-view {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+}
+
+.rbc-month-row {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.rbc-event {
+  background-color: #3b82f6;
+  color: white;
+  border-radius: 0.25rem;
+  padding: 2px 4px;
+  font-size: 0.75rem;
+}
+
+.rbc-event:hover {
+  background-color: #2563eb;
+}
+
+.dark .rbc-month-view {
+  border-color: #374151;
+}
+
+.dark .rbc-month-row {
+  border-bottom-color: #374151;
+}
+
+.dark .rbc-event {
+  background-color: #4f46e5;
+}
+
+.dark .rbc-event:hover {
+  background-color: #6366f1;
+}
+
 :root {
   --bg-primary: #f3f4f6;
   --bg-secondary: #ffffff;

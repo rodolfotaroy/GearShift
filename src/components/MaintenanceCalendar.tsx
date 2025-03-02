@@ -1,11 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { Calendar, momentLocalizer, Event } from 'react-big-calendar';
+import { Calendar, momentLocalizer, Event as BigCalendarEvent } from 'react-big-calendar';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
 import moment from 'moment';
 import { Database } from '../types/supabase';
 import { TrashIcon, PencilIcon } from '@heroicons/react/24/solid';
-
-// Styles for react-big-calendar
-import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 // Localization
 const localizer = momentLocalizer(moment);
@@ -36,7 +34,7 @@ export function MaintenanceCalendar({
   }, [schedules]);
 
   // Handle event selection
-  const handleSelectEvent = (event: { resource: Database['public']['Tables']['maintenance_events']['Row'] }) => {
+  const handleSelectEvent = (event: BigCalendarEvent & { resource: Database['public']['Tables']['maintenance_events']['Row'] }) => {
     setSelectedEvent(event.resource);
   };
 
@@ -65,13 +63,13 @@ export function MaintenanceCalendar({
   };
 
   return (
-    <div className="maintenance-calendar-container">
+    <div className="maintenance-calendar-container w-full h-[600px]">
       <Calendar
         localizer={localizer}
         events={events}
         startAccessor="start"
         endAccessor="end"
-        style={{ height: 600 }}
+        style={{ height: '100%', width: '100%' }}
         onSelectEvent={handleSelectEvent}
         views={['month', 'week', 'day']}
         defaultView="month"
