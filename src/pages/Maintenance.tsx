@@ -174,7 +174,6 @@ export function Maintenance() {
               onAddSchedule={handleAddSchedule}
               onUpdateSchedule={handleUpdateSchedule}
               onDeleteSchedule={handleDeleteSchedule}
-              deleteSchedule={handleDeleteSchedule}
             />
           )}
         </div>
