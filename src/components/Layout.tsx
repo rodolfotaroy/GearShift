@@ -16,7 +16,7 @@ import {
   SunIcon
 } from '@heroicons/react/24/outline';
 import type { ComponentType } from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -42,24 +42,20 @@ const navigation: NavigationItem[] = [
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const { signOut } = useAuth();
-  const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('theme') || 'light';
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const savedTheme = localStorage.getItem('theme');
+    return savedTheme === 'dark' ? 'dark' : 'light';
   });
+
+  const toggleTheme = useCallback(() => {
+    setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.remove('light', 'dark');
     document.documentElement.classList.add(theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
-
-  useEffect(() => {
-    (window as any).toggleTheme = () => {
-      setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
-    };
-    return () => {
-      delete (window as any).toggleTheme;
-    };
-  }, []);
 
   return (
     <div className={`min-h-screen bg-${theme === 'dark' ? 'dark-background' : 'neutral-50'} transition-colors duration-300`}>
@@ -102,66 +98,19 @@ export default function Layout({ children }: LayoutProps) {
                     ))}
                   </div>
                 </div>
-                <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-4">
+                <div className="flex items-center">
                   <button 
-                    onClick={() => setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark')} 
-                    className="p-2 rounded-md transition-colors duration-300 
-                      bg-button-secondary dark:bg-button-secondary-dark 
-                      text-button-secondary-text dark:text-button-secondary-dark-text
-                      hover:bg-button-secondary-hover dark:hover:bg-button-secondary-dark-hover
-                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                    onClick={toggleTheme} 
+                    className="p-2 rounded-full hover:bg-neutral-200 dark:hover:bg-dark-surface transition-colors"
                   >
-                    {theme === 'dark' ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
+                    {theme === 'dark' ? <SunIcon className="h-6 w-6" /> : <MoonIcon className="h-6 w-6" />}
                   </button>
-                  <button
-                    onClick={() => signOut()}
-                    className="bg-neutral-100 dark:bg-dark-surface p-2 rounded-full text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-dark-border hover:text-neutral-800 dark:hover:text-neutral-100 transition-colors"
-                  >
-                    <UserIcon className="h-6 w-6" />
-                  </button>
-                </div>
-                <div className="-mr-2 flex items-center sm:hidden">
-                  <Disclosure.Button className="bg-neutral-100 dark:bg-dark-surface inline-flex items-center justify-center p-2 rounded-md text-neutral-600 dark:text-neutral-300 hover:text-neutral-800 dark:hover:text-neutral-100 hover:bg-neutral-200 dark:hover:bg-dark-border">
-                    <span className="sr-only">Open main menu</span>
-                    {open ? (
-                      <XMarkIcon className="block h-6 w-6" />
-                    ) : (
-                      <Bars3Icon className="block h-6 w-6" />
-                    )}
-                  </Disclosure.Button>
                 </div>
               </div>
             </div>
-
-            <Disclosure.Panel className="sm:hidden">
-              <div className="pt-2 pb-3 space-y-1">
-                {navigation.map((item) => (
-                  <Disclosure.Button
-                    key={item.name}
-                    as={Link}
-                    to={item.href}
-                    className={`${
-                      location.pathname === item.href
-                        ? 'bg-primary-50 dark:bg-primary-900 border-primary-500 text-primary-700 dark:text-primary-200'
-                        : 'border-transparent text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-dark-surface hover:border-neutral-300 dark:hover:border-dark-border hover:text-neutral-800 dark:hover:text-neutral-200'
-                    } block pl-3 pr-4 py-2 border-l-4 text-base font-medium`}
-                  >
-                    <div className="flex items-center">
-                      <item.icon className={`h-5 w-5 mr-2 flex-shrink-0 ${
-                        location.pathname === item.href 
-                          ? 'text-primary-500' 
-                          : 'text-neutral-500 dark:text-neutral-400'
-                      }`} />
-                      {item.name}
-                    </div>
-                  </Disclosure.Button>
-                ))}
-              </div>
-            </Disclosure.Panel>
           </>
         )}
       </Disclosure>
-
       <main className="py-10">
         <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 dark:text-dark-text-primary transition-colors duration-300`}>
           {children}
