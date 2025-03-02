@@ -2,21 +2,25 @@ import { useState, useEffect } from 'react';
 import { MaintenanceView } from '../components/MaintenanceView';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Car, MaintenanceEvent, Tables } from '../types/supabase';
+import { Database } from '../types/supabase';
+import { DateTime } from 'luxon';
 
 export function Maintenance() {
   const { supabaseClient } = useSupabase();
   const { user } = useAuth();
-  const [cars, setCars] = useState<Car[]>([]);
-  const [selectedCar, setSelectedCar] = useState<Car | null>(null);
-  const [schedules, setSchedules] = useState<MaintenanceEvent[]>([]);
+  const [cars, setCars] = useState<Database['public']['Tables']['cars']['Row'][]>([]);
+  const [selectedCar, setSelectedCar] = useState<Database['public']['Tables']['cars']['Row'] | null>(null);
+  const [schedules, setSchedules] = useState<Database['public']['Tables']['maintenance_events']['Row'][]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchCars() {
+      if (!user) return;
+
       const { data, error } = await supabaseClient
         .from('cars')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -30,17 +34,24 @@ export function Maintenance() {
     }
 
     fetchCars();
-  }, []);
+  }, [user, supabaseClient]);
 
   useEffect(() => {
     async function fetchSchedules() {
-      if (!selectedCar) return;
+      if (!selectedCar || !user) return;
 
       setLoading(true);
+      
+      const startOfMonth = DateTime.now().startOf('month').toISO();
+      const endOfMonth = DateTime.now().endOf('month').toISO();
+
       const { data, error } = await supabaseClient
         .from('maintenance_events')
         .select('*')
         .eq('car_id', selectedCar.id)
+        .eq('user_id', user.id)
+        .gte('date', startOfMonth)
+        .lte('date', endOfMonth)
         .order('date', { ascending: false });
 
       if (error) {
@@ -52,14 +63,17 @@ export function Maintenance() {
     }
 
     fetchSchedules();
-  }, [selectedCar]);
+  }, [selectedCar, user, supabaseClient]);
 
-  const handleAddSchedule = async (schedule: Tables<'maintenance_events'>['Insert']) => {
-    if (!selectedCar) return;
+  const handleAddSchedule = async (schedule: Database['public']['Tables']['maintenance_events']['Insert']) => {
+    if (!selectedCar || !user) return;
 
     const { data, error } = await supabaseClient
       .from('maintenance_events')
-      .insert(schedule)
+      .insert({
+        ...schedule,
+        user_id: user.id
+      })
       .select()
       .single();
 
@@ -71,7 +85,7 @@ export function Maintenance() {
     setSchedules(prev => [data, ...prev]);
   };
 
-  const handleUpdateSchedule = async (id: number, updates: Tables<'maintenance_events'>['Update']) => {
+  const handleUpdateSchedule = async (id: number, updates: Database['public']['Tables']['maintenance_events']['Update']) => {
     const { data, error } = await supabaseClient
       .from('maintenance_events')
       .update(updates)

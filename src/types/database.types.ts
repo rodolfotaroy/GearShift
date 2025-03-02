@@ -11,63 +11,110 @@ export interface Database {
     Tables: {
       cars: {
         Row: {
-          id: string
-          created_at: string
-          make: string
-          model: string
-          year: number
-          user_id: string
+          id: number;
+          created_at: string;
+          make: string;
+          model: string;
+          year: number;
+          plate_number: string;
+          mileage?: number;
+          vin?: string;
+          image_url?: string;
+          user_id: string;
         }
         Insert: {
-          id?: string
-          created_at?: string
-          make: string
-          model: string
-          year: number
-          user_id: string
+          id?: number;
+          created_at?: string;
+          make: string;
+          model: string;
+          year: number;
+          plate_number: string;
+          mileage?: number;
+          vin?: string;
+          image_url?: string;
+          user_id: string;
         }
         Update: {
-          id?: string
-          created_at?: string
-          make?: string
-          model?: string
-          year?: number
-          user_id?: string
+          id?: number;
+          created_at?: string;
+          make?: string;
+          model?: string;
+          year?: number;
+          plate_number?: string;
+          mileage?: number;
+          vin?: string;
+          image_url?: string;
+          user_id?: string;
+        }
+      }
+      maintenance_costs: {
+        Row: {
+          id: number;
+          car_id: number;
+          amount: number;
+          description?: string;
+          date: string;
+          created_at: string;
+          updated_at: string;
+          user_id: string;
+        }
+        Insert: {
+          id?: number;
+          car_id: number;
+          amount: number;
+          description?: string;
+          date: string;
+          created_at?: string;
+          updated_at?: string;
+          user_id: string;
+        }
+        Update: {
+          id?: number;
+          car_id?: number;
+          amount?: number;
+          description?: string;
+          date?: string;
+          created_at?: string;
+          updated_at?: string;
+          user_id?: string;
         }
       }
       maintenance_events: {
         Row: {
-          id: number
-          car_id: number
-          title: string
-          description?: string
-          date: string
-          completed: boolean
-          created_at: string
-          updated_at: string
-          notes?: string
+          id: number;
+          car_id: number;
+          title: string;
+          description?: string;
+          date: string;
+          completed: boolean;
+          created_at: string;
+          updated_at: string;
+          notes?: string;
+          user_id: string;
         }
         Insert: {
-          id?: number
-          car_id: number
-          title: string
-          description?: string
-          date: string
-          completed: boolean
-          created_at?: string
-          updated_at?: string
-          notes?: string
+          id?: number;
+          car_id: number;
+          title: string;
+          description?: string;
+          date: string;
+          completed?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          notes?: string;
+          user_id: string;
         }
         Update: {
-          id?: number
-          car_id?: number
-          title?: string
-          description?: string
-          date?: string
-          completed?: boolean
-          created_at?: string
-          updated_at?: string
-          notes?: string
+          id?: number;
+          car_id?: number;
+          title?: string;
+          description?: string;
+          date?: string;
+          completed?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          notes?: string;
+          user_id?: string;
         }
       }
     }

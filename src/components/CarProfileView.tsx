@@ -1,21 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
-import { Tables } from '../types/supabase';
+import { Database } from '../types/supabase';
+import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
-// Ensure Car type matches Supabase table definition
-type Car = Tables['cars']['Row'];
+interface CarProfileViewProps {
+  car: Database['public']['Tables']['cars']['Row'];
+  onEdit?: () => void;
+  onDelete?: () => void;
+}
 
-export const CarProfileView = ({ 
-  car, 
-  onClose 
-}: { 
-  car: Car, 
-  onClose: () => void 
+export const CarProfileView: React.FC<CarProfileViewProps> = ({ 
+  car,
+  onEdit,
+  onDelete
 }) => {
-  const { supabaseClient, supabaseStorage } = useSupabase();
-  const [editMode, setEditMode] = useState(false);
-  const [activeTab, setActiveTab] = useState<'details' | 'maintenance' | 'documents'>('details');
-  const [maintenanceHistory, setMaintenanceHistory] = useState<Tables<'maintenance_events'>[]>([]);
+  const { supabaseClient } = useSupabase();
+  const [maintenanceHistory, setMaintenanceHistory] = useState<Database['public']['Tables']['maintenance_events']['Row'][]>([]);
 
   useEffect(() => {
     const fetchMaintenanceHistory = async () => {
@@ -35,115 +35,92 @@ export const CarProfileView = ({
     fetchMaintenanceHistory();
   }, [car.id, supabaseClient]);
 
-  const handleImageUpload = async (selectedImage: File) => {
-    try {
-      const fileExt = selectedImage.name.split('.').pop();
-      const fileName = `${car.id}-${Date.now()}.${fileExt}`;
-      
-      const { error: uploadError } = await supabaseStorage
-        .from('car-images')
-        .upload(fileName, selectedImage);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabaseStorage
-        .from('car-images')
-        .getPublicUrl(fileName);
-
-      await supabaseClient
-        .from('cars')
-        .update({ image_url: publicUrl })
-        .eq('id', car.id);
-
-      setEditMode(false);
-    } catch (error) {
-      console.error('Error updating car:', error);
-    }
-  };
-
   return (
-    <div className="car-profile-view p-4">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Car Profile</h2>
-        <button 
-          type="button" 
-          onClick={onClose} 
-          className="text-gray-500 hover:text-gray-700"
-        >
-          Close
-        </button>
-      </div>
-
-      <div className="tabs mb-4">
-        {['details', 'maintenance', 'documents'].map(tab => (
-          <button 
-            key={tab}
-            onClick={() => setActiveTab(tab as typeof activeTab)} 
-            className={`mr-2 px-3 py-1 rounded capitalize ${activeTab === tab ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
-      {activeTab === 'details' && (
-        <div>
-          <h3 className="text-lg font-semibold mb-2">{car.year} {car.make} {car.model}</h3>
-          
-          {editMode && (
-            <div className="mt-2">
-              <input 
-                type="file" 
-                onChange={(e) => {
-                  if (e.target.files?.[0]) {
-                    handleImageUpload(e.target.files[0]);
-                  }
-                }} 
-                className="w-full p-2 border rounded"
-              />
-            </div>
+        <h2 className="text-xl font-semibold">
+          {car.year} {car.make} {car.model}
+        </h2>
+        <div className="flex space-x-2">
+          {onEdit && (
+            <button 
+              onClick={onEdit}
+              className="text-gray-600 hover:text-primary-500 transition-colors"
+            >
+              <PencilIcon className="w-5 h-5" />
+            </button>
           )}
-          
-          <div className="grid grid-cols-2 gap-4 mt-4">
-            {[
-              { label: 'Make', value: car.make },
-              { label: 'Model', value: car.model },
-              { label: 'Year', value: car.year }
-            ].map(({ label, value }) => (
-              <div key={label}>
-                <p className="font-medium">{label}</p>
-                <p>{value}</p>
-              </div>
-            ))}
-          </div>
+          {onDelete && (
+            <button 
+              onClick={onDelete}
+              className="text-red-600 hover:text-red-700 transition-colors"
+            >
+              <TrashIcon className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <p className="text-gray-600 dark:text-gray-300">Plate Number</p>
+          <p className="font-medium">{car.plate_number || 'N/A'}</p>
+        </div>
+        <div>
+          <p className="text-gray-600 dark:text-gray-300">VIN</p>
+          <p className="font-medium">{car.vin || 'N/A'}</p>
+        </div>
+        <div>
+          <p className="text-gray-600 dark:text-gray-300">Mileage</p>
+          <p className="font-medium">{car.mileage ? `${car.mileage} miles` : 'N/A'}</p>
+        </div>
+      </div>
+      {car.image_url && (
+        <div className="mt-4">
+          <img 
+            src={car.image_url} 
+            alt={`${car.year} ${car.make} ${car.model}`} 
+            className="w-full h-48 object-cover rounded-lg"
+          />
         </div>
       )}
-
-      {activeTab === 'maintenance' && (
-        <div>
-          <h3 className="text-lg font-semibold mb-2">Maintenance History</h3>
-          {maintenanceHistory.length === 0 ? (
-            <p className="text-gray-500">No maintenance events recorded.</p>
-          ) : (
-            maintenanceHistory.map(event => (
-              <div 
+      <div className="mt-6">
+        <h3 className="text-lg font-semibold mb-4">Maintenance History</h3>
+        {maintenanceHistory.length === 0 ? (
+          <p className="text-gray-500">No maintenance records found</p>
+        ) : (
+          <ul className="space-y-2">
+            {maintenanceHistory.map((event) => (
+              <li 
                 key={event.id} 
-                className="bg-gray-100 p-2 rounded mb-2"
+                className="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg"
               >
-                <p className="font-medium">{event.title}</p>
-                <p className="text-sm text-gray-600">{event.date}</p>
-              </div>
-            ))
-          )}
-        </div>
-      )}
-
-      {activeTab === 'documents' && (
-        <div>
-          <h3 className="text-lg font-semibold mb-2">Documents</h3>
-          <p className="text-gray-500">No documents uploaded yet.</p>
-        </div>
-      )}
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h4 className="font-medium">{event.title}</h4>
+                    {event.description && (
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {event.description}
+                      </p>
+                    )}
+                  </div>
+                  <span 
+                    className={`px-2 py-1 rounded text-xs ${
+                      event.completed 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}
+                  >
+                    {event.completed ? 'Completed' : 'Pending'}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-500 mt-1">
+                  Date: {new Date(event.date).toLocaleDateString()}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 };
